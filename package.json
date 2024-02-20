@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "start": "node .output/server/index.mjs"
+    "start": "npx serve .output/public"
   },
   "dependencies": {
     "@tiptap/starter-kit": "2.0.0-beta.192",
