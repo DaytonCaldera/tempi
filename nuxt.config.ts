@@ -34,8 +34,8 @@ export default defineNuxtConfig({
         type: 'Bearer'
       }
     }, 
-    // baseURL: 'https://api.tempi.pro/', 
-    baseURL: 'http://localhost:3100/', 
+    baseURL: 'https://api.tempi.pro/', 
+    // baseURL: 'http://localhost:3100/', 
     globalAppMiddleware: {
       isEnabled: true
     }
