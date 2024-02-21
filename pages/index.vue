@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 definePageMeta({
-  middleware: ['auth']
+  middleware: 'auth',
+  auth: {
+    unauthenticatedOnly: false,
+  }
 })
 </script>
 
 <template>
   <div>
-    Page: index
+    Page: Inicio
   </div>
 </template>
 

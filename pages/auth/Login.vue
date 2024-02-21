@@ -2,7 +2,10 @@
 /*-For Set Blank Layout-*/
 definePageMeta({
   layout: "blank",
-  middleware:['guest']
+  auth: {
+    unauthenticatedOnly: true,
+    navigateAuthenticatedTo: '/'
+  }
 });
 </script>
 <template>

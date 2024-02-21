@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 definePageMeta({
-  middleware: ['auth']
+  auth: true
 })
 const { data } = await useApiFetch('/grupo')
 

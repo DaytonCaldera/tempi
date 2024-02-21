@@ -1,5 +1,5 @@
 <template>
-  <v-data-table :headers="headers" :items="grupos" :sort-by="[{ key: 'id', order: 'asc' }]">
+  <v-data-table :headers="headers" :items="publicadores" :sort-by="[{ key: 'id', order: 'asc' }]">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title>Grupos</v-toolbar-title>
@@ -73,7 +73,7 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps(['grupos'])
+const props = defineProps(['publicadores'])
 
 const headers = [
   {
@@ -84,7 +84,7 @@ const headers = [
   },
   { key: 'nombre', title: 'Nombre' },
   { key: 'encargado', title: 'Encargado' },
-  { key: 'auxiliar', title: 'Auxiliar' },
+  { key: 'auxiliar', title: 'auxiliar' },
   { key: 'actions', title: 'Acciones', align: 'end' },
 ]
 
@@ -137,7 +137,7 @@ function closeDelete() {
 
 
 async function handleAddGrupo() {
-  const { data, error } = await useApiFetch('/grupo', {
+  const { data, error } = await useApiFetch('/publicador', {
     method: 'POST',
     body: {
       nombre: editedItem.value.nombre

@@ -8,9 +8,9 @@ export function useApiFetch<T>(path: string, options: UseFetchOptions<T> = {}) {
     let headers: any = {
       accept: 'application/json'
     }
-    const token = useCookie('access_token')
-    if (token.value) {
-      headers['access_token'] = token.value;
+    const {token} = useAuthState()
+    if (token) {
+      headers['Authorization'] = token.value;
     }
     if (process.server) {
       headers = {

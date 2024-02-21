@@ -1,9 +1,12 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+definePageMeta({
+  middleware: ['auth']
+})
+const { data } = await useApiFetch('/publicador')
+</script>
 
 <template>
-  <div>
-    Page: publicadores
-  </div>
+  <PublicadoresTabla :publicadores="data" />
 </template>
 
 <style scoped></style>
