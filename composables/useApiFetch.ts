@@ -2,13 +2,14 @@ import type { UseFetchOptions } from 'nuxt/app'
 
 export function useApiFetch<T>(path: string, options: UseFetchOptions<T> = {}) {
   let errors = [];
+  const config = useRuntimeConfig()
   try {
 
 
     let headers: any = {
       accept: 'application/json'
     }
-    const {token} = useAuthState()
+    const { token } = useAuthState()
     if (token) {
       headers['Authorization'] = token.value;
     }
@@ -18,7 +19,7 @@ export function useApiFetch<T>(path: string, options: UseFetchOptions<T> = {}) {
         ...useRequestHeaders(["referer", "cookie"])
       }
     }
-    const response = useFetch('http://localhost:3100' + path, {
+    const response = useFetch(config.public.NUXT_BASE_URL + path, {
       credentials: 'include',
       ...options,
       headers: {

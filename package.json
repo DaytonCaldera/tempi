@@ -17,6 +17,7 @@
     "@tiptap/starter-kit": "2.0.0-beta.192",
     "@tiptap/vue-3": "2.0.0-beta.97",
     "apexcharts": "3.36.3",
+    "dotenv": "^16.4.5",
     "nuxt": "^3.10.2",
     "pinia": "^2.1.7",
     "sass": "^1.49.9",

@@ -5,13 +5,10 @@ const form = ref({
     username: "dayton",
     password: "admin123",
 });
-const auth = useAuthStore();
 async function handleLogin() {
     const { signIn, status, getSession } = useAuth();
     await signIn(form.value, { redirect: false });
     await navigateTo('/')
-
-
 }
 </script>
 
