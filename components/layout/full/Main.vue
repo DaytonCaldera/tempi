@@ -4,7 +4,7 @@ import sidebarItems from '@/components/layout/full/vertical-sidebar/sidebarItem'
 import { Menu2Icon } from 'vue-tabler-icons';
 const sidebarMenu = shallowRef(sidebarItems);
 const sDrawer = ref(true);
-const auth = useAuthStore();
+const {status} = useAuth()
 </script>
 
 <template>
@@ -48,9 +48,9 @@ const auth = useAuthStore();
             </div>
             <div>
                 <!-- Upgrade button -->
-                <v-btn v-if="!auth.isLoggedIn" class="mr-2 bg-primary" href="/auth/login">Iniciar sesion</v-btn>
+                <v-btn v-if="status.value == 'unauthenticated'" class="mr-2 bg-primary" href="/auth/login">Iniciar sesion</v-btn>
                 <!-- User Profile -->
-                <LayoutFullVerticalHeaderProfileDD v-if="!!auth.isLoggedIn" />
+                <LayoutFullVerticalHeaderProfileDD v-else />
             </div>
         </div>
     </v-app-bar>
