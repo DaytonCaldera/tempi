@@ -3,7 +3,7 @@ import { RuntimeConfig } from 'nuxt/schema';
 export default defineNuxtConfig({
   runtimeConfig: {
     public: {
-      NUXT_BASE_URL: process.env.NUXT_AUTH_API_SERVER_URL,
+      NUXT_BASE_URL: process.env.NUXT_AUTH_ORIGIN,
     },
   },
   devtools: { enabled: true },
