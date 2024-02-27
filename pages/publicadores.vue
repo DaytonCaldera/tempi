@@ -2,7 +2,7 @@
 definePageMeta({
   middleware: ['auth']
 })
-const { data } = await useApiFetch('/publicador')
+const { data } = await useApiFetch('/publicador/tabla')
 </script>
 
 <template>

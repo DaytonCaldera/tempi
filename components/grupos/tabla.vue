@@ -1,52 +1,41 @@
 <template>
-  <v-data-table :headers="headers" :items="grupos" :sort-by="[{ key: 'id', order: 'asc' }]">
+  <v-data-table
+    :headers="headers"
+    :items="grupos"
+    :sort-by="[{ key: 'id', order: 'asc' }]"
+  >
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title>Grupos</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
-        <v-dialog v-model="dialog" max-width="65vw">
-          <template v-slot:activator="{ props }">
-            <v-btn color="primary" dark class="mb-2" v-bind="props">
-              Nuevo grupo
-            </v-btn>
-          </template>
-          <v-card>
-            <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
-            </v-card-title>
+        <v-btn color="primary" dark class="mb-2" @click="dialog = !dialog">
+          <GruposModalGrupos
+            @close="close"
+            @handle-add-group="handleAddEditGroup"
+            :dialog="dialog"
+            :form-title="formTitle"
+            :edited-index="editedIndex"
+            :edited-item="editedItem"
+            @update-item="updateEditedItem"
+            :buttonSaveTitle="buttonSaveTitle"
+          ></GruposModalGrupos>
+          Nuevo grupo
+        </v-btn>
 
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-col cols="3" sm="3" md="3">
-                    <v-text-field v-model="editedItem.id" v-if="editedIndex > 0" label="Id" disabled></v-text-field>
-                  </v-col>
-                  <v-col cols="9" sm="9" md="9">
-                    <v-text-field v-model="editedItem.nombre" label="Nombre"></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue-darken-1" variant="text" @click="close">
-                Cancel
-              </v-btn>
-              <v-btn color="blue-darken-1" variant="text" @click="handleAddGrupo()">
-                Save
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
         <v-dialog v-model="dialogDelete" max-width="500px">
           <v-card>
-            <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
+            <v-card-title class="text-h5"
+              >Are you sure you want to delete this item?</v-card-title
+            >
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue-darken-1" variant="text" @click="closeDelete">Cancelar</v-btn>
-              <v-btn color="blue-darken-1" variant="text" @click="deleteItemConfirm">Agregar</v-btn>
+              <v-btn color="blue-darken-1" variant="text" @click="closeDelete"
+                >Cancelar</v-btn
+              >
+              <v-btn color="blue-darken-1" variant="text" @click="deleteItemConfirm"
+                >Agregar</v-btn
+              >
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -54,112 +43,150 @@
       </v-toolbar>
     </template>
     <template v-slot:item.actions="{ item }">
-      <v-icon size="small" class="me-2" @click="editItem(item)">
-        mdi-pencil
-      </v-icon>
-      <v-icon size="small" @click="eliminarGrupo(item?.id)">
-        mdi-delete
-      </v-icon>
+      <v-icon size="small" class="me-2" @click="editItem(item)"> mdi-pencil </v-icon>
+      <v-icon size="small" @click="eliminarGrupo(item?.id)"> mdi-delete </v-icon>
     </template>
-    <!-- <template v-slot:no-data>
-      <v-btn
-        color="primary"
-        @click="initialize"
-      >
-        Reset
-      </v-btn>
-    </template> -->
   </v-data-table>
 </template>
 
 <script lang="ts" setup>
-const props = defineProps(['grupos'])
+const props = defineProps(["grupos"]);
 
 const headers = [
   {
-    align: 'start',
-    key: 'id',
+    align: "start",
+    key: "id",
     sortable: true,
-    title: 'Id',
+    title: "Id",
   },
-  { key: 'nombre', title: 'Nombre' },
-  { key: 'encargado', title: 'Encargado' },
-  { key: 'auxiliar', title: 'Auxiliar' },
-  { key: 'actions', title: 'Acciones', align: 'end' },
-]
+  { key: "nombre", title: "Nombre" },
+  { key: "encargado", title: "Encargado" },
+  { key: "auxiliar", title: "Auxiliar" },
+  { key: "actions", title: "Acciones", align: "end" },
+];
 
-const dialog = ref(false)
-const dialogDelete = ref(false)
-const editedIndex = ref(-1)
+const dialog = ref(false);
+const dialogDelete = ref(false);
+const editedIndex = ref(-1);
 const editedItem = ref({
   id: 0,
-  nombre: ''
-})
+  nombre: "",
+  encargado_id: null,
+  encargado: null,
+  auxiliar_id: null,
+  auxiliar: null,
+});
 
 const defaultItem = ref({
   id: 0,
-  nombre: ''
-})
+  nombre: "",
+  encargado: null,
+  auxiliar: null,
+});
 const formTitle = computed(() => {
-  return editedIndex.value === -1 ? 'Nuevo grupo' : 'Editar grupo'
-})
+  return editedIndex.value === -1 ? "Nuevo grupo" : "Editar grupo";
+});
+
+const buttonSaveTitle = computed(() => {
+  return editedIndex.value === -1 ? "Agregar" : "Guardar";
+});
 
 function editItem(item: any) {
-  editedIndex.value = props.grupos.indexOf(item)
-  editedItem.value = Object.assign({}, item)
-  dialog.value = true
+  editedIndex.value = props.grupos.indexOf(item);
+  editedItem.value = Object.assign({}, item);
+  dialog.value = true;
 }
 function deleteItem(item: any) {
-  editedIndex.value = props.grupos.indexOf(item)
-  editedItem.value = Object.assign({}, item)
-  dialogDelete.value = true
+  editedIndex.value = props.grupos.indexOf(item);
+  editedItem.value = Object.assign({}, item);
+  dialogDelete.value = true;
 }
 function deleteItemConfirm() {
-  props.grupos.value.splice(editedIndex.value, 1)
-  closeDelete()
+  props.grupos.value.splice(editedIndex.value, 1);
+  closeDelete();
 }
 function close() {
-  dialog.value = false
+  dialog.value = false;
   nextTick(() => {
-    editedItem.value = Object.assign({}, defaultItem.value)
-    editedIndex.value = -1
-  })
+    editedItem.value = Object.assign({}, defaultItem.value);
+    editedIndex.value = -1;
+  });
 }
 function closeDelete() {
-  dialogDelete.value = false
+  dialogDelete.value = false;
   nextTick(() => {
-    editedItem.value = Object.assign({}, defaultItem.value)
-    editedIndex.value = -1
-  })
+    editedItem.value = Object.assign({}, defaultItem.value);
+    editedIndex.value = -1;
+  });
 }
-// console.log(props.grupos?.push({id:35,nombre:'desde nuxt props'}));
 
+function updateEditedItem(newItem: any) {
+  editedItem.value = newItem;
+}
 
-
-async function handleAddGrupo() {
-  const { data, error } = await useApiFetch('/grupo', {
-    method: 'POST',
-    body: {
-      nombre: editedItem.value.nombre
-    }
+console.log(props.grupos);
+watch(props.grupos, (val) => {
+  console.log(val);
+});
+async function handleAddEditGroup() {
+  const method = editedIndex.value === -1 ? "POST" : "PATCH";
+  const body = {
+    id: editedItem.value.id ?? null,
+    nombre: editedItem.value.nombre,
+    encargado: editedItem.value.encargado_id ?? null,
+    auxiliar: editedItem.value.auxiliar_id ?? null,
+  };
+  const { data, error } = await useApiFetch("/grupo", {
+    method: method,
+    body: body,
   });
   if (!error.value) {
-    props.grupos?.push({ id: data.value?.id, nombre: data.value?.nombre });
+    switch (method) {
+      case "POST":
+        {
+          agregarRegistroGrupo(data.value);
+        }
+        break;
+      case "PATCH":
+        {
+          const index = props.grupos.findIndex((obj) => obj.id === data.value?.id);
+          actualizarRegistroGrupo(index, data.value);
+        }
+        break;
+    }
     close();
-  }else{
-    console.log(error.value);
-    
+  } else {
+    console.error(error.value);
   }
 }
 
 async function eliminarGrupo(id: number) {
-  const index = props.grupos.findIndex(object => object.id === id);
-  const response = await useApiFetch(`/grupo/${id}`, { method: 'DELETE' });
+  const index = props.grupos.findIndex((object) => object.id === id);
+  const response = await useApiFetch(`/grupo/${id}`, { method: "DELETE" });
   if (!response.error.value) {
     props.grupos.splice(index, 1);
   } else {
     console.log("Algo salió mal");
   }
+}
+
+async function agregarRegistroGrupo(registro: any) {
+  props.grupos?.push({
+    id: registro?.id,
+    nombre: registro?.nombre,
+    encargado_id: registro?.encargado.id,
+    encargado: registro?.encargado.nombre,
+    auxiliar_id: registro?.auxiliar.id,
+    auxiliar: registro?.auxiliar.nombre,
+  });
+}
+
+async function actualizarRegistroGrupo(index: number, registro: any) {
+  props.grupos[index].nombre = registro?.nombre;
+  props.grupos[index].encargado_id = registro?.encargado.id;
+  props.grupos[index].encargado = registro?.encargado.nombre;
+  props.grupos[index].auxiliar_id = registro?.auxiliar.id;
+  props.grupos[index].auxiliar = registro?.auxiliar.nombre;
 }
 </script>
 

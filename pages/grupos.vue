@@ -2,7 +2,7 @@
 definePageMeta({
   auth: true
 })
-const { data } = await useApiFetch('/grupo')
+const { data } = await useApiFetch('/grupo/tabla')
 
 </script>
 
