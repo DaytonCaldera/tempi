@@ -1,5 +1,5 @@
+import { RuntimeConfig } from 'nuxt/schema';
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { AppEnv } from "./env-vars";
 export default defineNuxtConfig({
   runtimeConfig: {
     public: {
@@ -33,11 +33,16 @@ export default defineNuxtConfig({
         headerName: 'Authorization',
         type: 'Bearer'
       }
-    }, 
-    baseURL: 'https://api.tempi.pro/', 
-    // baseURL: 'http://localhost:3100/', 
+    },
     globalAppMiddleware: {
       isEnabled: true
-    }
+    },
+    computed: {
+      origin: process.env.NUXT_AUTH_ORIGIN,
+      fullBaseUrl: process.env.NUXT_AUTH_ORIGIN + '/',
+      pathname: '/'
+    },
+    origin: process.env.NUXT_AUTH_ORIGIN,
+    baseUrl: process.env.NUXT_AUTH_ORIGIN,
   }
 })
