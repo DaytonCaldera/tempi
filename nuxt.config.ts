@@ -1,6 +1,7 @@
 import { RuntimeConfig } from 'nuxt/schema';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  ssr: false,
   runtimeConfig: {
     public: {
       NUXT_BASE_URL: process.env.NUXT_AUTH_ORIGIN,
