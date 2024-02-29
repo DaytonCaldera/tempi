@@ -1,7 +1,7 @@
 import {
     ApertureIcon,
     CopyIcon,
-    LayoutDashboardIcon, LoginIcon, MoodHappyIcon, TypographyIcon, UserPlusIcon
+    LayoutDashboardIcon, LoginIcon, MoodHappyIcon, TypographyIcon, UserPlusIcon, TableIcon
 } from 'vue-tabler-icons';
 
 export interface menu {
@@ -58,6 +58,12 @@ const sidebarItem: menu[] = [
         icon: ApertureIcon,
         to: '/programa-predicacion'
     },
+    {header:'Administracion'},
+    {
+        title:'Diccionarios de datos',
+        icon:TableIcon,
+        to:'/diccionario'
+    }
 ];
 
 export default sidebarItem;
