@@ -9,6 +9,7 @@
         <v-toolbar-title>Grupos</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
+
         <v-btn color="primary" dark class="mb-2" @click="dialog = !dialog">
           <GruposModalGrupos
             @close="close"
@@ -19,6 +20,7 @@
             :edited-item="editedItem"
             @update-item="updateEditedItem"
             :buttonSaveTitle="buttonSaveTitle"
+            :usedPublicadores="usedPublicadores"
           ></GruposModalGrupos>
           Nuevo grupo
         </v-btn>
@@ -90,6 +92,12 @@ const formTitle = computed(() => {
 const buttonSaveTitle = computed(() => {
   return editedIndex.value === -1 ? "Agregar" : "Guardar";
 });
+
+const usedPublicadores = computed(()=>{
+  const usedEncargados = props.grupos.map((g) => g.encargado_id).filter((v)=> v !=null);
+  const usedAuxiliares = props.grupos.map((g) => g.auxiliar_id).filter((v)=> v !=null);
+  return [...usedEncargados,...usedAuxiliares];
+})
 
 function editItem(item: any) {
   editedIndex.value = props.grupos.indexOf(item);

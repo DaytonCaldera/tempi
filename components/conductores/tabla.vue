@@ -181,13 +181,6 @@ async function eliminarConductor(id: number) {
   }
 }
 
-// id: 0,
-//   publicador: {
-//     id: null,
-//     nombre: null,
-//   },
-//   dias: [],
-//   modalidad: [],
 async function agregarRegistroConductor(registro: any) {
   props.conductores?.push({
     id: registro?.id,

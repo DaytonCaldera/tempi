@@ -19,14 +19,14 @@
           </v-row>
           <v-row>
             <v-col cols="12">
-              <PublicadoresDropdown :id="props.editedItem.encargado" :label="'Seleccione un encargado'"
+              <PublicadoresDropdown :id="props.editedItem.encargado" :label="'Seleccione un encargado'" :avoid="usedPublicadores"
                 @change="change('encargado', $event)">
               </PublicadoresDropdown>
             </v-col>
           </v-row>
           <v-row>
             <v-col cols="12">
-              <PublicadoresDropdown :id="props.editedItem.auxiliar" :label="'Seleccione un auxiliar'"
+              <PublicadoresDropdown :id="props.editedItem.auxiliar" :label="'Seleccione un auxiliar'" :avoid="usedPublicadores"
                 @change="change('auxiliar', $event)">
               </PublicadoresDropdown>
             </v-col>
@@ -54,6 +54,7 @@ const props = defineProps([
   "dialog",
   "editedIndex",
   "buttonSaveTitle",
+  "usedPublicadores"
 ]);
 const emits = defineEmits(["update-item"]);
 const rules = {

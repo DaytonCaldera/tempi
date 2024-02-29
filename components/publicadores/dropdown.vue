@@ -4,7 +4,7 @@
       hint="Seleccione un encargado" persistent-hint small-chips> -->
     <!-- </v-combobox> -->
     <v-select :label="props.label" :items="options" item-title="label" item-value="id" variant="solo-inverted"
-      return-object @update:modelValue="$emit('change',$event)" v-model="model">
+      return-object @update:modelValue="$emit('change', $event)" v-model="model">
       <template v-slot:no-data>
         <v-list-item>
           <v-list-item-title>
@@ -17,16 +17,22 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps(['id', 'label', 'emitChange'])
+const props = defineProps(['id', 'label', 'emitChange', 'avoid'])
 const { data } = await useApiFetch('/publicador')
 
 const options = computed(() => {
-  return data.value.map((persona) => {
-    return {
-      id: persona?.id,
-      label: `${persona?.nombre} ${persona?.apellido1}`,
-    };
-  });
+  if (props.avoid)
+    return data.value
+      .filter((persona) => !props.avoid.includes(persona.id)) // Filter based on avoid list
+      .map((persona) => ({
+        id: persona.id, // Access id directly (assumes non-null)
+        label: `${persona.nombre} ${persona.apellido1}`, // Access properties directly
+      })).filter(Boolean);
+  else
+    return data.value.map((persona) => ({
+      id: persona.id, // Access id directly (assumes non-null)
+      label: `${persona.nombre} ${persona.apellido1}`, // Access properties directly
+    }))
 });
 
 const model = ref(props?.id ?? null)
