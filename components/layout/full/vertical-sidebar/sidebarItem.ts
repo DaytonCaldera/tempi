@@ -27,19 +27,9 @@ const sidebarItem: menu[] = [
     },
     { header: 'Publicadores' },
     {
-        title: 'Grupos',
+        title: 'Personal y tareas',
         icon: TypographyIcon,
-        to: '/grupos'
-    },
-    {
-        title: 'Publicadores',
-        icon: CopyIcon,
-        to: '/publicadores'
-    },
-    {
-        title: 'Conductores',
-        icon: LoginIcon,
-        to: '/conductores'
+        to: '/personal'
     },
     { header: 'Predicacion' },
     {

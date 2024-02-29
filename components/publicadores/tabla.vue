@@ -148,7 +148,7 @@ async function handleAddEditPublicador() {
         break;
       case "PATCH":
         {
-          const index = props.grupos.findIndex((obj) => obj.id === data.value?.id);
+          const index = props.publicadores.findIndex((obj) => obj.id === data.value?.id);
           actualizarRegistroPublicador(index, data.value);
         }
         break;
@@ -182,6 +182,7 @@ async function agregarRegistroPublicador(registro: any) {
 
 async function actualizarRegistroPublicador(index: number, registro: any) {
   props.publicadores[index].nombre = registro?.nombre;
+  props.publicadores[index].apellido1 = registro?.apellido1;
   props.publicadores[index].grupo_id = registro?.grupo.id;
   props.publicadores[index].grupo = registro?.grupo.nombre;
   props.publicadores[index].es_conductor = props.publicadores[index].es_conductor //TODO: Devolver si es conductor desde API

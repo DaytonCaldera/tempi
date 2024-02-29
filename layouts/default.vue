@@ -20,9 +20,9 @@ definePageMeta({
             <LayoutFullMain />
             <v-main>
                 <v-container fluid class="page-wrapper">
-                    <div class="maxWidth">
+                    <!-- <div class="maxWidth"> -->
                         <RouterView />
-                    </div>
+                    <!-- </div> -->
                 </v-container>
             </v-main>
         </v-app>
