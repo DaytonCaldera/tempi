@@ -182,19 +182,19 @@ async function agregarRegistroGrupo(registro: any) {
   props.grupos?.push({
     id: registro?.id,
     nombre: registro?.nombre,
-    encargado_id: registro?.encargado.id,
-    encargado: registro?.encargado.nombre,
-    auxiliar_id: registro?.auxiliar.id,
-    auxiliar: registro?.auxiliar.nombre,
+    encargado_id: registro?.encargado?.id ?? null,
+    encargado: registro?.encargado?.nombre ?? null,
+    auxiliar_id: registro?.auxiliar?.id ?? null,
+    auxiliar: registro?.auxiliar?.nombre ?? null,
   });
 }
 
 async function actualizarRegistroGrupo(index: number, registro: any) {
   props.grupos[index].nombre = registro?.nombre;
-  props.grupos[index].encargado_id = registro?.encargado.id;
-  props.grupos[index].encargado = registro?.encargado.nombre;
-  props.grupos[index].auxiliar_id = registro?.auxiliar.id;
-  props.grupos[index].auxiliar = registro?.auxiliar.nombre;
+  props.grupos[index].encargado_id = registro?.encargado?.id ?? null;
+  props.grupos[index].encargado = registro?.encargado?.nombre ?? null;
+  props.grupos[index].auxiliar_id = registro?.auxiliar?.id ?? null;
+  props.grupos[index].auxiliar = registro?.auxiliar?.nombre ?? null;
 }
 </script>
 
