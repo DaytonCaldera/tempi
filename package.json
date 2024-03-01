@@ -19,6 +19,7 @@
     "apexcharts": "3.36.3",
     "dotenv": "^16.4.5",
     "nuxt": "^3.10.2",
+    "nuxt-socket-io": "^3.0.13",
     "pinia": "^2.1.7",
     "sass": "^1.49.9",
     "sass-loader": "^10.0.0",

@@ -1,4 +1,3 @@
-import { RuntimeConfig } from 'nuxt/schema';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: false,
@@ -10,8 +9,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     '@pinia/nuxt',
-    '@sidebase/nuxt-auth'
-
+    '@sidebase/nuxt-auth',
   ],
   build: {
     transpile: ["vuetify"],
@@ -45,5 +43,5 @@ export default defineNuxtConfig({
     },
     origin: process.env.NUXT_AUTH_ORIGIN,
     baseUrl: process.env.NUXT_AUTH_ORIGIN,
-  }
+  },
 })

@@ -55,7 +55,7 @@
 
 <script lang="ts" setup>
 const props = defineProps(["publicadores"]);
-
+const emits = defineEmits(['actualizar-publicadores']);
 const headers = [
   {
     align: "start",
@@ -76,6 +76,7 @@ const editedIndex = ref(-1);
 const editedItem = ref({
   id: '',
   nombre: "",
+  apellido1:'',
   grupo_id: 0,
   grupo: "",
 });
@@ -83,6 +84,7 @@ const editedItem = ref({
 const defaultItem = ref({
   id: '',
   nombre: "",
+  apellido1:'',
   grupo_id: 0,
   grupo: "",
 });
@@ -135,25 +137,14 @@ async function handleAddEditPublicador() {
     apellido1: editedItem.value.apellido1 ?? null,
     grupo_id: editedItem.value.grupo_id ?? null,
   };
-  const { data, error } = await useApiFetch("/publicador", {
+  const { data, error, status } = await useApiFetch("/publicador", {
     method: method,
     body: body,
   });
   if (!error.value) {
-    switch (method) {
-      case "POST":
-        {
-          agregarRegistroPublicador(data.value);
-        }
-        break;
-      case "PATCH":
-        {
-          const index = props.publicadores.findIndex((obj) => obj.id === data.value?.id);
-          actualizarRegistroPublicador(index, data.value);
-        }
-        break;
-    }
+    emits('actualizar-publicadores', status);
     close();
+    return;
   } else {
     console.error(error.value);
   }
@@ -161,32 +152,14 @@ async function handleAddEditPublicador() {
 
 async function eliminarPublicador(id: number) {
   const index = props.publicadores.findIndex((object) => object.id === id);
-  const response = await useApiFetch(`/publicador/${id}`, { method: "DELETE" });
-  if (!response.error.value) {
-    props.publicadores.splice(index, 1);
+  const {error, status} = await useApiFetch(`/publicador/${id}`, { method: "DELETE" });
+  if (!error.value) {
+    emits('actualizar-publicadores', status);
   } else {
     console.log("Algo salió mal");
   }
 }
 
-async function agregarRegistroPublicador(registro: any) {
-  props.publicadores?.push({
-    id: registro?.id,
-    nombre: registro?.nombre,
-    apellido1: registro?.apellido1,
-    grupo_id: registro?.grupo?.id ?? 0,
-    grupo: registro?.grupo?.nombre ?? "",
-    es_conductor: false
-  });
-}
-
-async function actualizarRegistroPublicador(index: number, registro: any) {
-  props.publicadores[index].nombre = registro?.nombre;
-  props.publicadores[index].apellido1 = registro?.apellido1;
-  props.publicadores[index].grupo_id = registro?.grupo?.id ?? 0;
-  props.publicadores[index].grupo = registro?.grupo?.nombre ?? "";
-  props.publicadores[index].es_conductor = props.publicadores[index].es_conductor //TODO: Devolver si es conductor desde API
-}
 </script>
 
 <style></style>

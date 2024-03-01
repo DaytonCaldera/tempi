@@ -59,7 +59,7 @@
 
 <script lang="ts" setup>
 const props = defineProps(["conductores"]);
-
+const emits = defineEmits(["actualizar-conductores"]);
 const headers = [
   {
     align: "start",
@@ -78,7 +78,7 @@ const dialogDelete = ref(false);
 const editedIndex = ref(-1);
 const editedItem = ref({
   id: 0,
-  nombre_conductor:'',
+  nombre_conductor: "",
   publicador: {
     id: null,
     nombre: null,
@@ -89,7 +89,7 @@ const editedItem = ref({
 
 const defaultItem = ref({
   id: 0,
-  nombre_conductor:'',
+  nombre_conductor: "",
   publicador: {
     id: null,
     nombre: null,
@@ -147,25 +147,14 @@ async function handleAddEditConductor() {
     modalidad:
       editedItem.value.modalidad.map((modalidad) => modalidad.id ?? modalidad) ?? null,
   };
-  const { data, error } = await useApiFetch("/conductor", {
+  const { data, error, status } = await useApiFetch("/conductor", {
     method: method,
     body: body,
   });
   if (!error.value) {
-    switch (method) {
-      case "POST":
-        {
-          agregarRegistroConductor(data.value);
-        }
-        break;
-      case "PATCH":
-        {
-          const index = props.conductores.findIndex((obj) => obj.id === data.value?.id);
-          actualizarRegistroConductor(index, data.value);
-        }
-        break;
-    }
+    emits("actualizar-conductores", status);
     close();
+    return;
   } else {
     console.error(error.value);
   }
@@ -173,30 +162,14 @@ async function handleAddEditConductor() {
 
 async function eliminarConductor(id: number) {
   const index = props.conductores.findIndex((object) => object.id === id);
-  const response = await useApiFetch(`/conductor/${id}`, { method: "DELETE" });
-  if (!response.error.value) {
-    props.conductores.splice(index, 1);
+  const {error,status} = await useApiFetch(`/conductor/${id}`, { method: "DELETE" });
+  if (!error.value) {
+    emits('actualizar-conductores', status);
   } else {
     console.log("Algo salió mal");
   }
 }
 
-async function agregarRegistroConductor(registro: any) {
-  props.conductores?.push({
-    id: registro?.id,
-    publicador: registro?.publicador,
-    nombre_conductor:registro?.publicador?.nombre + ' ' + registro?.publicador?.apellido1,
-    dias: registro?.dias,
-    modalidad: registro?.modalidades,
-  });
-}
-
-async function actualizarRegistroConductor(index: number, registro: any) {
-  props.conductores[index].publicador.id = registro?.publicador?.id;
-  props.conductores[index].publicador.nombre = registro?.publicador?.nombre;
-  props.conductores[index].dias = registro?.dias;
-  props.conductores[index].modalidad = registro?.modalidades;
-}
 </script>
 
 <style></style>

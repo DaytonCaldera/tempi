@@ -53,7 +53,7 @@
 
 <script lang="ts" setup>
 const props = defineProps(["grupos"]);
-
+const emits = defineEmits(['actualizarGrupos']);
 const headers = [
   {
     align: "start",
@@ -144,24 +144,12 @@ async function handleAddEditGroup() {
     encargado: editedItem.value.encargado_id ?? null,
     auxiliar: editedItem.value.auxiliar_id ?? null,
   };
-  const { data, error } = await useApiFetch("/grupo", {
+  const { data, error, status } = await useApiFetch("/grupo", {
     method: method,
     body: body,
   });
   if (!error.value) {
-    switch (method) {
-      case "POST":
-        {
-          agregarRegistroGrupo(data.value);
-        }
-        break;
-      case "PATCH":
-        {
-          const index = props.grupos.findIndex((obj) => obj.id === data.value?.id);
-          actualizarRegistroGrupo(index, data.value);
-        }
-        break;
-    }
+    emits('actualizarGrupos',status)
     close();
   } else {
     console.error(error.value);
@@ -170,32 +158,14 @@ async function handleAddEditGroup() {
 
 async function eliminarGrupo(id: number) {
   const index = props.grupos.findIndex((object) => object.id === id);
-  const response = await useApiFetch(`/grupo/${id}`, { method: "DELETE" });
-  if (!response.error.value) {
-    props.grupos.splice(index, 1);
+  const {error, status} = await useApiFetch(`/grupo/${id}`, { method: "DELETE" });
+  if (!error.value) {
+    emits('actualizarGrupos',status);
   } else {
     console.log("Algo salió mal");
   }
 }
 
-async function agregarRegistroGrupo(registro: any) {
-  props.grupos?.push({
-    id: registro?.id,
-    nombre: registro?.nombre,
-    encargado_id: registro?.encargado?.id ?? null,
-    encargado: registro?.encargado?.nombre ?? null,
-    auxiliar_id: registro?.auxiliar?.id ?? null,
-    auxiliar: registro?.auxiliar?.nombre ?? null,
-  });
-}
-
-async function actualizarRegistroGrupo(index: number, registro: any) {
-  props.grupos[index].nombre = registro?.nombre;
-  props.grupos[index].encargado_id = registro?.encargado?.id ?? null;
-  props.grupos[index].encargado = registro?.encargado?.nombre ?? null;
-  props.grupos[index].auxiliar_id = registro?.auxiliar?.id ?? null;
-  props.grupos[index].auxiliar = registro?.auxiliar?.nombre ?? null;
-}
 </script>
 
 <style></style>
