@@ -40,24 +40,20 @@ async function refreshData(path: string, status: any) {
 
 <template>
   <v-row>
-    <v-col cols="6">
-      <GruposTabla
-        :grupos="grupos"
-        @actualizar-grupos="refreshData(url_personal.grupos, $event)"
-      />
+    <v-col cols="12" md="6" lg="6">
+      <GruposTabla :grupos="grupos" @actualizar-grupos="refreshData(url_personal.grupos, $event)" />
     </v-col>
-    <v-col cols="6">
-      <PublicadoresTabla
-        :publicadores="publicadores"
-        @actualizar-publicadores="refreshData(url_personal.publicadores, $event)"
-      />
+    <v-col cols="12" md="6" lg="6
+    ">
+      <PublicadoresTabla :publicadores="publicadores"
+        @actualizar-publicadores="refreshData(url_personal.publicadores, $event)" />
     </v-col>
   </v-row>
   <v-row>
-    <ConductoresTabla
-      :conductores="conductores"
-      @actualizar-conductores="refreshData(url_personal.conductores, $event)"
-    />
+    <v-col cols="12">
+      <ConductoresTabla :conductores="conductores"
+        @actualizar-conductores="refreshData(url_personal.conductores, $event)" />
+    </v-col>
   </v-row>
 </template>
 
