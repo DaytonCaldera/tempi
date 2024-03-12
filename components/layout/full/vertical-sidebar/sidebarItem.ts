@@ -33,14 +33,9 @@ const sidebarItem: menu[] = [
     },
     { header: 'Predicacion' },
     {
-        title: 'Territorios y fracciones',
+        title: 'Puntos y territorios',
         icon: UserPlusIcon,
         to: '/territorios-fracciones'
-    },
-    {
-        title: 'Puntos de salida',
-        icon: MoodHappyIcon,
-        to: '/puntos'
     },
     {
         title: 'Registro (S-13)',

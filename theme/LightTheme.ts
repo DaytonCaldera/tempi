@@ -5,7 +5,8 @@ const PurpleTheme: ThemeTypes = {
     dark: false,
     variables: {
         'border-color': '#eeeeee',
-        'carousel-control-size': 10
+        'carousel-control-size': 10,
+        'border-opacity':'0.75'
     },
     colors: {
         primary: '#5D87FF',
@@ -24,6 +25,7 @@ const PurpleTheme: ThemeTypes = {
         textPrimary: '#2A3547',
         textSecondary: '#2A3547',
         borderColor: '#e5eaef',
+        borderOpacity:'0.5',
         inputBorder: '#000',
         containerBg: '#ffffff',
         hoverColor: '#f6f9fc',
