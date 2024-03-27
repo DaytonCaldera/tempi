@@ -35,7 +35,7 @@ const sidebarItem: menu[] = [
     {
         title: 'Puntos y territorios',
         icon: UserPlusIcon,
-        to: '/territorios-fracciones'
+        to: '/puntos-territorios'
     },
     {
         title: 'Registro (S-13)',

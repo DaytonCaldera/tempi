@@ -18,13 +18,13 @@
 
 <script lang="ts" setup>
 const props = defineProps(['id', 'label', 'emitChange','is_multiple'])
-const { data:territorios } = await useApiFetch('/territorio')
-const ids = ref(props.id != null ? props?.id.map((territorio)=>territorio.id):null);
+const { data:conductores } = await useApiFetch('/conductor')
+const ids = ref(props.id != null ? props?.id.map((conductor)=>conductor.id):null);
 const options = computed(() => {
-  return territorios.value.map((territorio) => {
+  return conductores.value.map((conductor) => {
     return {
-      id: territorio?.id,
-      label: territorio?.nombre,
+      id: conductor?.id,
+      label: `${conductor?.publicador?.nombre} ${conductor?.publicador?.apellido1}`,
     };
   });
 });

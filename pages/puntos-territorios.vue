@@ -29,15 +29,15 @@ async function refreshData(path: string, status: any) {
     switch (path) {
       case url_campo.territorios:
         {
-          const { data: nGrupos } = await useApiFetch(url_campo.territorios);
-          territorios.value = nGrupos.value;
+          const { data: nTerritorios } = await useApiFetch(url_campo.territorios);
+          territorios.value = nTerritorios.value;
         }
         break;
       case url_campo.puntos: {
         console.log("actualizando puntos");
 
-        const { data: nConductores } = await useApiFetch(url_campo.puntos);
-        territorios.value = nConductores.value;
+        const { data: nPuntos } = await useApiFetch(url_campo.puntos);
+        puntos.value = nPuntos.value;
       }
 
     }

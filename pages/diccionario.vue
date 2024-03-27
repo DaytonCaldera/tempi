@@ -8,12 +8,17 @@
     </v-col>
 
   </v-row>
+  <v-row>
+    <v-col cols="6">
+      <DiccionarioPeriodoTabla :periodos="periodos" />
+    </v-col>
+  </v-row>
 </template>
 
 <script lang="ts" setup>
 const { data: dias } = await useApiFetch("/dia");
 const { data: modalidad } = await useApiFetch("/modalidad");
-console.log(dias, modalidad);
+const { data: periodos } = await useApiFetch("/periodo");
 
 </script>
 

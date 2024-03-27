@@ -3,7 +3,7 @@
     <!-- <v-combobox v-model="model" v-model:search="search" :hide-no-data="false" :items="options" hide-selected
       hint="Seleccione un encargado" persistent-hint small-chips> -->
     <!-- </v-combobox> -->
-    <v-select :label="props.label" :items="options" item-title="label" item-value="id" variant="solo-inverted" :multiple="is_multiple"
+    <v-select :label="props.label" :items="options" item-title="label" item-value="id" variant="solo-inverted" 
        @update:modelValue="$emit('change',$event)" v-model="model">
       <template v-slot:no-data>
         <v-list-item>
@@ -17,18 +17,17 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps(['id', 'label', 'emitChange','is_multiple'])
-const { data:territorios } = await useApiFetch('/territorio')
-const ids = ref(props.id != null ? props?.id.map((territorio)=>territorio.id):null);
+const props = defineProps(['id', 'label', 'emitChange'])
+const { data:periodos } = await useApiFetch('/periodo')
+const ids = ref(props.id != null ? props?.id : null);
 const options = computed(() => {
-  return territorios.value.map((territorio) => {
+  return periodos.value.map((periodo) => {
     return {
-      id: territorio?.id,
-      label: territorio?.nombre,
+      id: periodo?.id,
+      label: periodo?.id,
     };
   });
 });
-const is_multiple = ref(props.is_multiple ?? true);
 const model = ref(ids)
 const search = ref(null)
 

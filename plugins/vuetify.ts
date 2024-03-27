@@ -7,6 +7,7 @@ import { es } from 'vuetify/locale';
 // import PerfectScrollbar from 'vue3-perfect-scrollbar';
 // import VueApexCharts from 'vue3-apexcharts';
 import VueTablerIcons from 'vue-tabler-icons';
+import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import '@/scss/style.scss';
 import {
   PurpleTheme,
@@ -23,6 +24,13 @@ export default defineNuxtPlugin((nuxtApp) => {
       defaultTheme: "PurpleTheme",
       themes: {
         PurpleTheme,
+      },
+    },
+    icons: {
+      defaultSet: 'mdi',
+      aliases,
+      sets: {
+        mdi,
       },
     },
   });
