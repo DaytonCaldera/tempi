@@ -28,17 +28,12 @@ export default function AuthLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
     return (
         <html lang="en">
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <main className="min-h-screen bg-[#0a0a0c] text-white selection:bg-purple-500/30">
-                    <AuthProvider>
-                        {children}
-                    </AuthProvider>
-                </main>
+                <AuthProvider>
+                    {children}
+                </AuthProvider>
             </body>
         </html>
     );

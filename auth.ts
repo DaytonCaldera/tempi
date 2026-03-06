@@ -1,58 +1,43 @@
 import NextAuth from "next-auth"
-import "next-auth/jwt"
 import Google from "next-auth/providers/google"
-import { createStorage } from "unstorage"
-import memoryDriver from "unstorage/drivers/memory"
-import { UnstorageAdapter } from "@auth/unstorage-adapter"
-
-const storage = createStorage({
-  driver: memoryDriver(),
-})
+import { MongoDBAdapter } from "@auth/mongodb-adapter"
+import clientPromise from "@/lib/mongodb" // Your MongoClient promise file
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  debug: !!process.env.AUTH_DEBUG,
-  theme: { logo: "https://authjs.dev/img/logo-sm.png" },
-  adapter: UnstorageAdapter(storage),
+  adapter: MongoDBAdapter(clientPromise),
   providers: [
     Google({
       clientId: process.env.NEXT_PUBLIC_GOOGLE_ID_CLIENT as string,
-      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_API_SECRET as string,
-    }),
-  ],
-  session: { strategy: "jwt" },
-  callbacks: {
-    authorized({ request, auth }) {
-      const { pathname } = request.nextUrl
-      if (pathname === "/middleware-example") return !!auth
-      return true
-    },
-    jwt({ token, trigger, session, account }) {
-      if (trigger === "update") token.name = session.user.name
-      if (account?.provider === "keycloak") {
-        return { ...token, accessToken: account.access_token }
+      clientSecret: process.env.GOOGLE_API_SECRET as string,
+      profile(profile) {
+        // This maps the Google profile to your database User document
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          role: profile.role ?? "user",
+        }
       }
-      return token
+    })
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        console.log("✅ New User detected, attempting to save to DB:", user);
+      } else {
+        console.log("ℹ️ Existing session (no DB write triggered)");
+      }
+      if (user) token.role = user.role;
+      return token;
     },
     async session({ session, token }) {
-      if (token?.accessToken) session.accessToken = token.accessToken
-
-      return session
+      if (session.user) {
+        // Direct assignment from the token we prepared above
+        session.user.role = token.role as string;
+      }
+      return session;
     },
-  }
+  },
+  session: { strategy: "jwt" }, // Recommended for most role-based apps
 })
-
-declare module "next-auth" {
-  interface Session {
-    accessToken?: string
-  }
-
-  interface CallbacksOptions<P, A> {
-    authorized?: (params: { request: any; auth: any }) => boolean | Promise<boolean>
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    accessToken?: string
-  }
-}

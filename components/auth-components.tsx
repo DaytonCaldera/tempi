@@ -11,7 +11,7 @@ export function SignIn({
         await signIn(provider)
       }}
     >
-      <Button {...props}>Iniciar sesion</Button>
+      <Button {...props}>Iniciar Sesion</Button>
     </form>
   )
 }
@@ -22,10 +22,10 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       action={async () => {
         await signOut()
       }}
-      className="w-full"
+      className="w-50 mt-6"
     >
       <Button className="w-full p-0" {...props}>
-        Sign Out
+        Cerrar Sesion
       </Button>
     </form>
   )
