@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
+import { ROLES } from "@/lib/constants"
 
 const handler = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
@@ -15,7 +16,9 @@ const handler = NextAuth({
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: (profile.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) ? "superadmin" : (profile.role) ? profile.role : "pending_user",
+          role: (profile.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) ? ROLES.SUPERADMIN : (profile.role) ? profile.role : ROLES.NEW_USER,
+          client_code: (profile.client_code) ? profile.client_code : null,
+          clientId: profile.clientId ?? null,
         }
       }
     })

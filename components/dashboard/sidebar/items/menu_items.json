@@ -1,0 +1,46 @@
+{
+    "general":[
+        {
+            "href": "/dashboard",
+            "label": "Dashboard"
+        }
+    ],
+    "superadmin": [
+        {
+            "href": "/superdash",
+            "label": "Admin Dashboard"
+        },
+        {
+            "href": "/superdash/accounts",
+            "label": "Cuentas"
+        },
+        {
+            "href": "/superdash/users",
+            "label": "Usuarios"
+        },
+        {
+            "href": "/superdash/tasks",
+            "label": "Tareas"
+        }
+    ],
+    "admin": [
+        {
+            "href": "/dashboard/departments",
+            "label": "Departmentos"
+        },
+        {
+            "href": "/dashboard/users",
+            "label": "Personal"
+        },
+        {
+            "href": "/dashboard/tasks",
+            "label": "Tareas"
+        }
+    ],
+    "user": [
+        {
+            "href": "/dashboard/tasks",
+            "label": "Tareas"
+        }
+    ]
+}

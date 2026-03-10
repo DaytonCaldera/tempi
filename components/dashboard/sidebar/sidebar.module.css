@@ -1,0 +1,24 @@
+:root {
+    --text-color: #171717;
+    --primary-color: #0070f3;
+    --background-color: #ffffff;
+    --gradient-color-1: #0E6183;
+    --gradient-color-2: #257A9F;
+
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-color: #171717;
+    --primary-color: #0070f3;
+    --background-color: #ffffff;
+  }
+}
+
+.sidebar{
+    background: linear-gradient(to bottom, var(--gradient-color-1), var(--gradient-color-2));
+}
+
+.sidebar_section {
+    color: var(--text-color);
+}
