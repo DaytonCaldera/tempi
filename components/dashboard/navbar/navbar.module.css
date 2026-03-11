@@ -1,0 +1,8 @@
+
+.navbar {
+    --nav-background: #FFF;
+    --nav-text: #2B2B2B;
+
+    background-color: var(--nav-background);
+    color: var(--nav-text);
+}

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { SignOut } from "../auth-components";
 import Button from "../ui/button";
+import { useSession } from "next-auth/react";
 
 export default function New() {
 
     const [code, setCode] = useState("");
     const [error, setError] = useState("");
     const [verified, setVerified] = useState(false);
+    const { update } = useSession();
 
     const handleSubmit = async () => {
         if (!code) return;
@@ -23,7 +25,7 @@ export default function New() {
                 setError(error.message);
                 return;
             }
-
+            setError("");
             setVerified(true);
         } catch (err) {
             setError("Error verifying code");
@@ -50,15 +52,19 @@ export default function New() {
             </h2>
             <p className="text-gray-400">
                 Ingrese el codigo de la cuenta general proporcionada por el administrador. Luego cierre y vuelva a iniciar sesion.
+                <br />
+                Si no tiene el codigo, contacte al administrador.
             </p>
-            <input type="text" onChange={handleMaskCode} placeholder="Ej. 000-000" className="w-50 bg-gray-800 text-gray-400 placeholder:text-gray-500 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 rounded my-4" />
+            <input hidden={verified} type="text" onChange={handleMaskCode} placeholder="Ej. 000-000" className="w-75 bg-gray-800 text-gray-400 placeholder:text-gray-500 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 rounded my-4" />
             <Button
-                className="w-50 p-0"
+                hidden={verified}
+                className="w-75 p-0"
                 variant="primary"
                 onClick={handleSubmit}
             >
                 Ingresar codigo
             </Button>
+            <p className={`${(error !== '') ? '' : 'hidden'} text-sm text-red-400 w-75`}>{error}</p>
 
 
             <SignOut variant="secondary" />

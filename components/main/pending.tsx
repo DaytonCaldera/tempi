@@ -8,6 +8,8 @@ export default function Pending() {
             </h2>
             <p className="text-gray-400">
                 Tu cuenta está en revisión. Por favor, espera a que un administrador apruebe tu acceso.
+                <br />
+                Puede esperar o volver a iniciar sesion mas tarde.
             </p>
             <SignOut />
         </div>

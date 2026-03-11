@@ -20,7 +20,7 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
   return (
     <form
       action={async () => {
-        await signOut()
+        await signOut({ redirect: true, callbackUrl: "/" })
       }}
       className="w-50 mt-6"
     >

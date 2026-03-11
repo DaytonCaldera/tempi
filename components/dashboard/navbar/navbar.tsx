@@ -1,11 +1,11 @@
 'use client';
 import { signOut, useSession } from "next-auth/react";
-import { useState } from "react";
+import styles from "./navbar.module.css";
 
 export default function Navbar({isSidebarOpen, onToggle}: any) {
     const { data: session } = useSession();
     return (
-        <header className="bg-[#F7EFDE] border-b border-[#DEE7F7] h-16 flex items-center justify-between px-8 shadow-sm">
+        <header className={`${styles.navbar} border-b border-[#DEE7F7] h-16 flex items-center justify-between px-8 shadow-lg`}>
           <button onClick={onToggle} className="text-[#000000] border border-[#7789AA] px-3 py-1 rounded-md cursor-pointer">
             ☰
           </button>

@@ -1,5 +1,5 @@
 'use client'
-import auth from "next-auth/react";
+import auth from "@/auth";
 import { SignOut } from "@/components/auth-components";
 import { useEffect, useState } from "react";
 

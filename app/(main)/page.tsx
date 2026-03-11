@@ -13,13 +13,17 @@ export default function Home() {
 
 
   useEffect(() => {
-    if (status === "authenticated" && ![ROLES.PENDING_USER, ROLES.NEW_USER].includes(session?.user?.role)) {
+    if(session?.user?.isActive === false) {
+      redirect("/unauthorized");
+    }
+    
+    if (status === "authenticated" && [ROLES.ADMIN, ROLES.SUPERADMIN].includes(session?.user?.role)) {
       redirect("/dashboard")
     }
-  },[status])
+  },[session, status])
 
   return status === "loading" ? (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen p-6">
       <p className="text-gray-500">Cargando...</p>
     </div>
   ) : (

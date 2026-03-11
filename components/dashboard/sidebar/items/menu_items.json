@@ -29,7 +29,7 @@
             "label": "Departmentos"
         },
         {
-            "href": "/dashboard/users",
+            "href": "/admin/users",
             "label": "Personal"
         },
         {
