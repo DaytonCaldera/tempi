@@ -2,9 +2,18 @@ import { usePathname } from "next/navigation";
 import sections from "./items/menu_items.json";
 import SidebarItem from "./items/sidebar_item";
 import styles from "./sidebar.module.css";
+import { ROLES } from "@/lib/constants";
+import { useSession } from "next-auth/react";
 
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
+    const {data:session } = useSession();
+    
+    const isValidSection = (section: string) => {
+        if (session?.user?.role === ROLES.SUPERADMIN) return true; // Superadmins can see all sections
+        return session?.user?.role === section; // For now, we show all sections to all users. In the future, we can implement role-based access control here using the ROLES constant.
+    }
+
     return (
         <>
             {/* MOBILE OVERLAY: Dims the background when sidebar is open on mobile */}
@@ -28,19 +37,24 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 <nav className={`space-y-1 transition-opacity duration-200 ${!isOpen ? 'opacity-0' : 'opacity-100'}`}>
                     {Object.entries(sections).map(([section, items]) => (
                         <div key={section}>
-                            <h3 className="px-4 mt-8 mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 select-none">
-                                {section}
-                            </h3>
-                            <div className="space-y-1">
-                                {items.map((item: any) => (
-                                    <SidebarItem
-                                        key={item.href}
-                                        href={item.href}
-                                        label={item.label}
-                                        isActive={usePathname() === item.href}
-                                    />
-                                ))}
-                            </div>
+                            {(isValidSection(section) || section === "general") && (
+                                <>
+                                    <h3 className="px-4 mt-8 mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 select-none">
+                                        {section}
+                                    </h3>
+                                    <div className="space-y-1">
+                                        {items.map((item: any) => (
+                                            <SidebarItem
+                                                key={item.href}
+                                                href={item.href}
+                                                label={item.label}
+                                                isActive={usePathname() === item.href}
+                                            />
+                                        ))}
+                                    </div> 
+                                </>
+                            )}
+
                         </div>
                     ))}
                 </nav>

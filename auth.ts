@@ -18,7 +18,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: profile.role ?? "user",
+          role: profile.role ?? "new_user", // Default role for new users
           clientId: profile.clientId ?? null,
           clientCode: profile.clientCode ?? null,
           isActive: profile.isActive ?? true,
