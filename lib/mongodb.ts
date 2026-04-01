@@ -1,11 +1,11 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
 import dns from "node:dns/promises";
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
-if (!process.env.MONGODB_URI) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
+if (!process.env.MONGO_MONGODB_URI) {
+  throw new Error('Invalid/Missing environment variable: "MONGO_MONGODB_URI"');
 }
 
-const uri = process.env.MONGODB_URI;
+const uri = process.env.MONGO_MONGODB_URI;
 const options = {
   serverApi: {
     version: ServerApiVersion.v1,
