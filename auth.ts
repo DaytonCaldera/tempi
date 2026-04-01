@@ -9,8 +9,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     Google({
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_ID_CLIENT as string,
-      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_API_SECRET as string,
+      clientId: process.env.GOOGLE_ID_CLIENT as string,
+      clientSecret: process.env.GOOGLE_API_SECRET as string,
       profile(profile) {
         // This maps the Google profile to your database User document
         return {
