@@ -11,7 +11,7 @@ interface CardProps {
 
 export function Card({ children, className = "", variant = "default" }: CardProps) {
   // Logic for variant-based styles
-  const variantStyles = {
+  const variantStyles:any = {
     default: "bg-white border-gray-200/60 shadow-sm text-black/80",
     primary: "bg-[#0070f3] text-white shadow-blue-200"
   };

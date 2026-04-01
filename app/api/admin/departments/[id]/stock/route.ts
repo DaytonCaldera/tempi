@@ -13,24 +13,8 @@ import mongo from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 
-/**
- * POST handler - Creates a new stock item for a department
- * 
- * @async
- * @param {Request} req - The incoming request object containing stock item data in JSON format
- * @param {Object} params - Route parameters
- * @param {string} params.id - The department ID
- * @returns {Promise<NextResponse>} 
- * - Success: `{ success: true, id: ObjectId }`
- * - Error: `{ error: string }` with status 500
- * 
- * @throws Will return 500 error if database operation fails
- * 
- * @example
- * POST /api/admin/departments/[id]/stock
- * Body: { name: string, sku: string, unit: string, quantity: number, minStock: number }
- */
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         const body = await req.json();
@@ -57,19 +41,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 }
 
-/**
- * GET handler - Retrieves all stock items for a specific department
- * 
- * @async
- * @param {Request} req - The incoming request object
- * @param {Object} params - Route parameters
- * @param {Promise<{ id: string }>} params.id - Promise that resolves to the department ID
- * @returns {Promise<Response>} Array of stock items with serialized ObjectIds
- * 
- * @example
- * GET /api/admin/departments/[id]/stock
- * Response: Array<{ _id: string, departmentId: string, productName: string, ... }>
- */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const client = await mongo;

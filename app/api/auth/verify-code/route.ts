@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         }
         
         db.collection('users').updateOne(
-            { email: session.user.email },
+            { email: session?.user.email },
             {
                 $set: {
                     clientCode: code,
