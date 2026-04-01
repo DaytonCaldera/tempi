@@ -13,14 +13,19 @@ export async function PATCH(request: Request) {
     }
 
     try {
-        const { userId, isActive } = await request.json();
+        const { userId, isActive, departments } = await request.json();
         const client = await mongo;
         const db = client.db(process.env.MONGODB_DB);
 
         // 2. Perform the Update
         const result = await db.collection('users').updateOne(
             { _id: new ObjectId(userId) },
-            { $set: { isActive: !isActive } } // Toggles the current state
+            { 
+                $set: { 
+                    isActive: isActive,
+                    departments: departments.map((id: string) => new ObjectId(id))
+                } 
+            }
         );
 
         if (result.modifiedCount === 0) {

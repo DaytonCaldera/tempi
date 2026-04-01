@@ -25,7 +25,7 @@
     ],
     "admin": [
         {
-            "href": "/dashboard/departments",
+            "href": "/admin/departments",
             "label": "Departmentos"
         },
         {

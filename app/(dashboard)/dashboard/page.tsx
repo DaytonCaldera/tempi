@@ -1,18 +1,11 @@
 'use client';
 import {Card, CardHeader, CardBody, CardFooter} from '@/components/ui/card';
 import styles from './dashboard.module.css';
+import ConsumptionReport from '@/components/admin/consumption';
 export default function Dashboard() {
     return (
         <div className={styles.dashboard}>
-            <Card variant='default'>
-                <CardHeader title='Title for test' />
-                <CardBody>
-                    This is a test
-                </CardBody>
-                <CardFooter>
-                    <p>Footer content</p>
-                </CardFooter> 
-            </Card>
+            <ConsumptionReport title='Consumo global en los departamentos' />
         </div>
     );
 }

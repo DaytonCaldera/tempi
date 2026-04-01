@@ -1,7 +1,7 @@
 import React from "react";
 
 interface DataTableProps {
-  headers: string[];
+  headers: { title: string; hideOnMobile?: boolean }[];
   children: React.ReactNode;
 }
 
@@ -12,12 +12,12 @@ export function DataTable({ headers, children }: DataTableProps) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
-              {headers.map((header) => (
-                <th 
-                  key={header} 
-                  className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-gray-400"
+              {headers.map((header, index) => (
+                <th
+                  key={index}
+                  className={`px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-gray-400${header.hideOnMobile ? " hidden md:block" : ""}`}
                 >
-                  {header}
+                  {header.title}
                 </th>
               ))}
             </tr>
@@ -31,9 +31,12 @@ export function DataTable({ headers, children }: DataTableProps) {
   );
 }
 
-export function DataTableRow({ children }: { children: React.ReactNode }) {
+export function DataTableRow({  children,  onClick, className = ""}: {  children: React.ReactNode;  onClick?: () => void;  className?: string;}) {
   return (
-    <tr className="hover:bg-gray-50/50 transition-colors duration-150">
+    <tr
+      onClick={onClick}
+      className={`hover:bg-gray-200/50 transition-colors duration-150 ${onClick ? "cursor-pointer" : ""} ${className}`}
+    >
       {children}
     </tr>
   );

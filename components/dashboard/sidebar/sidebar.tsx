@@ -7,9 +7,12 @@ import { useSession } from "next-auth/react";
 
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
-    const {data:session } = useSession();
-    
+    const { data: session } = useSession();
+
+    const pathname = usePathname();
+
     const isValidSection = (section: string) => {
+        if (section === "general") return true; // General section is visible to all users
         if (session?.user?.role === ROLES.SUPERADMIN) return true; // Superadmins can see all sections
         return session?.user?.role === section; // For now, we show all sections to all users. In the future, we can implement role-based access control here using the ROLES constant.
     }
@@ -37,7 +40,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 <nav className={`space-y-1 transition-opacity duration-200 ${!isOpen ? 'opacity-0' : 'opacity-100'}`}>
                     {Object.entries(sections).map(([section, items]) => (
                         <div key={section}>
-                            {(isValidSection(section) || section === "general") && (
+                            {isValidSection(section) && (
                                 <>
                                     <h3 className="px-4 mt-8 mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 select-none">
                                         {section}
@@ -48,10 +51,10 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                                                 key={item.href}
                                                 href={item.href}
                                                 label={item.label}
-                                                isActive={usePathname() === item.href}
+                                                isActive={pathname === item.href}
                                             />
                                         ))}
-                                    </div> 
+                                    </div>
                                 </>
                             )}
 

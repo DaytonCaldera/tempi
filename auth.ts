@@ -21,7 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: profile.role ?? "new_user", // Default role for new users
           clientId: profile.clientId ?? null,
           clientCode: profile.clientCode ?? null,
-          isActive: profile.isActive ?? true,
+          isActive: profile.isActive ?? false, // Default to inactive until approved by admin
         }
       }
     })

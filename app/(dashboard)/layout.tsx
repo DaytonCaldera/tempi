@@ -6,7 +6,8 @@ import Navbar from "@/components/dashboard/navbar/navbar";
 import Sidebar from "@/components/dashboard/sidebar/sidebar";
 import { Metadata } from "next";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Head from "next/head";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -29,13 +30,23 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }>) {
 
-    const [isSidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth > 1024 : true);
+    const [isSidebarOpen, setSidebarOpen] = useState(true); // Default to true
+
+    // Use an effect to close it on small screens after mounting
+    useEffect(() => {
+        if (window.innerWidth < 1024) setSidebarOpen(false);
+    }, []);
 
     const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
     return (
         <AuthProvider>
             <html lang="en">
-                <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+                <Head>
+                    <title>
+                        {metadata.title?.toString()} || Inventario Asamblea
+                    </title>
+                </Head>
+                <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-black`}>
                     <div className="flex h-screen overflow-hidden">
                         {/* SIDEBAR */}
                         <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
