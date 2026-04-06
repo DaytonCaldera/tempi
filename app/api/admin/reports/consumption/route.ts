@@ -22,22 +22,34 @@ export async function GET(req: Request) {
         { $match: query },
         {
             $group: {
-                _id: "$inventoryId",
+                _id: {
+                    deptId: "$departmentId",
+                    prodId: "$inventoryId"
+                },
+                // We take the name directly from the log itself!
+                departmentName: { $first: "$departmentName" },
                 productName: { $first: "$productName" },
                 sku: { $first: "$sku" },
-                // Total "Entradas"
-                totalIn: {
-                    $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$amount", 0] }
-                },
-                // Total "Salidas" (Consumption)
-                totalOut: {
-                    $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$amount", 0] }
-                },
-                // How many times it was touched
-                movementsCount: { $sum: 1 }
+                totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$amount", 0] } },
+                totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$amount", 0] } }
             }
         },
-        { $sort: { totalOut: -1 } } // Show most consumed first
+        {
+            $group: {
+                _id: "$_id.deptId",
+                departmentName: { $first: "$departmentName" },
+                items: {
+                    $push: {
+                        inventoryId: "$_id.prodId",
+                        productName: "$productName",
+                        sku: "$sku",
+                        totalIn: "$totalIn",
+                        totalOut: "$totalOut"
+                    }
+                }
+            }
+        },
+        { $sort: { departmentName: 1 } }
     ]).toArray();
 
     return NextResponse.json(report);

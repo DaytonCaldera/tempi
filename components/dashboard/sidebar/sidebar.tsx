@@ -33,11 +33,11 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                     : "-translate-x-full w-0 md:w-0 md:-translate-x-full"
                 } `}
             >
-                <div className={`px-4 mb-10 transition-opacity duration-200 ${!isOpen ? 'opacity-0' : 'opacity-100'}`}>
+                <div className={`px-4 mb-10 transition-opacity duration-200 ${!isOpen ? 'opacity-0 hidden' : 'opacity-100 '}`}>
                     <span className="text-2xl font-bold tracking-tight">TEMPI</span>
                 </div>
 
-                <nav className={`space-y-1 transition-opacity duration-200 ${!isOpen ? 'opacity-0' : 'opacity-100'}`}>
+                <nav className={`space-y-1 transition-opacity duration-200 ${!isOpen ? 'opacity-0 hidden' : 'opacity-100'}`}>
                     {Object.entries(sections).map(([section, items]) => (
                         <div key={section}>
                             {isValidSection(section) && (

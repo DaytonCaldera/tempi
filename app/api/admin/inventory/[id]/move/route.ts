@@ -80,10 +80,13 @@ export async function PATCH(
             }
         );
 
+        const dept = await db.collection('departments').findOne({ _id: currentItem.departmentId });
+
         // 5. Create the Movement Log (This is what powers your Reports)
         const movementLog = {
             inventoryId: new ObjectId(id),
             departmentId: currentItem.departmentId, // Handy for filtering by dept later
+            departmentName: dept?.name || "Depto. Desconocido",
             productName: currentItem.productName,
             sku: currentItem.sku,
             type: type, // "IN" or "OUT"
@@ -97,6 +100,8 @@ export async function PATCH(
             },
             createdAt: new Date()
         };
+        console.log(movementLog);
+        
 
         await db.collection('stock_movements').insertOne(movementLog);
 
