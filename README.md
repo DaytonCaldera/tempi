@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📦 TEMPI | Real-Time Inventory & Logistics
 
-## Getting Started
+**TEMPI** is a high-performance, real-time inventory management ecosystem designed for fast-paced environments like events, warehouses, and department-based logistics. Built with **Next.js 15**, it balances administrative control with "on-the-ground" agility.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 The Core Philosophy
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Unlike traditional inventory systems that only track "current numbers," TEMPI is built on a **Double-Entry Audit System**. Every single change—no matter how small—is logged with a user ID, timestamp, and reason, ensuring total transparency and historical accountability.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **⚡ Real-Time Synchronization**: Powered by SWR, stock levels update across all administrative and runner devices instantly without page refreshes.
+* **📊 Advanced Consumption Reporting**: Generate granular reports by department or globally. See exactly what went "IN" and "OUT" within specific time windows.
+* **🔍 Movement Drill-Down**: Click any item in a report to see a full log of every person who touched that stock, when they did it, and why.
+* **🛡️ Role-Based Access (RBAC)**: Secure separation between **Superadmins**, **Admins**, and **Runners** (Field Users).
+* **📱 Mobile-First "Runner" View**: Optimized for field staff to "burn" stock quickly using a 16px+ high-readability interface.
+* **🏷️ Intelligent SKU Engine**: Automated, department-prefixed SKU generation (e.g., `LOG-4832`) to maintain a professional catalog.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Technical Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Layer | Technology |
+| :--- | :--- |
+| **Framework** | Next.js 15 (App Router) |
+| **Language** | TypeScript |
+| **Database** | MongoDB (Aggregation Pipelines for Reporting) |
+| **Auth** | NextAuth.js (Auth.js) |
+| **Styling** | Tailwind CSS (Subtle & Dark Mode ready) |
+| **Icons** | Lucide React |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📈 Data Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+TEMPI utilizes a **Denormalized Audit Pattern**. When a movement occurs, we capture the department and product metadata at that exact moment. This ensures that historical reports remain accurate even if products are renamed or departments are deleted in the future.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Movement Log Structure
+```json
+{
+  "inventoryId": "ObjectId",
+  "departmentId": "ObjectId",
+  "departmentName": "Main Kitchen",
+  "productName": "Water Bottles 500ml",
+  "type": "OUT",
+  "amount": 24,
+  "user": { "name": "John Doe", "email": "john@tempi.com" },
+  "createdAt": "2026-04-06T15:00:00Z"
+}
