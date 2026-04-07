@@ -1,71 +1,41 @@
-import mongo from '@/lib/mongodb';
-import { ROLES } from '@/lib/constants';
-import * as authModule from "@/auth";
+import { auth } from "@/auth";
+import mongo from "@/lib/mongodb";
+import { ROLES } from "@/lib/constants";
+import { NextResponse } from "next/server";
 
-export async function POST(request: Request) {
-    console.log(Object.keys(authModule));
-    
-    const { auth } = authModule; 
-    console.log(typeof auth);
-    
-    if (typeof auth !== 'function') {
-        console.error("Auth is still not a function:", auth);
-        return Response.json({ message: "Auth initialization failed" }, { status: 500 });
-    }
-
-    const session = await authModule.auth();
+export async function POST(req: Request) {
     try {
-        console.log('Current user:', session?.user);
-        
+        const session = await auth();
+        if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+
+        const { code } = await req.json();
+
         const client = await mongo;
-        const { code } = await request.json();
-
-        if (!code) {
-            return Response.json(
-                { message: errorMessages[400] },
-                { status: 400 }
-            );
-        }
-
-        await client.connect();
         const db = client.db(process.env.MONGODB_DB);
-        const collection = db.collection('clients');
 
-        const result = await collection.findOne({ code });
+        // 1. Find the organization with this code
+        const organization = await db.collection("clients").findOne({ clientCode: code });
 
-        if (!result) {
-            return Response.json(
-                { message: errorMessages[404] },
-                { status: 404 }
-            );
+        if (!organization) {
+            return NextResponse.json({ message: "Código de organización no válido" }, { status: 404 });
         }
-        
-        db.collection('users').updateOne(
-            { email: session?.user.email },
+
+        // 2. Link the user to this organization as a 'user' (Runner)
+        // Note: status is 'pending' until the Admin approves them in the dashboard
+        await db.collection("users").updateOne(
+            { email: session.user.email },
             {
                 $set: {
-                    clientCode: code,
-                    role: ROLES.PENDING_USER,
-                    clientId: result._id.toString()
+                    clientId: organization._id,
+                    clientName: organization.name,
+                    role: ROLES.PENDING_USER, // this will trigger the "pendiente" status in the dashboard where Admins can approve them
+                    isActive: true
                 }
             }
         );
 
-        return Response.json(
-            { success: true },
-            { status: 200 }
-        );
+        return NextResponse.json({ success: true });
     } catch (error) {
-        console.error(error);
-        return Response.json(
-            { message: errorMessages[500] },
-            { status: 500 }
-        );
+        return NextResponse.json({ message: "Error al procesar el código" }, { status: 500 });
     }
-}
-
-const errorMessages = {
-    404: 'Código no encontrado. Por favor, verifica el código proporcionado.',
-    400: 'Código inválido. Asegúrate de ingresar un código válido.',
-    500: 'Error del servidor. Por favor, intenta nuevamente más tarde.'
 }
