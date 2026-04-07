@@ -1,6 +1,5 @@
 'use client';
 import ConsumptionReport from '@/components/admin/consumption';
-import GroupedConsumptionReport from '@/components/admin/consumptionByDept';
 export default function Dashboard() {
 
 

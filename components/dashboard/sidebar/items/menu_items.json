@@ -1,6 +1,10 @@
 {
     "general":[
         {
+            "href": "/",
+            "label": "Inicio"
+        },
+        {
             "href": "/dashboard",
             "label": "Dashboard"
         }

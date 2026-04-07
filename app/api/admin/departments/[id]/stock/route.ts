@@ -22,8 +22,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const db = client.db(process.env.MONGODB_DB);
 
         const departmentId = new ObjectId(await id);
+        const departmentName = await db.collection("departments").findOne({ _id: departmentId }, { projection: { name: 1 } });
+        if (!departmentName) {
+            return NextResponse.json({ error: "Departamento no encontrado" }, { status: 404 });
+        }
+
         const newStockItem = {
             departmentId: departmentId,
+            departmentName: departmentName.name,
             productName: body.name,
             sku: body.sku,
             unit: body.unit,

@@ -7,20 +7,22 @@ import Pending from "@/components/main/pending";
 import { useEffect } from "react";
 import { redirect } from "next/navigation";
 import New from "@/components/main/new";
+import Runner from "@/components/main/runner";
 
 export default function Home() {
   const { data: session, status } = useSession()
 
 
   useEffect(() => {
-    if(session?.user?.isActive === false) {
+    if (session?.user?.isActive === false) {
       redirect("/unauthorized");
     }
-    
-    if (status === "authenticated" && [ROLES.ADMIN, ROLES.SUPERADMIN].includes(session?.user?.role)) {
-      redirect("/dashboard")
+    console.log(status, session?.user.role);
+
+    if (status === "authenticated" && ![ROLES.PENDING_USER, ROLES.NEW_USER].includes(session?.user?.role)) {
+      redirect("/runner")
     }
-  },[session, status])
+  }, [session, status])
 
   return status === "loading" ? (
     <div className="flex items-center justify-center min-h-screen p-6">
@@ -38,7 +40,9 @@ export default function Home() {
         ) : session.user?.role === ROLES.NEW_USER ? (
           <New />
         ) : (
-          <TestDashboard session={session} />
+          <div className="flex items-center justify-center min-h-screen p-6">
+            <p className="text-gray-500">Cargando...</p>
+          </div>
         )
       )}
     </div>
