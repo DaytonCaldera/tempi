@@ -46,6 +46,7 @@ export async function POST(req: Request) {
             clientId: cleanClientIdString,
             createdAt: new Date(),
         };
+        console.log(newDept);
 
         const result = await db.collection("departments").insertOne(newDept);
         return NextResponse.json({ ...newDept, _id: result.insertedId });

@@ -16,22 +16,19 @@ export default async function UserManagementPage() {
     const db = client.db(process.env.MONGODB_DB);
 
     const isSuperAdmin = session.user.role === ROLES.SUPERADMIN;
+    const query = isSuperAdmin ? {} : { clientId: session.user.clientId };
     
-   const cleanClientIdString = session?.user?.clientId;
-   console.log(cleanClientIdString);
-   
-    
+
     // 3. Fetch Users
     const usersRaw = await db.collection('users')
-        .find({ clientId: cleanClientIdString })
+        .find(query) // Filter by clientId to ensure they only see their own users
         .project({ password: 0 })
         .toArray();
-    
+
     const deptsRaw = await db.collection('departments')
         .find({ clientId: session.user.clientId })
         .toArray();
-    console.log(usersRaw, deptsRaw);
-    
+
     // 4. Serialization (Required to move data from Server to Client)
     const users = usersRaw.map(user => ({
         ...user,

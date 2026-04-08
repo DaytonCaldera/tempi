@@ -41,7 +41,6 @@ export default async function RunnerPage() {
         })
         .sort({ productName: 1 })
         .toArray();
-    console.log(inventory);
     
     // 5. Serialize data for Client Component
     const serializedItems = inventory.map(item => ({
@@ -65,7 +64,6 @@ export default async function RunnerPage() {
                     </div>
                 </div>
             </div>
-
             <RunnerInventoryClient initialItems={serializedItems} userRole={userDoc.role} />
         </main>
     );

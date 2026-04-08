@@ -5,10 +5,7 @@ import { ROLES } from "./lib/constants"
 export default auth((req) => {
     // 1. Access the session via req.auth
     const session = req.auth;
-    const user = session?.user;
-
-    console.log('User active?: ', user?.isActive);
-    
+    const user = session?.user;    
     
     const isAuth = !!session;
     const path = req.nextUrl.pathname;
