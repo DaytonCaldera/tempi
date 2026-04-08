@@ -50,10 +50,19 @@ export async function PATCH(
         const client = await mongo;
         const db = client.db(process.env.MONGODB_DB);
 
-        // 2. Fetch current state to calculate new balance
         const currentItem = await db.collection('department_stock').findOne({
             _id: new ObjectId(id)
         });
+
+        // ANCHOR: Verify item ownership via department
+        const dept = await db.collection('departments').findOne({
+            _id: currentItem?.departmentId,
+            clientId: new ObjectId(session.user.clientId) // Added check
+        });
+
+        if (!currentItem || !dept) {
+            return NextResponse.json({ error: "Producto no encontrado o acceso denegado" }, { status: 404 });
+        }
 
         if (!currentItem) {
             return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
@@ -80,13 +89,12 @@ export async function PATCH(
             }
         );
 
-        const dept = await db.collection('departments').findOne({ _id: currentItem.departmentId });
-
         // 5. Create the Movement Log (This is what powers your Reports)
         const movementLog = {
             inventoryId: new ObjectId(id),
             departmentId: currentItem.departmentId, // Handy for filtering by dept later
             departmentName: dept?.name || "Depto. Desconocido",
+            clientId: new ObjectId(session.user.clientId), // Added clientId for multi-tenancy
             productName: currentItem.productName,
             sku: currentItem.sku,
             type: type, // "IN" or "OUT"
@@ -101,7 +109,7 @@ export async function PATCH(
             createdAt: new Date()
         };
         console.log(movementLog);
-        
+
 
         await db.collection('stock_movements').insertOne(movementLog);
 

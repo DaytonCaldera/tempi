@@ -1,8 +1,10 @@
+import { auth } from '@/auth';
 import mongo from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
+    const session = await auth();
     const { searchParams } = new URL(req.url);
     const start = searchParams.get('start'); // e.g. 2026-03-31T08:00:00Z
     const end = searchParams.get('end');     // e.g. 2026-03-31T18:00:00Z
@@ -13,7 +15,10 @@ export async function GET(req: Request) {
     const client = await mongo;
     const db = client.db(process.env.MONGODB_DB);
 
+    // Inside GET function
     const query: any = {
+        // ANCHOR: Strictly limit results to this client only
+        clientId: session?.user.clientId,
         createdAt: { $gte: new Date(start), $lte: new Date(end) }
     };
     if (deptId) query.departmentId = new ObjectId(deptId);

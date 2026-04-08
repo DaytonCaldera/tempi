@@ -48,9 +48,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const session = await auth();
+    if (!session?.user?.clientId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const client = await mongo;
     const db = client.db(process.env.MONGODB_DB);
+
+    // ANCHOR: First, verify the department belongs to this client
+    const department = await db.collection('departments').findOne({
+        _id: new ObjectId(id),
+        clientId: new ObjectId(session.user.clientId)
+    });
+
+    if (!department) return Response.json({ error: "Access denied" }, { status: 403 });
 
     const inventory = await db.collection('department_stock')
         .find({ departmentId: new ObjectId(id) })
