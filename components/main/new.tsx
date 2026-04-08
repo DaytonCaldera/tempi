@@ -77,7 +77,7 @@ export default function New() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center max-w-md mx-auto">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent mb-4">
+            <h2 className="text-3xl font-bold bg-linear-to-r from-white to-purple-400 bg-clip-text text-transparent mb-4">
                 Bienvenido a TEMPI
             </h2>
 

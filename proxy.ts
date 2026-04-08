@@ -18,16 +18,16 @@ export default auth((req) => {
         return NextResponse.redirect(new URL('/unauthorized', req.url));
     }
     
-    if (path.startsWith('/admin') && user?.role !== ROLES.SUPERADMIN) {
-        return NextResponse.redirect(new URL('/unauthorized', req.url))
-    }
+    // if (path.startsWith('/admin') && user?.role !== ROLES.SUPERADMIN) {
+    //     return NextResponse.redirect(new URL('/unauthorized', req.url))
+    // }
 
     // Dashboard specific checks
-    if (path.startsWith('/dashboard')) {
-        if (!user || [ROLES.NEW_USER, ROLES.PENDING_USER].includes(user.role)) {
-            return NextResponse.redirect(new URL('/unauthorized', req.url))
-        }
-    }
+    // if (path.startsWith('/dashboard')) {
+    //     if (!user || [ROLES.NEW_USER, ROLES.PENDING_USER].includes(user.role)) {
+    //         return NextResponse.redirect(new URL('/unauthorized', req.url))
+    //     }
+    // }
 
     // Redirect authenticated users away from login page
     if (isAuthPage) {

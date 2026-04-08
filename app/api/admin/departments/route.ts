@@ -1,38 +1,79 @@
-import mongo from '@/lib/mongodb';
 import { auth } from "@/auth";
+import mongo from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
-    const session = await auth();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export async function GET() {
     try {
-        const { name, clientId, id } = await req.json();
+        const session = await auth();
+
+        // 1. Session & ClientId Validation
+        if (!session?.user?.clientId) {
+            return NextResponse.json({ message: "No autorizado o sin organización" }, { status: 401 });
+        }
+
         const client = await mongo;
         const db = client.db(process.env.MONGODB_DB);
 
-        // Data object to save
-        const deptData = {
+        // 2. Filter by clientId
+        const departments = await db.collection("departments")
+            .find({ clientId: session.user.clientId })
+            .sort({ name: 1 })
+            .toArray();
+
+        return NextResponse.json(departments);
+    } catch (error) {
+        return NextResponse.json({ message: "Error al obtener departamentos" }, { status: 500 });
+    }
+}
+
+export async function POST(req: Request) {
+    try {
+        const session = await auth();
+        if (!session?.user?.clientId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+
+        const { name, description } = await req.json();
+
+        const client = await mongo;
+        const db = client.db(process.env.MONGODB_DB);
+
+        const cleanClientIdString = String(session?.user?.clientId);
+
+        // 3. Anchor new data to the Client
+        const newDept = {
             name,
-            clientId: new ObjectId(clientId),
-            updatedAt: new Date()
+            description,
+            clientId: cleanClientIdString,
+            createdAt: new Date(),
         };
 
-        if (id) {
-            await db.collection('departments').updateOne(
-                { _id: new ObjectId(id) },
-                { $set: deptData }
-            );
-            return NextResponse.json({ message: "Actualizado con éxito" });
-        } else {
-            await db.collection('departments').insertOne({
-                ...deptData,
-                createdAt: new Date()
-            });
-            return NextResponse.json({ message: "Creado con éxito" });
-        }
+        const result = await db.collection("departments").insertOne(newDept);
+        return NextResponse.json({ ...newDept, _id: result.insertedId });
     } catch (error) {
-        return NextResponse.json({ error: "Error al procesar la solicitud" }, { status: 500 });
+        return NextResponse.json({ message: "Error al crear departamento" }, { status: 500 });
+    }
+}
+
+//PATCH to update department
+export async function PATCH(req: Request) {
+    try {
+        const session = await auth();
+        if (!session?.user?.clientId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+
+        const { id, name, description } = await req.json();
+
+        const client = await mongo;
+        const db = client.db(process.env.MONGODB_DB);
+        // 4. Ensure update is scoped to the Client
+        const result = await db.collection("departments").updateOne(
+            { _id: new ObjectId(id), clientId: session.user.clientId }, // Critical: Scope update
+            { $set: { name, description } }
+        );
+        if (result.matchedCount === 0) {
+            return NextResponse.json({ message: "Departamento no encontrado o sin permiso" }, { status: 404 });
+        }
+        return NextResponse.json({ message: "Departamento actualizado" });
+    } catch (error) {
+        return NextResponse.json({ message: "Error al actualizar departamento" }, { status: 500 });
     }
 }

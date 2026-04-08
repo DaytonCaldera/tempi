@@ -16,6 +16,8 @@ export default async function DepartmentManagementPage() {
     
     // If Superadmin, get all depts. If Admin, filter by their clientId.
     const query = isSuperAdmin ? {} : { clientId: session.user.clientId };
+    console.log(query);
+    
     
     const deptsRaw = await db.collection('departments').find(query).toArray();
     

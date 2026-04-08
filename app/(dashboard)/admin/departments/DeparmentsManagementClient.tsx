@@ -55,6 +55,29 @@ export default function DepartmentManagementClient({
     const [isSaving, setIsSaving] = useState(false);
     const router = useRouter();
 
+    const fetchEditingDept = async (deptId: string, formData: any) => {
+        return await fetch("/api/admin/departments", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id: deptId,
+                name: formData.name,
+                clientId: formData.clientId
+            }),
+        });
+    }
+
+    const fetchInsertDept = async (formData: any) => {
+        return await fetch("/api/admin/departments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: formData.name,
+                clientId: formData.clientId
+            }),
+        });
+    }
+
     const handleSave = async () => {
         // Validation
         if (!formData.name || !formData.clientId) {
@@ -64,15 +87,12 @@ export default function DepartmentManagementClient({
 
         setIsSaving(true);
         try {
-            const res = await fetch("/api/admin/departments", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id: editingDept?._id,
-                    name: formData.name,
-                    clientId: formData.clientId
-                }),
-            });
+            let res: any;
+            if (editingDept) {
+                res = await fetchEditingDept(editingDept._id, formData);
+            } else {
+                res = await fetchInsertDept(formData);
+            }
 
             if (res.ok) {
                 setIsModalOpen(false);
