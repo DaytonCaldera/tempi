@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
 import { Modal } from "@/components/ui/Modal";
 import { UserCheck, Shield, MapPin, Edit3, Trash2, UserPlus } from "lucide-react";
+import { ROLES } from "@/lib/constants";
 
 export default function UserManagementClient({ users: initialUsers, departments }: { users: any[], departments: any[] }) {
     const router = useRouter();
@@ -40,6 +41,23 @@ export default function UserManagementClient({ users: initialUsers, departments 
             router.refresh();
         }
         setLoading(false);
+    };
+
+    const handleApprove = async (userId: string) => {
+        // You would ideally show a Modal here to pick the Department
+        const res = await fetch('/api/admin/users/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId,
+                deptId: departments[0]._id // Defaulting to the first dept for now
+            })
+        });
+
+        if (res.ok) {
+            // Refresh local state or router.refresh()
+            router.refresh();
+        }
     };
 
     const tableHeaders = [
@@ -124,7 +142,7 @@ export default function UserManagementClient({ users: initialUsers, departments 
                         {/* 4. ACTIONS (Department UI Style) */}
                         <DataTableCell>
                             <div className="flex items-center justify-end gap-1">
-                                {!user.isActive ? (
+                                {!user.isActive || (user.role === ROLES.PENDING_USER) ? (
                                     <button
                                         onClick={() => openEditModal(user)}
                                         className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg text-[11px] font-bold hover:bg-green-700 transition-all shadow-sm"
@@ -185,16 +203,16 @@ export default function UserManagementClient({ users: initialUsers, departments 
                                             prev.includes(dept._id) ? prev.filter(id => id !== dept._id) : [...prev, dept._id]
                                         )}
                                         className={`flex items-center justify-between px-4 py-3 rounded-xl border text-xs font-bold transition-all ${isSelected
-                                                ? "bg-blue-50 border-[#0070f3] text-[#0070f3] shadow-sm"
-                                                : "bg-white border-gray-100 text-gray-500 hover:border-gray-300 shadow-sm"
+                                            ? "bg-blue-50 border-[#0070f3] text-[#0070f3] shadow-sm"
+                                            : "bg-white border-gray-100 text-gray-500 hover:border-gray-300 shadow-sm"
                                             }`}
                                     >
                                         <span className="truncate mr-2">{dept.name}</span>
 
                                         {/* Visual Checkmark for Selected State */}
                                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected
-                                                ? "bg-[#0070f3] border-[#0070f3]"
-                                                : "border-gray-200"
+                                            ? "bg-[#0070f3] border-[#0070f3]"
+                                            : "border-gray-200"
                                             }`}>
                                             {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                                         </div>

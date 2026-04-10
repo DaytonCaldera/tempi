@@ -24,7 +24,8 @@ export async function PATCH(request: NextRequest) {
             { 
                 $set: { 
                     isActive: isActive,
-                    departments: departments.map((id: string) => new ObjectId(id))
+                    departments: departments.map((id: string) => new ObjectId(id)),
+                    role: ROLES.USER
                 } 
             }
         );
