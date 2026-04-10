@@ -1,9 +1,11 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
-import clientPromise from "@/lib/mongodb" // Your MongoClient promise file
+import clientPromise from "@/lib/mongodb"
+import { getSuperAdminEmail, ROLES } from "./lib/constants"
 
 
+const SUPERADMIN_EMAIL = getSuperAdminEmail(); // Get the super admin email from env or default
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
@@ -12,8 +14,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.GOOGLE_ID_CLIENT as string,
       clientSecret: process.env.GOOGLE_API_SECRET as string,
       profile(profile) {
-        console.log('Google profile data: ', profile);
-        
         // This maps the Google profile to your database User document
         return {
           id: profile.sub,
@@ -21,7 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: profile.email,
           image: profile.picture,
           role: profile.role ?? "new_user", // Default role for new users
-          clientId: profile.clientId?.toString() ?? 'sup22',
+          clientId: profile.clientId ?? 'sup22',
           clientCode: profile.clientCode ?? null,
           isActive: profile.isActive ?? true, // Default to active for new users, they are gonna verify laternpm 
         }
@@ -31,7 +31,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.role = user.role;
+        if (user.email === SUPERADMIN_EMAIL) {
+          token.role = ROLES.SUPERADMIN;
+        } else {
+          token.role = user.role;
+        }
+        token.clientId = user.clientId?.toString();
         token.clientId = user.clientId ? user.clientId.toString() : 'sup';
         token.clientCode = user.clientCode;
         token.isActive = user.isActive;

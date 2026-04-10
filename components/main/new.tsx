@@ -27,10 +27,10 @@ export default function New() {
             if (!res.ok) throw new Error(data.message);
 
             // Update session to reflect new role and clientId
-            await update({ 
-                role: ROLES.ADMIN, 
-                clientId: data.clientId, 
-                clientCode: data.clientCode 
+            await update({
+                role: ROLES.ADMIN,
+                clientId: data.clientId,
+                clientCode: data.clientCode
             });
             window.location.reload(); // Force refresh to trigger dashboard redirect
         } catch (err: any) {
@@ -42,7 +42,7 @@ export default function New() {
 
     const handleJoinSubmit = async () => {
         if (!code) return;
-
+        setLoading(true); // Añade un estado de carga
         try {
             const res = await fetch("/api/auth/verify-code", {
                 method: "POST",
@@ -50,28 +50,36 @@ export default function New() {
                 headers: { "Content-Type": "application/json" }
             });
 
-            if (!res.ok) {
-                const error = await res.json();
-                setError(error.message);
-                return;
-            }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
+
+            // 🔥 ESTO ES LO QUE FALTA: Actualizar la sesión del usuario que se une
+            await update({
+                role: ROLES.PENDING_USER, // O el rol que devuelva tu API
+                clientId: data.clientId,
+                status: "pending"
+            });
+
             setError("");
             setVerified(true);
-        } catch (err) {
-            setError("Error verifying code");
+            window.location.reload(); // Recargar para ir al dashboard/pending view
+        } catch (err: any) {
+            setError(err.message || "Error verifying code");
+        } finally {
+            setLoading(false);
         }
     }
 
     const handleMaskCode = (e: React.ChangeEvent<HTMLInputElement>) => {
         const digits = e.target.value.replace(/\D/g, '');
         const x = digits.match(/(\d{0,3})(\d{0,3})/);
-        
+
         if (x) {
             e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2];
         } else {
             e.target.value = '';
         }
-        
+
         setCode(e.target.value);
     }
 
@@ -96,9 +104,9 @@ export default function New() {
             {view === "create" && (
                 <div className="space-y-4 w-full">
                     <p className="text-gray-400">Ingresa el nombre de tu empresa o equipo</p>
-                    <input 
-                        type="text" 
-                        placeholder="Nombre de la Empresa" 
+                    <input
+                        type="text"
+                        placeholder="Nombre de la Empresa"
                         className="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 outline-none focus:ring-2 ring-purple-500"
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
@@ -113,10 +121,10 @@ export default function New() {
             {view === "join" && (
                 <div className="space-y-4 w-full">
                     <p className="text-gray-400">Ingresa el código proporcionado por tu administrador</p>
-                    <input 
-                        type="text" 
-                        onChange={handleMaskCode} 
-                        placeholder="Ej. 000-000" 
+                    <input
+                        type="text"
+                        onChange={handleMaskCode}
+                        placeholder="Ej. 000-000"
                         className="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 outline-none focus:ring-2 ring-purple-500"
                     />
                     <Button variant="primary" className="w-full" onClick={handleJoinSubmit}>

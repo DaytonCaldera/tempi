@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import mongo from "@/lib/mongodb";
+import { getTenantQuery } from "@/lib/tenant-guard";
 import { ObjectId } from "mongodb";
 import { NextResponse } from "next/server";
 
@@ -14,10 +15,10 @@ export async function GET() {
 
         const client = await mongo;
         const db = client.db(process.env.MONGODB_DB);
-
+        const query = getTenantQuery(session);
         // 2. Filter by clientId
         const departments = await db.collection("departments")
-            .find({ clientId: session.user.clientId })
+            .find(query)
             .sort({ name: 1 })
             .toArray();
 

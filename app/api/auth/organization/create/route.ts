@@ -37,6 +37,16 @@ export async function POST(req: Request) {
             createdAt: new Date(),
         });
 
+        const clientId = newClient.insertedId;
+
+        const defaultDepartment = await db.collection('departments').insertOne({
+            name: "General",
+            description: "Departamento inicial predeterminado",
+            clientId: clientId,
+            createdAt: new Date()
+        });
+
+        const departmentId = defaultDepartment.insertedId;
         // 3. Update the User to be the ADMIN of this client
         await db.collection("users").updateOne(
             { email: session.user.email },
@@ -45,7 +55,8 @@ export async function POST(req: Request) {
                     role: ROLES.ADMIN,
                     clientId: newClient.insertedId,
                     clientCode: clientCode,
-                    isActive: true
+                    isActive: true,
+                    departments: [departmentId] // Assign the default department to the user
                 }
             }
         );

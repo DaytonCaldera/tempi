@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import DepartmentManagementClient from './DeparmentsManagementClient';
 import { ROLES } from '@/lib/constants';
+import { getTenantQuery } from '@/lib/tenant-guard';
 
 // app/admin/departments/page.tsx
 export default async function DepartmentManagementPage() {
@@ -15,7 +16,7 @@ export default async function DepartmentManagementPage() {
     const isSuperAdmin = session.user.role === ROLES.SUPERADMIN;
     
     // If Superadmin, get all depts. If Admin, filter by their clientId.
-    const query = isSuperAdmin ? {} : { clientId: session.user.clientId };
+    const query = getTenantQuery(session);
     
     
     const deptsRaw = await db.collection('departments').find(query).toArray();

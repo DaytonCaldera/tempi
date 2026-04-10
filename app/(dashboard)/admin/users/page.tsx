@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ObjectId } from 'mongodb';
 import UserManagementClient from "./UserManagementClient";
 import { ROLES } from '@/lib/constants';
+import { getTenantQuery } from '@/lib/tenant-guard';
 
 export default async function UserManagementPage() {
     const session = await auth();
@@ -16,7 +17,7 @@ export default async function UserManagementPage() {
     const db = client.db(process.env.MONGODB_DB);
 
     const isSuperAdmin = session.user.role === ROLES.SUPERADMIN;
-    const query = isSuperAdmin ? {} : { clientId: session.user.clientId };
+    const query = getTenantQuery(session);
     
 
     // 3. Fetch Users
@@ -24,9 +25,9 @@ export default async function UserManagementPage() {
         .find(query) // Filter by clientId to ensure they only see their own users
         .project({ password: 0 })
         .toArray();
-
+    
     const deptsRaw = await db.collection('departments')
-        .find({ clientId: session.user.clientId })
+        .find(query)
         .toArray();
 
     // 4. Serialization (Required to move data from Server to Client)
@@ -34,13 +35,16 @@ export default async function UserManagementPage() {
         ...user,
         _id: user._id.toString(), // Convert ObjectId to string
         clientId: user.clientId ? user.clientId.toString() : null,
+        clientCode: user.clientCode ? user.clientCode.toString() : null,
         // If you have a departments array of ObjectIds, stringify those too
         departments: user.departments?.map((d: any) => d.toString()) || []
     }));
+    
 
     const departments = deptsRaw.map(dept => ({
         ...dept,
         _id: dept._id.toString(), // Convert ObjectId to string
+        clientId: dept.clientId ? dept.clientId.toString() : null,
     }));
 
     // Render the interactive client component

@@ -2,14 +2,15 @@ import mongo from '@/lib/mongodb';
 import { auth } from "@/auth";
 import { ROLES } from "@/lib/constants";
 import { ObjectId } from "mongodb";
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
     const session = await auth();
     
     // 1. Security Check: Only Admin or Superadmin
     const allowedRoles = [ROLES.ADMIN, ROLES.SUPERADMIN];
     if (!session || !allowedRoles.includes(session.user.role)) {
-        return Response.json({ message: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     try {
@@ -27,13 +28,18 @@ export async function PATCH(request: Request) {
                 } 
             }
         );
-
-        if (result.modifiedCount === 0) {
-            return Response.json({ message: "User not found" }, { status: 404 });
+        console.log(result);
+        
+        if (result.modifiedCount === 0 && result.matchedCount === 0) {
+            return NextResponse.json({ message: "User not found" }, { status: 404 });
         }
 
-        return Response.json({ success: true, newState: !isActive });
+        if (result.modifiedCount === 0 && result.matchedCount === 1) {
+            return NextResponse.json({ message: "No changes made" }, { status: 200 });
+        }
+
+        return NextResponse.json({ success: true, newState: !isActive });
     } catch (error) {
-        return Response.json({ message: "Server error" }, { status: 500 });
+        return NextResponse.json({ message: "Server error" }, { status: 500 });
     }
 }

@@ -11,3 +11,8 @@ export const isSuperAdmin = (session: any) => {
     const masterEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || [];
     return session?.user?.role === ROLES.SUPERADMIN && masterEmails.includes(session.user.email);
 };
+
+//return the admin email from SUPERADMIN_EMAIL env variable, if not set return the default email
+export const getSuperAdminEmail = (): string => {
+    return process.env.SUPERADMIN_EMAIL || "superadmin@example.com";
+}
