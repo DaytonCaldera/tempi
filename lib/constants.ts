@@ -7,7 +7,7 @@ export const ROLES = {
 }
 
 export const isSuperAdmin = (session: any) => {
-    if(!process.env.ADMIN_EMAILS) return false;
+    if (!process.env.ADMIN_EMAILS) return false;
     const masterEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || [];
     return session?.user?.role === ROLES.SUPERADMIN && masterEmails.includes(session.user.email);
 };
@@ -16,3 +16,14 @@ export const isSuperAdmin = (session: any) => {
 export const getSuperAdminEmail = (): string => {
     return process.env.SUPERADMIN_EMAIL || "superadmin@tempi.pro";
 }
+
+export const sectionPermissions: Record<string, string> = {
+    admin: "manage_users",       // O el permiso que definas en tu JSON de roles
+    inventory: "view_stock",
+    reports: "view_reports"
+};
+
+export const sectionItemPermissions: Record<string, string> = {
+    "admin_users": "manage_users",
+    "admin_clients": "manage_clients"
+};

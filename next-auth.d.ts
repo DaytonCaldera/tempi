@@ -6,6 +6,7 @@ declare module "next-auth" {
     clientId?: string
     clientCode?: string
     isActive?: boolean
+    permissions?: Record<string, any> // Add permissions field to the User interface
   }
 
   interface Session {
@@ -14,6 +15,7 @@ declare module "next-auth" {
       clientId?: string
       clientCode?: string
       isActive?: boolean
+      permissions?: Record<string, any>
     } & DefaultSession["user"]
   }
 }
@@ -24,5 +26,6 @@ declare module "next-auth/jwt" {
     clientId?: string
     clientCode?: string
     isActive?: boolean
+    permissions?: Record<string, any>
   }
 }

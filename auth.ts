@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
 import { getSuperAdminEmail, ROLES } from "./lib/constants"
+import mongo from "@/lib/mongodb";
 
 
 const SUPERADMIN_EMAIL = getSuperAdminEmail(); // Get the super admin email from env or default
@@ -24,6 +25,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           clientId: profile.clientId ?? 'sup22',
           clientCode: profile.clientCode ?? null,
           isActive: profile.isActive ?? true, // Default to active for new users, they are gonna verify laternpm 
+          permissions: profile.permissions || {}, // You can also store permissions directly in the user document if needed
         }
       }
     })
@@ -36,6 +38,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } else {
           token.role = user.role;
         }
+
+        const client = await mongo;
+        const db = client.db(process.env.MONGODB_DB);
+        const roleDoc = await db.collection('roles').findOne({ slug: user.role });
+
+        token.permissions = roleDoc?.permissions || {};
         token.clientId = user.clientId?.toString();
         token.clientId = user.clientId ? user.clientId.toString() : 'sup';
         token.clientCode = user.clientCode;
@@ -58,6 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.clientId = token.clientId as string;
         session.user.clientCode = token.clientCode as string
         session.user.isActive = token.isActive as boolean;
+        session.user.permissions = token.permissions as any;
       }
       return session;
     },
