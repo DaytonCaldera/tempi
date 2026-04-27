@@ -108,7 +108,6 @@ export async function PATCH(
             },
             createdAt: new Date()
         };
-        console.log(movementLog);
 
 
         await db.collection('stock_movements').insertOne(movementLog);

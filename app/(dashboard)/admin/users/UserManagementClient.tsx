@@ -11,6 +11,7 @@ export default function UserManagementClient({ users: initialUsers, departments 
     const [users, setUsers] = useState(initialUsers);
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
+    const [selectedRole, setSelectedRole] = useState<string>(ROLES.USER);
     const [loading, setLoading] = useState(false);
 
     // Sync state with server props
@@ -22,16 +23,19 @@ export default function UserManagementClient({ users: initialUsers, departments 
         setSelectedUser(user);
         // Ensure we handle the array of strings correctly
         setSelectedDepts(user.departments || []);
+        setSelectedRole(user.role || ROLES.USER);
     };
 
     const handleConfirm = async () => {
         setLoading(true);
+        const newRole = selectedUser.role === ROLES.PENDING_USER ? ROLES.USER : selectedRole;
         const res = await fetch("/api/admin/users/toggle-status", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 userId: selectedUser._id,
                 isActive: true, // Approving or keeping active
+                role: newRole, // Update role if it was pending
                 departments: selectedDepts
             }),
         });
@@ -157,7 +161,7 @@ export default function UserManagementClient({ users: initialUsers, departments 
                                             className="p-2 text-gray-400 hover:text-[#0070f3] hover:bg-blue-50 rounded-lg transition-all"
                                             title="Editar Departamentos"
                                         >
-                                            <MapPin size={18} />
+                                            <Edit3 size={18} />
                                         </button>
                                         <button
                                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
@@ -186,6 +190,22 @@ export default function UserManagementClient({ users: initialUsers, departments 
                         <p className="text-xs text-gray-500">{selectedUser?.email}</p>
                     </div>
 
+                    <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">
+                            Tipo de Acceso (Rol)
+                        </p>
+                        <select
+                            value={selectedRole}
+                            onChange={(e) => setSelectedRole(e.target.value)}
+                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-2 ring-blue-500 outline-none"
+                        >
+                            {/* These would ideally come from the database, but we can list the slugs here */}
+                            <option value="user">Runner / Operativo</option>
+                            <option value="admin">Administrador (Acceso Total)</option>
+                            {/* We exclude Superadmin here so an Admin can't create another Superadmin */}
+                        </select>
+                    </div>
+                    <div className="my-6 border-t border-gray-50" />
                     <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">
                             Asignación de Áreas

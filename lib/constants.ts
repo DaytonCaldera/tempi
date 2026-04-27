@@ -14,5 +14,5 @@ export const isSuperAdmin = (session: any) => {
 
 //return the admin email from SUPERADMIN_EMAIL env variable, if not set return the default email
 export const getSuperAdminEmail = (): string => {
-    return process.env.SUPERADMIN_EMAIL || "superadmin@example.com";
+    return process.env.SUPERADMIN_EMAIL || "superadmin@tempi.pro";
 }

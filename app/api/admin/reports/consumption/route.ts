@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import mongo from '@/lib/mongodb';
+import { getTenantQuery } from '@/lib/tenant-guard';
 import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 
@@ -16,10 +17,10 @@ export async function GET(req: Request) {
     const db = client.db(process.env.MONGODB_DB);
 
     // Inside GET function
-    const query: any = {
-        // ANCHOR: Strictly limit results to this client only
-        clientId: session?.user.clientId,
-        createdAt: { $gte: new Date(start), $lte: new Date(end) }
+    const query: any = getTenantQuery(session);
+    query.createdAt = {
+        $gte: new Date(start),
+        $lte: new Date(end)
     };
     if (deptId) query.departmentId = new ObjectId(deptId);
 

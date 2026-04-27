@@ -30,11 +30,13 @@
     "admin": [
         {
             "href": "/admin/departments",
-            "label": "Departmentos"
+            "label": "Departmentos",
+            "permission": "manage_departments"
         },
         {
             "href": "/admin/users",
-            "label": "Personal"
+            "label": "Personal",
+            "permission": "manage_users"
         },
         {
             "href": "/dashboard/tasks",

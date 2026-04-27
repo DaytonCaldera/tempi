@@ -4,6 +4,7 @@ import SidebarItem from "./items/sidebar_item";
 import styles from "./sidebar.module.css";
 import { ROLES } from "@/lib/constants";
 import { useSession } from "next-auth/react";
+import { hasPermission } from "@/lib/permissions";
 
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
@@ -12,10 +13,17 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
     const pathname = usePathname();
 
     const isValidSection = (section: string) => {
-        if (section === "general") return true; // General section is visible to all users
-        if (session?.user?.role === ROLES.SUPERADMIN) return true; // Superadmins can see all sections
-        return session?.user?.role === section; // For now, we show all sections to all users. In the future, we can implement role-based access control here using the ROLES constant.
-    }
+        if (section === "general") return true;
+
+        // Map section names to the permission keys in your Roles collection
+        const sectionMapping: Record<string, string> = {
+            admin: "manage_users",       // If they can manage users, show admin section
+            superadmin: "view_all_clients" // Only for those with god-mode
+        };
+
+        const requiredPermission = sectionMapping[section];
+        return hasPermission(session, requiredPermission);
+    };
 
     return (
         <>
