@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
 import { Modal } from "@/components/ui/Modal";
-import { UserCheck, Shield, MapPin, Edit3, Trash2, UserPlus } from "lucide-react";
+import { UserCheck, Shield, MapPin, Edit3, Trash2, UserPlus, Ban } from "lucide-react";
 import { ROLES } from "@/lib/constants";
 
 export default function UserManagementClient({ users: initialUsers, departments }: { users: any[], departments: any[] }) {
@@ -167,7 +167,8 @@ export default function UserManagementClient({ users: initialUsers, departments 
                                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                                             title="Desactivar Usuario"
                                         >
-                                            <Trash2 size={18} />
+                                            
+                                            <Ban size={18} />
                                         </button>
                                     </>
                                 )}
