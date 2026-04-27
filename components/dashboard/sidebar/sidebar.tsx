@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { hasPermission } from "@/lib/permissions";
 import { sectionPermissions } from "@/lib/constants";
 import { sectionItemPermissions } from "@/lib/constants";
+import ClientSwitcher from "../ClientSwicher";
 
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
@@ -42,6 +43,8 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 <div className={`px-4 mb-10 transition-opacity duration-200 ${!isOpen ? 'opacity-0 hidden' : 'opacity-100 '}`}>
                     <span className="text-2xl font-bold tracking-tight">TEMPI</span>
                 </div>
+
+                <ClientSwitcher className={` ${!isOpen ? 'opacity-0 hidden' : 'opacity-100 '} `}></ClientSwitcher>
 
                 <nav className={`space-y-1 transition-opacity duration-200 ${!isOpen ? 'opacity-0 hidden' : 'opacity-100'}`}>
                     {Object.entries(sections).map(([section, items]) => (
