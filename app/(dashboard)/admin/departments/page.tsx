@@ -4,11 +4,15 @@ import { redirect } from "next/navigation";
 import DepartmentManagementClient from './DeparmentsManagementClient';
 import { ROLES } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
+import { hasPermission } from '@/lib/hasPermissions';
 
-// app/admin/departments/page.tsx
 export default async function DepartmentManagementPage() {
     const session = await auth();
     if (!session) redirect("/login");
+
+    if (!hasPermission(session, "manage_departments")) {
+        redirect("/unauthorized"); // Or back to dashboard
+    }
 
     const client = await mongo;
     const db = client.db(process.env.MONGODB_DB);
@@ -17,6 +21,7 @@ export default async function DepartmentManagementPage() {
     
     // If Superadmin, get all depts. If Admin, filter by their clientId.
     const query = getTenantQuery(session);
+    console.log(query);
     
     
     const deptsRaw = await db.collection('departments').find(query).toArray();

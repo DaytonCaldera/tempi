@@ -5,16 +5,30 @@ import { ROLES } from "./lib/constants"
 export default auth((req) => {
     // 1. Access the session via req.auth
     const session = req.auth;
-    const user = session?.user;    
-    
+    const user = session?.user;
+
     const isAuth = !!session;
     const path = req.nextUrl.pathname;
     const isAuthPage = path.startsWith('/login');
-    
+
+    ///api/auth/signin?callbackUrl=F%2
+
     if (user && user.isActive === false) {
         return NextResponse.redirect(new URL('/unauthorized', req.url));
     }
-    
+
+    const isLoggedIn = !!auth;
+    const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
+
+    if (isAdminRoute && !isLoggedIn) {
+        return Response.redirect(new URL("/login", req.nextUrl));
+    }
+
+    // High-level role check (Permissions are better checked inside the Page)
+    if (isAdminRoute && user?.role === 'user') {
+        return Response.redirect(new URL("/unauthorized", req.nextUrl));
+    }
+
     // if (path.startsWith('/admin') && user?.role !== ROLES.SUPERADMIN) {
     //     return NextResponse.redirect(new URL('/unauthorized', req.url))
     // }

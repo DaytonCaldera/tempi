@@ -3,7 +3,7 @@ import sections from "./items/menu_items.json";
 import SidebarItem from "./items/sidebar_item";
 import styles from "./sidebar.module.css";
 import { useSession } from "next-auth/react";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission } from "@/lib/hasPermissions";
 import { sectionPermissions } from "@/lib/constants";
 import { sectionItemPermissions } from "@/lib/constants";
 import ClientSwitcher from "../ClientSwicher";

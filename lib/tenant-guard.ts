@@ -1,5 +1,5 @@
-import { ROLES } from "./constants";
 import { ObjectId } from "mongodb";
+import { ROLES } from "./constants";
 
 export const getTenantQuery = (session: any) => {
     if (session?.user?.role === ROLES.SUPERADMIN) {
@@ -16,5 +16,6 @@ export const getTenantQuery = (session: any) => {
         return { clientId: new ObjectId(session.user.clientId) };
     }
 
-    return { _id: new ObjectId("000000000000000000000000") };
+    return { _id: new ObjectId("000000000000000000000000")   };
 };
+

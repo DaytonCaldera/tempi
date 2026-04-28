@@ -1,13 +1,17 @@
 import mongo from '@/lib/mongodb';
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { ObjectId } from 'mongodb';
 import UserManagementClient from "./UserManagementClient";
 import { ROLES } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
+import { hasPermission } from '@/lib/hasPermissions';
 
 export default async function UserManagementPage() {
     const session = await auth();
+
+    if (!hasPermission(session, "manage_users")) {
+        redirect("/unauthorized"); // Or back to dashboard
+    }
 
     // 1. Security Check
     if (!session) redirect("/login");
@@ -18,14 +22,14 @@ export default async function UserManagementPage() {
 
     const isSuperAdmin = session.user.role === ROLES.SUPERADMIN;
     const query = getTenantQuery(session);
-    
+
 
     // 3. Fetch Users
     const usersRaw = await db.collection('users')
         .find(query) // Filter by clientId to ensure they only see their own users
         .project({ password: 0 })
         .toArray();
-    
+
     const deptsRaw = await db.collection('departments')
         .find(query)
         .toArray();
@@ -39,7 +43,7 @@ export default async function UserManagementPage() {
         // If you have a departments array of ObjectIds, stringify those too
         departments: user.departments?.map((d: any) => d.toString()) || []
     }));
-    
+
 
     const departments = deptsRaw.map(dept => ({
         ...dept,

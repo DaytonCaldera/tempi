@@ -53,7 +53,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // This is the "Real-Time" magic part,
       if (trigger === "update" && session) {
         if (session.role) token.role = session.role;
-        if (session.clientId) token.clientId = session.clientId.toString();
+        if (session.clientId) {
+          const clientData = await switchClient(session, token);
+          if (token.role === ROLES.SUPERADMIN) {
+            token.clientId = session.clientId === 'all' ? null : session.clientId; // Superadmin can switch to 'all' or specific client
+          }else {
+            token.clientId = clientData.clientId;
+            token.role = clientData.role;
+            token.permissions = clientData.permissions;
+          }
+        }
         if (session.clientCode) token.clientCode = session.clientCode;
         if (session.isActive !== undefined) token.isActive = session.isActive;
       }
@@ -77,3 +86,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: { strategy: 'jwt' }, // Recommended for most role-based apps,
 });
+
+
+/**
+ * Switches the client for the user based on the session's clientId and updates the token with the new role and permissions.
+ * This is useful for users who belong to multiple organizations and need to switch contexts without logging out.
+ * @param session - The current session object containing the selected clientId and any updated session values.
+ * @param token - The current JWT token payload containing user information such as email.
+ * @returns A promise resolving to an object with the resolved clientId, role, and permissions for the selected organization.
+ */
+async function switchClient(session: any, token: any) {
+  const client = await mongo;
+  const db = client.db(process.env.MONGODB_DB);
+
+  const resultToken = {
+    clientId: null,
+    role: null,
+    permissions: null,
+  };
+
+  // Find the user's specific role for THIS specific organization
+  // This assumes your User doc has an 'organizations' array
+  const userDoc = await db.collection('users').findOne({ email: token.email });
+  const orgData = userDoc?.organizations?.find((o: any) => o.clientId.toString() === session.clientId);
+
+  if (orgData) {
+    resultToken.clientId = session.clientId;
+    resultToken.role = orgData.role;
+    const { getRolePermissions } = await import("./lib/permissions");
+    resultToken.permissions = await getRolePermissions(orgData.role);
+  }
+  return resultToken;
+}
