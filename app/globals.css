@@ -5,6 +5,26 @@
   --breakpoint-md: 768px; 
 }
 
+
+@theme {
+  /* Brand Colors */
+  --color-brand: #1E3A8A;
+  --color-brand-accent: #A8E6CF;
+  
+  /* Semantic Backgrounds */
+  --color-surface: #F7F5F2;
+  --color-surface-card: #FFFFFF;
+  
+  /* Typography */
+  --color-text-main: #475569;
+  --color-text-muted: #94A3B8;
+
+  /* Status */
+  --color-danger: #FF6F61;
+  --color-success: #A8E6CF;
+}
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

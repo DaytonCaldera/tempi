@@ -191,11 +191,11 @@ export default function RunnerInventoryClient({ initialItems, userRole }: { init
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button onClick={() => handleUpdate(item._id, 'OUT')} disabled={processingId === item._id || item.quantity < globalQty} className="flex flex-col items-center justify-center gap-2 bg-red-50 text-red-600 py-6 rounded-3xl active:scale-95 transition-all disabled:opacity-20">
-                                            {processingId === item._id ? <Loader2 className="animate-spin" /> : <><Minus size={32} strokeWidth={3} /><span className="text-[10px] font-black uppercase">Quitar {globalQty}</span></>}
+                                        <button onClick={() => handleUpdate(item._id, 'OUT')} disabled={processingId === item._id || item.quantity < globalQty} className="flex flex-row items-center justify-center gap-2 bg-red-50 text-red-600 py-6 rounded-3xl active:scale-95 transition-all disabled:opacity-20">
+                                            {processingId === item._id ? <Loader2 className="animate-spin" /> : <><Minus size={32} strokeWidth={3} /><span className="text-2xl font-black uppercase">{globalQty}</span></>}
                                         </button>
-                                        <button onClick={() => handleUpdate(item._id, 'IN')} disabled={processingId === item._id} className="flex flex-col items-center justify-center gap-2 bg-green-50 text-green-600 py-6 rounded-3xl active:scale-95 transition-all">
-                                            {processingId === item._id ? <Loader2 className="animate-spin" /> : <><Plus size={32} strokeWidth={3} /><span className="text-[10px] font-black uppercase">Sumar {globalQty}</span></>}
+                                        <button onClick={() => handleUpdate(item._id, 'IN')} disabled={processingId === item._id} className="flex flex-row items-center justify-center gap-2 bg-green-50 text-green-600 py-6 rounded-3xl active:scale-95 transition-all">
+                                            {processingId === item._id ? <Loader2 className="animate-spin" /> : <><Plus size={32} strokeWidth={3} /><span className="text-2xl font-black uppercase">{globalQty}</span></>}
                                         </button>
                                     </div>
                                 </div>

@@ -2,15 +2,13 @@ import { auth } from "@/auth";
 import mongo from "@/lib/mongodb";
 import { ROLES } from "@/lib/constants";
 import { NextResponse } from "next/server";
-import { ObjectId } from "mongodb";
 
 export async function POST(req: Request) {
-
     const defaultPlanName = "Plan Gratuito";
 
     try {
         const session = await auth();
-        if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+        if (!session?.user?.email) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
         const { companyName } = await req.json();
         if (!companyName) return NextResponse.json({ message: "Nombre de empresa requerido" }, { status: 400 });
@@ -18,11 +16,10 @@ export async function POST(req: Request) {
         const client = await mongo;
         const db = client.db(process.env.MONGODB_DB);
 
-        // 1. Generate a unique Client Code (e.g., ABC-123)
+        // 1. Generate a unique Client Code
         const clientCode = Math.random().toString(36).substring(2, 5).toUpperCase() + "-" +
-            Math.random().toString(36).substring(2, 5).toUpperCase();
+                           Math.random().toString(36).substring(2, 5).toUpperCase();
 
-        //Find the plan in the db
         const defaultPlan = await db.collection("plans").findOne({ name: defaultPlanName });
         if (!defaultPlan) {
             return NextResponse.json({ message: "Plan predeterminado no encontrado" }, { status: 500 });
@@ -39,6 +36,7 @@ export async function POST(req: Request) {
 
         const clientId = newClient.insertedId;
 
+        // 3. Create default "General" Department
         const defaultDepartment = await db.collection('departments').insertOne({
             name: "General",
             description: "Departamento inicial predeterminado",
@@ -47,16 +45,25 @@ export async function POST(req: Request) {
         });
 
         const departmentId = defaultDepartment.insertedId;
-        // 3. Update the User to be the ADMIN of this client
+
+        // 4. MULTI-ORG UPDATE: Use $addToSet to add to the array, don't overwrite!
         await db.collection("users").updateOne(
             { email: session.user.email },
             {
+                // We keep role/clientId at top-level for backwards compatibility 
+                // but the "Source of Truth" is now the organizations array
                 $set: {
-                    role: ROLES.ADMIN,
-                    clientId: newClient.insertedId,
-                    clientCode: clientCode,
                     isActive: true,
-                    departments: [departmentId] // Assign the default department to the user
+                },
+                $addToSet: {
+                    organizations: {
+                        clientId: clientId,
+                        clientCode: clientCode,
+                        role: ROLES.ADMIN,
+                        status: "active",
+                        departments: [departmentId],
+                        joinedAt: new Date()
+                    }
                 }
             }
         );
@@ -64,9 +71,10 @@ export async function POST(req: Request) {
         return NextResponse.json({
             message: "Organización creada",
             clientCode,
-            role: ROLES.ADMIN
+            clientId: clientId.toString()
         });
     } catch (error) {
+        console.error("Creation Error:", error);
         return NextResponse.json({ message: "Error al crear organización" }, { status: 500 });
     }
 }
