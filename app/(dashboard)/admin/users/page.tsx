@@ -41,7 +41,12 @@ export default async function UserManagementPage() {
         clientId: user.clientId ? user.clientId.toString() : null,
         clientCode: user.clientCode ? user.clientCode.toString() : null,
         // If you have a departments array of ObjectIds, stringify those too
-        departments: user.departments?.map((d: any) => d.toString()) || []
+        departments: user.departments?.map((d: any) => d.toString()) || [],
+        organizations: user.organizations?.map((org: any) => ({
+            ...org,
+            clientId: org.clientId ? org.clientId.toString() : null,
+            departments: org.departments?.map((d: any) => d.toString()) || []
+        })) || []
     }));
 
 

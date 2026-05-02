@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { Search, Minus, Plus, Package, Loader2, RotateCcw, LayoutDashboard, Link, LogOut, MapPin } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import useSWR from "swr";
@@ -8,7 +8,11 @@ import useSWR from "swr";
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function RunnerInventoryClient({ initialItems, userRole }: { initialItems: any[]; userRole: string }) {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+    
+    console.log(userRole);
+    
+
     const [search, setSearch] = useState("");
     const [globalQty, setGlobalQty] = useState(1);
     const [processingId, setProcessingId] = useState<string | null>(null);

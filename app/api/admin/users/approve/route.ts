@@ -18,14 +18,14 @@ export async function POST(req: Request) {
     await db.collection('users').updateOne(
         { 
             _id: new ObjectId(userId),
-            clientId: new ObjectId(session.user.clientId) // Security: Ensure same client
+            "organizations.clientId": new ObjectId(session.user.clientId)
         },
         { 
             $set: { 
-                role: ROLES.USER, 
-                status: 'active',
-                departments: [new ObjectId(deptId)] // Assign to their first department
-            } 
+                "organizations.$.role": ROLES.USER, 
+                "organizations.$.status": 'active',
+                "organizations.$.departments": [new ObjectId(deptId)]
+            }
         }
     );
 

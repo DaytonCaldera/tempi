@@ -33,8 +33,6 @@ export default async function RunnerPage() {
             </div>
         );
     }
-
-    console.log(userDoc.departments);
     
     // 4. Fetch Inventory for all assigned departments
     const inventory = await db.collection("department_stock")
@@ -43,7 +41,6 @@ export default async function RunnerPage() {
         })
         .sort({ productName: 1 })
         .toArray();
-    console.log(inventory);
     
     // 5. Serialize data for Client Component
     const serializedItems = inventory.map(item => ({
@@ -67,7 +64,7 @@ export default async function RunnerPage() {
                     </div>
                 </div>
             </div>
-            <RunnerInventoryClient initialItems={serializedItems} userRole={userDoc.role} />
+            <RunnerInventoryClient initialItems={serializedItems} userRole={session.user.role} />
         </main>
     );
 }

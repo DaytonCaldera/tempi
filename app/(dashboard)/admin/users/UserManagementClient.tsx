@@ -5,13 +5,16 @@ import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatabl
 import { Modal } from "@/components/ui/Modal";
 import { UserCheck, Shield, MapPin, Edit3, Trash2, UserPlus, Ban } from "lucide-react";
 import { ROLES } from "@/lib/constants";
+import { useSession } from "next-auth/react";
 
 export default function UserManagementClient({ users: initialUsers, departments }: { users: any[], departments: any[] }) {
+    const { data: session } = useSession();
     const router = useRouter();
     const [users, setUsers] = useState(initialUsers);
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
     const [selectedRole, setSelectedRole] = useState<string>(ROLES.USER);
+    const [targetClientId, setTargetClientId] = useState<string>('');
     const [loading, setLoading] = useState(false);
 
     // Sync state with server props
@@ -24,6 +27,7 @@ export default function UserManagementClient({ users: initialUsers, departments 
         // Ensure we handle the array of strings correctly
         setSelectedDepts(user.departments || []);
         setSelectedRole(user.role || ROLES.USER);
+        setTargetClientId(user.targetClientId || '');
     };
 
     const handleConfirm = async () => {
@@ -36,7 +40,8 @@ export default function UserManagementClient({ users: initialUsers, departments 
                 userId: selectedUser._id,
                 isActive: true, // Approving or keeping active
                 role: newRole, // Update role if it was pending
-                departments: selectedDepts
+                departments: selectedDepts,
+                targetClientId: session?.user.role === ROLES.SUPERADMIN ? targetClientId : undefined // Only send if Superadmin
             }),
         });
 
@@ -190,7 +195,27 @@ export default function UserManagementClient({ users: initialUsers, departments 
                         <p className="text-sm font-bold text-black">{selectedUser?.name}</p>
                         <p className="text-xs text-gray-500">{selectedUser?.email}</p>
                     </div>
+                    {(session?.user.role === ROLES.SUPERADMIN) && (
+                        <div className="my-6 border-t border-gray-50">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">
+                                Seleccionar Cliente (Solo Superadmin)
+                            </p>
+                            <select
+                                value={targetClientId}
+                                onChange={(e) => setTargetClientId(e.target.value.toString())}
 
+                                className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-2 ring-blue-500 outline-none"
+                            >
+                                <option value="" disabled>Selecciona un cliente</option>
+                                {/* iterates through the selectedUser.organizations */}
+                                {selectedUser?.organizations?.map((org: any, index: number) => (
+                                    <option key={index} value={org.clientId}>
+                                        {org.clientName}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">
                             Tipo de Acceso (Rol)

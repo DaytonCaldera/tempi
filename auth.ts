@@ -4,6 +4,7 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
 import { getSuperAdminEmail, ROLES } from "./lib/constants"
 import mongo from "@/lib/mongodb";
+import { ObjectId } from "mongodb"
 
 
 const SUPERADMIN_EMAIL = getSuperAdminEmail(); // Get the super admin email from env or default
@@ -57,14 +58,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					);
 				}
 
+
 				if (user.email === SUPERADMIN_EMAIL) {
 					token.role = ROLES.SUPERADMIN;
-					token.clientId = session?.clientId || user.clientId || 'all';
+					token.clientId = session?.clientId?.toString() || user.clientId?.toString() || 'all';
 				} else {
-					// For regular users, we pick the first active org as default
-					const activeOrg = organizations[0];
-					token.role = activeOrg?.role || "new_user";
-					token.clientId = activeOrg?.clientId?.toString() || 'sup';
+					// FIX: Find the organization that matches the user's current "assigned" clientId
+					// We use .toString() to ensure we are comparing strings to strings
+					const currentId = user.clientId?.toString();
+					const activeOrg = organizations.find((org: any) =>
+						org.clientId.toString() === currentId && org.status === 'active'
+					);
+
+					// Fallback: If the user has active orgs but currentId didn't match, pick the first active one
+					const effectiveOrg = activeOrg || organizations.find((o: any) => o.status === 'active');
+
+					token.role = effectiveOrg?.role || "new_user";
+					// ALWAYS store as string in the token to avoid BSON Errors in the session
+					token.clientId = effectiveOrg?.clientId?.toString() || null;
 				}
 
 				const { getRolePermissions } = await import("./lib/permissions");
@@ -74,13 +85,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			// This is the "Real-Time" magic part,
 			if (trigger === "update" && session) {
 
-				if (session.role) token.role = session.role;
+				if (session.role) {
+					token.role = session.role; console.log(token, 'TOKEN UPDATE');
+				}
 				if (session.clientId) {
 
 
 					const clientData = await switchClient(session, token);
 					if (token.role === ROLES.SUPERADMIN) {
-						token.clientId = session.clientId === 'all' ? null : session.clientId; // Superadmin can switch to 'all' or specific client
+						token.clientId = session.clientId === 'all' ? null : new ObjectId(session.clientId); // Superadmin can switch to 'all' or specific client
 					} else {
 						token.clientId = clientData.clientId;
 						token.role = clientData.role;
@@ -122,25 +135,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
  * @returns A promise resolving to an object with the resolved clientId, role, and permissions for the selected organization.
  */
 async function switchClient(session: any, token: any) {
+    const resultToken = {
+        clientId: null,
+        role: null,
+        permissions: null,
+    };
 
+    const userDoc = await db.collection('users').findOne({ email: token.email });
+    const orgData = userDoc?.organizations?.find((o: any) => o.clientId.toString() === session.clientId);
 
-
-	const resultToken = {
-		clientId: null,
-		role: null,
-		permissions: null,
-	};
-
-	// Find the user's specific role for THIS specific organization
-	// This assumes your User doc has an 'organizations' array
-	const userDoc = await db.collection('users').findOne({ email: token.email });
-	const orgData = userDoc?.organizations?.find((o: any) => o.clientId.toString() === session.clientId);
-
-	if (orgData) {
-		resultToken.clientId = session.clientId;
-		resultToken.role = orgData.role;
-		const { getRolePermissions } = await import("./lib/permissions");
-		resultToken.permissions = await getRolePermissions(orgData.role);
-	}
-	return resultToken;
+    if (orgData) {
+        // Keep it as a string here!
+        resultToken.clientId = orgData.clientId.toString();
+        resultToken.role = orgData.role;
+        const { getRolePermissions } = await import("./lib/permissions");
+        resultToken.permissions = await getRolePermissions(orgData.role);
+    }
+    return resultToken;
 }

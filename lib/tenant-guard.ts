@@ -3,6 +3,8 @@ import { ROLES } from "./constants";
 
 export const getTenantQuery = (session: any) => {
     if (session?.user?.role === ROLES.SUPERADMIN) {
+        console.log(session.user.clientId);
+        
         // Si el superadmin eligió un cliente en el switcher, filtramos por ese.
         // Si no (clientId es 'all' o null), devolvemos {} para ver todo.
         if (session.user.clientId && session.user.clientId !== 'all' && session.user.clientId !== 'sup') {
