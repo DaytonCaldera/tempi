@@ -76,6 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					token.role = effectiveOrg?.role || "new_user";
 					// ALWAYS store as string in the token to avoid BSON Errors in the session
 					token.clientId = effectiveOrg?.clientId?.toString() || null;
+					token.organizations = organizations; // Store all orgs in the token for easy access in the app
 				}
 
 				const { getRolePermissions } = await import("./lib/permissions");
@@ -115,6 +116,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				session.user.clientCode = token.clientCode as string
 				session.user.isActive = token.isActive as boolean;
 				session.user.permissions = token.permissions as any;
+				session.user.organizations = token.organizations as any; // Ensure organizations is always defined
 			}
 			return session;
 		},

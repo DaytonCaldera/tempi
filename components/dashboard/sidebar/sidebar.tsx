@@ -4,9 +4,10 @@ import SidebarItem from "./items/sidebar_item";
 import styles from "./sidebar.module.css";
 import { useSession } from "next-auth/react";
 import { hasPermission } from "@/lib/hasPermissions";
-import { sectionPermissions } from "@/lib/constants";
+import { ROLES, sectionPermissions } from "@/lib/constants";
 import { sectionItemPermissions } from "@/lib/constants";
 import ClientSwitcher from "../ClientSwicher";
+import OrgSwitcher from "@/components/main/organizationSwitcher";
 
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
@@ -15,7 +16,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
     const pathname = usePathname();
 
     const isValidSection = (section: string) => {
-        if (section === "general") return true;     
+        if (section === "general") return true;
         return hasPermission(session, sectionPermissions[section]);
     };
 
@@ -45,7 +46,13 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 </div>
 
                 <ClientSwitcher className={` ${!isOpen ? 'opacity-0 hidden' : 'opacity-100 '} `}></ClientSwitcher>
-
+                {/* {
+                    (session?.user?.role !== ROLES.SUPERADMIN) &&
+                    <div className="px-4 mt-4 mb-8">
+                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Organización</p>
+                        <OrgSwitcher className={` ${!isOpen ? 'opacity-0 hidden' : 'opacity-100 '} `} userOrgs={session?.user?.organizations || []} /> 
+                    </div>
+                } */}
                 <nav className={`space-y-1 transition-opacity duration-200 ${!isOpen ? 'opacity-0 hidden' : 'opacity-100'}`}>
                     {Object.entries(sections).map(([section, items]) => (
                         <div key={section}>
