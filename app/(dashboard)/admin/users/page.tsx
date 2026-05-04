@@ -25,10 +25,24 @@ export default async function UserManagementPage() {
 
 
     // 3. Fetch Users
-    const usersRaw = await db.collection('users')
-        .find(query) // Filter by clientId to ensure they only see their own users
-        .project({ password: 0 })
-        .toArray();
+    const usersRaw = await db.collection('client_users').aggregate([
+        {
+            '$match': query
+        }, {
+            '$lookup': {
+                'from': 'users',
+                'localField': 'userId',
+                'foreignField': '_id',
+                'as': 'user'
+            }
+        }, {
+            '$unwind': '$user'
+        }, {
+            '$replaceRoot': {
+                'newRoot': '$user'
+            }
+        }
+    ]).toArray();
 
     const deptsRaw = await db.collection('departments')
         .find(query)
@@ -39,6 +53,7 @@ export default async function UserManagementPage() {
         ...user,
         _id: user._id.toString(), // Convert ObjectId to string
         clientId: user.clientId ? user.clientId.toString() : null,
+        activeOrganization: user.activeOrganization ? user.activeOrganization.toString() : null,
         clientCode: user.clientCode ? user.clientCode.toString() : null,
         // If you have a departments array of ObjectIds, stringify those too
         departments: user.departments?.map((d: any) => d.toString()) || [],

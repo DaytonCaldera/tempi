@@ -29,7 +29,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					clientCode: profile.clientCode ?? null,
 					isActive: profile.isActive ?? true, // Default to active for new users, they are gonna verify laternpm 
 					permissions: profile.permissions || {}, // You can also store permissions directly in the user document if needed
-					organizations: profile.organizations || [] // Array of orgs the user belongs to
+					organizations: profile.organizations || [], // Array of orgs the user belongs to
+					activeOrganization: profile.activeOrganization ?? null // The user's currently active organization
 				}
 			}
 		})
@@ -54,18 +55,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					// Update DB so this only happens once
 					await db.collection('users').updateOne(
 						{ email: user.email },
-						{ $set: { organizations: organizations } }
+						{ $set: { organizations: organizations, activeOrganization: user.clientId } }
 					);
 				}
+
+				
 
 
 				if (user.email === SUPERADMIN_EMAIL) {
 					token.role = ROLES.SUPERADMIN;
-					token.clientId = session?.clientId?.toString() || user.clientId?.toString() || 'all';
+					token.clientId = session?.activeOrganization?.toString() || user.activeOrganization?.toString() || 'all';
 				} else {
 					// FIX: Find the organization that matches the user's current "assigned" clientId
 					// We use .toString() to ensure we are comparing strings to strings
-					const currentId = user.clientId?.toString();
+					const currentId = user.activeOrganization?.toString() || organizations[0]?.clientId?.toString(); // Fallback to first org if activeOrganization is not set
 					const activeOrg = organizations.find((org: any) =>
 						org.clientId.toString() === currentId && org.status === 'active'
 					);
@@ -77,6 +80,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					// ALWAYS store as string in the token to avoid BSON Errors in the session
 					token.clientId = effectiveOrg?.clientId?.toString() || null;
 					token.organizations = organizations; // Store all orgs in the token for easy access in the app
+					console.log(token);
+					
 				}
 
 				const { getRolePermissions } = await import("./lib/permissions");
@@ -91,7 +96,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				}
 				if (session.clientId) {
 
-
 					const clientData = await switchClient(session, token);
 					if (token.role === ROLES.SUPERADMIN) {
 						token.clientId = session.clientId === 'all' ? null : new ObjectId(session.clientId); // Superadmin can switch to 'all' or specific client
@@ -100,8 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 						token.role = clientData.role;
 						token.permissions = clientData.permissions;
 					}
-
-
+					
 				}
 				if (session.clientCode) token.clientCode = session.clientCode;
 				if (session.isActive !== undefined) token.isActive = session.isActive;

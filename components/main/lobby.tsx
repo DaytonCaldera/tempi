@@ -6,7 +6,7 @@ export default function Lobby() {
             <div className="inline-block px-4 py-1.5 mb-6 text-sm font-medium tracking-wider uppercase border rounded-full border-purple-500/30 bg-purple-500/10 text-purple-400">
                 System v1.0 Ready
             </div>
-            <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 bg-linear-to-b from-white to-purple-400 bg-clip-text text-transparent">
                 TEMPI
             </h1>
             <p className="max-w-xl text-lg text-gray-400 mb-10 leading-relaxed">

@@ -1,6 +1,6 @@
 'use client';
 import { signOut, useSession } from "next-auth/react";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, LogOut, User, Bell } from "lucide-react";
 
 interface NavbarProps {
     isSidebarOpen: boolean;
@@ -11,50 +11,64 @@ export default function Navbar({ isSidebarOpen, onToggle }: NavbarProps) {
     const { data: session } = useSession();
 
     return (
-        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-6 md:px-10 z-30 shadow-sm">
-            {/* 1. LEFT SIDE: MOBILE TRIGGER */}
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-brand/5 flex items-center justify-between px-6 md:px-10 sticky top-0 z-40 transition-all">
+            
+            {/* 1. LEFT SIDE: MOBILE-ONLY TRIGGER */}
             <div className="flex items-center gap-4">
                 <button 
                     onClick={onToggle} 
-                    className="p-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-2xl hover:bg-gray-100 transition-all active:scale-95 group"
+                    className="md:hidden p-3 bg-surface text-brand border border-brand/10 rounded-2xl hover:bg-brand/5 transition-all active:scale-95 group"
                     aria-label="Toggle Sidebar"
                 >
-                    {isSidebarOpen ? (
-                        <X size={22} className="group-hover:rotate-90 transition-transform duration-300" />
-                    ) : (
-                        <Menu size={22} />
-                    )}
+                    <Menu size={22} className="group-hover:rotate-12 transition-transform" />
                 </button>
-              
+                
+                {/* Dynamic Title based on Sidebar State */}
+                <div className={`hidden md:block transition-all duration-500 ${isSidebarOpen ? 'ml-0' : 'ml-4'}`}>
+                     <p className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em]">Gestión de Operaciones</p>
+                </div>
             </div>
 
-            {/* 2. RIGHT SIDE: USER PROFILE & ACTIONS */}
-            <div className="flex items-center gap-6 ml-auto">
+            {/* 2. RIGHT SIDE: NOTIFICATIONS & PROFILE */}
+            <div className="flex items-center gap-3 ml-auto">
                 
-                {/* User Info - Now 14px (text-sm) with Subtle Blue */}
-                <div className="flex items-center gap-4 border-r border-gray-100 pr-6 hidden sm:flex">
-                    <div className="text-right">
-                        <p className="text-sm font-bold text-gray-900 leading-tight">
+                {/* Sublte Notification Bell */}
+                <button className="p-3 text-brand/40 hover:text-brand hover:bg-surface rounded-xl transition-all relative mr-2">
+                    <Bell size={20} />
+                    <span className="absolute top-3 right-3 w-2 h-2 bg-brand-accent rounded-full border-2 border-white"></span>
+                </button>
+
+                {/* Profile Section */}
+                <div className="flex items-center gap-4 pl-4 border-l border-brand/5">
+                    <div className="text-right hidden sm:block">
+                        <p className="text-sm font-black text-brand leading-tight">
                             {session?.user?.name || "Usuario"}
                         </p>
-                        {/* Subtle Blue Text */}
-                        <p className="text-[13px] font-bold text-blue-500/80 uppercase tracking-tight mt-0.5">
+                        <p className="text-[11px] font-black text-brand-accent uppercase tracking-wider mt-0.5">
                             {session?.user?.role || "Personal"}
                         </p>
                     </div>
-                    {/* Subtle Blue Avatar */}
-                    <div className="w-11 h-11 bg-blue-50/50 border border-blue-100/50 rounded-2xl flex items-center justify-center text-blue-400">
-                        <User size={22} strokeWidth={2} />
+
+                    {/* Avatar with Status Ring */}
+                    <div className="relative group cursor-pointer">
+                        <div className="w-11 h-11 bg-surface border border-brand/10 rounded-2xl flex items-center justify-center text-brand shadow-sm group-hover:shadow-md transition-all">
+                            {session?.user?.image ? (
+                                <img src={session.user.image} alt="Avatar" className="w-full h-full rounded-2xl object-cover" />
+                            ) : (
+                                <User size={22} strokeWidth={2.5} />
+                            )}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success border-2 border-white rounded-full"></div>
                     </div>
                 </div>
 
-                {/* Sign Out - Subtle Red Style */}
+                {/* Sign Out - Refined Danger Style */}
                 <button 
                     onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
-                    className="flex items-center gap-2 text-sm font-bold bg-red-50/40 text-red-500/80 px-5 py-2.5 rounded-2xl hover:bg-red-50 hover:text-red-600 transition-all active:scale-95 border border-red-100/30"
+                    className="ml-4 p-3 text-brand/40 hover:text-danger hover:bg-danger/5 rounded-2xl transition-all group"
+                    title="Cerrar Sesión"
                 >
-                    <span className="hidden lg:inline">Cerrar Sesión</span>
-                    <LogOut size={18} strokeWidth={2} />
+                    <LogOut size={20} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform" />
                 </button>
             </div>
         </header>

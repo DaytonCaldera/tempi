@@ -7,7 +7,7 @@ import useSWR from "swr";
 // 1. Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export default function RunnerInventoryClient({ initialItems, userRole }: { initialItems: any[]; userRole: string }) {
+export default function RunnerInventoryClient({ initialItems, userRole, permissions }: { initialItems: any[]; userRole: string; permissions: any }) {
     const { data: session, status } = useSession();
     
     console.log(userRole);
@@ -92,7 +92,7 @@ export default function RunnerInventoryClient({ initialItems, userRole }: { init
         <div className="max-w-md mx-auto p-5 space-y-6">
 
             <div className="flex items-center justify-between gap-4 px-2">
-                {(userRole === 'admin' || userRole === 'superadmin') && (
+                {((userRole === 'admin' || userRole === 'superadmin') || permissions.view_dashboard === true) && (
                     <a
                         href="/dashboard"
                         className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all"

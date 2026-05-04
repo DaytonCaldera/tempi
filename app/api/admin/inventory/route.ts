@@ -13,15 +13,18 @@ export async function GET(req: Request) {
 
         // 1. Get the user's assigned departments
         const userDoc = await db.collection("users").findOne({ email: session.user.email });
-        
-        if (!userDoc?.departments || userDoc.departments.length === 0) {
+
+        const userDepartments = userDoc?.organizations?.flatMap((org:any) => org.departments) || [];
+        const hasValidDepartments = userDepartments.length > 0;
+
+        if (!hasValidDepartments) {
             return NextResponse.json([]);
         }
 
         // 2. Fetch inventory only for those specific departments
         const inventory = await db.collection('department_stock')
-            .find({ 
-                departmentId: { $in: userDoc.departments } 
+            .find({
+                departmentId: { $in: userDepartments }
             })
             .sort({ productName: 1 })
             .toArray();

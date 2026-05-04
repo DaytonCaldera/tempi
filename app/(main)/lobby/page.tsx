@@ -11,7 +11,7 @@ export default function LobbyPage() {
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [companyName, setCompanyName] = useState("");
-    
+
     if (!session?.user) redirect("/");
 
     const handleJoin = async () => {
@@ -20,7 +20,12 @@ export default function LobbyPage() {
             method: 'POST',
             body: JSON.stringify({ code: joinCode })
         });
-        if (res.ok) window.location.reload();
+
+        if (res.ok) {
+            const json = await res.json();
+            await update({ clientId: json.clientId });
+            window.location.reload();
+        }
         else alert("Código inválido");
         setLoading(false);
     };
@@ -28,11 +33,11 @@ export default function LobbyPage() {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!companyName) return;
-        
+
         setLoading(true);
-        const res = await fetch('/api/auth/organization/create', { 
+        const res = await fetch('/api/auth/organization/create', {
             method: 'POST',
-            body: JSON.stringify({ companyName }) 
+            body: JSON.stringify({ companyName })
         });
 
         if (res.ok) {
@@ -59,7 +64,7 @@ export default function LobbyPage() {
 
     return (
         <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 relative">
-            
+
             <div className="absolute top-8 right-8">
                 <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center gap-2 px-5 py-2.5 bg-surface-card border border-brand/10 text-text-muted rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm hover:text-danger hover:border-danger/20 transition-all active:scale-95">
                     <LogOut size={16} /> Cerrar Sesión
@@ -99,12 +104,12 @@ export default function LobbyPage() {
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
                     <div className="absolute inset-0 bg-brand/40 backdrop-blur-md" onClick={() => !loading && setIsModalOpen(false)}></div>
-                    
-                    <form 
+
+                    <form
                         onSubmit={handleCreate}
                         className="relative w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl border border-brand/5"
                     >
-                        <button 
+                        <button
                             type="button"
                             onClick={() => setIsModalOpen(false)}
                             className="absolute top-6 right-6 text-text-muted hover:text-brand transition-colors"
@@ -122,7 +127,7 @@ export default function LobbyPage() {
                         <div className="space-y-6">
                             <div>
                                 <label className="text-[10px] font-black text-brand uppercase tracking-widest ml-1">Nombre de la Empresa</label>
-                                <input 
+                                <input
                                     autoFocus
                                     required
                                     value={companyName}
@@ -132,7 +137,7 @@ export default function LobbyPage() {
                                 />
                             </div>
 
-                            <button 
+                            <button
                                 type="submit"
                                 disabled={loading || !companyName}
                                 className="w-full bg-brand text-white font-bold py-4 rounded-2xl shadow-xl shadow-brand/20 hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"

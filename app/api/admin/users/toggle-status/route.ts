@@ -14,6 +14,7 @@ export async function PATCH(request: NextRequest) {
 
     try {
         const { userId, isActive, departments, role, targetClientId } = await request.json();
+        
 
         if (role === ROLES.SUPERADMIN && session.user.role !== ROLES.SUPERADMIN) {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 });
@@ -39,7 +40,8 @@ export async function PATCH(request: NextRequest) {
                     // Using the '$' operator to update the matched array element
                     "organizations.$.status": isActive ? 'active' : 'inactive',
                     "organizations.$.role": role,
-                    "organizations.$.departments": departments.map((id: string) => new ObjectId(id))
+                    "organizations.$.departments": departments.map((id: string) => new ObjectId(id)),
+                    activeOrganization: clientIdToUpdate
                 }
             }
         );

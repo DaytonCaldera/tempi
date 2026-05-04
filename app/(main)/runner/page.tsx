@@ -18,9 +18,16 @@ export default async function RunnerPage() {
     const userDoc = await db.collection("users").findOne({
         email: session.user.email
     });
+console.log(session.user.permissions);
 
     // 3. Handle users with no assignments
-    if (!userDoc?.departments || userDoc.departments.length === 0) {
+    const hasValidDepartments = userDoc?.organizations?.some((org:any) => 
+        org.departments && org.departments.length > 0
+    );
+
+    const userDepartments = userDoc?.organizations?.flatMap((org:any) => org.departments) || [];
+    
+    if (!hasValidDepartments) {
         return (
             <div className="h-screen flex flex-col items-center justify-center p-10 text-center bg-gray-50">
                 <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center text-gray-400 mb-6">
@@ -37,7 +44,7 @@ export default async function RunnerPage() {
     // 4. Fetch Inventory for all assigned departments
     const inventory = await db.collection("department_stock")
         .find({
-            departmentId: { $in: userDoc.departments }
+            departmentId: { $in: userDepartments }
         })
         .sort({ productName: 1 })
         .toArray();
@@ -59,12 +66,12 @@ export default async function RunnerPage() {
                     <div className="flex items-center gap-2 mt-2">
                         <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                            {userDoc.departments.length} Áreas asignadas
+                            {userDepartments.length} Áreas asignadas
                         </p>
                     </div>
                 </div>
             </div>
-            <RunnerInventoryClient initialItems={serializedItems} userRole={session.user.role} />
+            <RunnerInventoryClient initialItems={serializedItems} userRole={session.user.role} permissions={session.user.permissions} />
         </main>
     );
 }

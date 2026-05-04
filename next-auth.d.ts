@@ -5,6 +5,7 @@ declare module "next-auth" {
     role?: string // Add your custom field here
     clientId?: string
     clientCode?: string
+    activeOrganization?: string
     isActive?: boolean
     permissions?: Record<string, any> // Add permissions field to the User interface
     organizations?: Array<{
@@ -21,6 +22,7 @@ declare module "next-auth" {
       role: string
       clientId?: string
       clientCode?: string
+      activeOrganization?: string
       isActive?: boolean
       permissions?: Record<string, any>
       organizations?: Array<{
@@ -39,6 +41,7 @@ declare module "next-auth/jwt" {
     role?: string
     clientId?: string
     clientCode?: string
+    activeOrganization?: string
     isActive?: boolean
     permissions?: Record<string, any>
     organizations?: Array<{

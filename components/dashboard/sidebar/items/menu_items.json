@@ -1,52 +1,62 @@
 {
-    "general":[
+    "general": [
         {
             "href": "/",
-            "label": "Inicio"
+            "label": "Inicio",
+            "icon": "Home"
         },
         {
             "href": "/dashboard",
-            "label": "Dashboard"
+            "label": "Dashboard",
+            "icon": "LayoutDashboard"
         }
     ],
     "superadmin": [
         {
             "href": "/superdash",
-            "label": "Admin Dashboard"
+            "label": "Admin Dashboard",
+            "icon": "ShieldCheck"
         },
         {
             "href": "/superdash/accounts",
-            "label": "Cuentas"
+            "label": "Cuentas",
+            "icon": "Building"
         },
         {
             "href": "/superdash/users",
-            "label": "Usuarios"
+            "label": "Usuarios",
+            "icon": "UserCog"
         },
         {
             "href": "/superdash/tasks",
-            "label": "Tareas"
+            "label": "Tareas",
+            "icon": "ListChecks"
         }
     ],
     "admin": [
         {
             "href": "/admin/departments",
-            "label": "Departmentos",
+            "label": "Departamentos",
+            "icon": "Layers",
             "permission": "manage_departments"
         },
         {
             "href": "/admin/users",
             "label": "Personal",
+            "icon": "Users",
             "permission": "manage_users"
         },
         {
             "href": "/dashboard/tasks",
-            "label": "Tareas"
+            "label": "Tareas",
+            "icon": "CheckSquare"
         }
     ],
     "user": [
         {
             "href": "/dashboard/tasks",
-            "label": "Tareas"
+            "label": "Tareas",
+            "icon": "CheckSquare"
         }
     ]
 }

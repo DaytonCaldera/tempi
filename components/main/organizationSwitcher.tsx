@@ -29,10 +29,7 @@ export default function OrgSwitcher({ className, userOrgs }: { className?: strin
         
         // Refresh the page to clear any old state/queries
         window.location.reload();
-    };
-
-    console.log(userOrgs);
-    
+    };    
 
     return (
         <div className={`relative ${className}`}>
@@ -67,10 +64,9 @@ export default function OrgSwitcher({ className, userOrgs }: { className?: strin
                                     org.clientId === session?.user?.clientId ? 'bg-brand/5' : ''
                                 }`}
                             >
-                                <pre>{org}</pre>
                                 <div className={`w-2 h-2 rounded-full ${org.status === 'active' ? 'bg-success' : 'bg-status-danger'}`}></div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold text-brand">{org.clientId}</p>
+                                    <p className="text-sm font-bold text-brand">{org.clientName}</p>
                                     <p className="text-[10px] text-text-muted uppercase font-bold">{org.role}</p>
                                 </div>
                                 {org.clientId === session?.user?.clientId && (
