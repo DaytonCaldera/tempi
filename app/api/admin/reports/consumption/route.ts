@@ -23,7 +23,8 @@ export async function GET(req: Request) {
         $lte: new Date(end)
     };
     if (deptId) query.departmentId = new ObjectId(deptId);
-
+    console.log(query);
+    
     const report = await db.collection('stock_movements').aggregate([
         { $match: query },
         {

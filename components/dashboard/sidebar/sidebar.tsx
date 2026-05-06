@@ -36,7 +36,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
             <aside className={`
                 fixed inset-y-0 left-0 z-50 transition-all duration-500 ease-in-out
                 bg-brand text-white shadow-2xl flex flex-col
-                ${isOpen ? "w-72 translate-x-0" : "w-0 -translate-x-full md:w-20 md:translate-x-0"}
+                ${isOpen ? "w-72 translate-x-0" : "w-0 -translate-x-full md:w-20 md:translate-x-0 overflow-hidden md:overflow-visible"}
             `}>
                 
                 {/* LOGO AREA */}
@@ -62,7 +62,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 {/* ORGANIZATION SWITCHER AREA */}
                 <div className={`px-4 mb-6 transition-all duration-300 ${!isOpen ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
                     {session?.user?.role !== ROLES.SUPERADMIN && (
-                        <div className="bg-white/5 p-4 rounded-[2rem] border border-white/10 shadow-inner">
+                        <div className="bg-white/5 p-4 rounded-4xl border border-white/10 shadow-inner">
                             <div className="flex items-center gap-2 mb-3 px-1">
                                 <Building2 size={12} className="text-brand-accent" />
                                 <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Espacio de Trabajo</p>
@@ -73,7 +73,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 </div>
 
                 {/* NAVIGATION MENU */}
-                <nav className="flex-1 overflow-y-auto px-4 custom-scrollbar">
+                <nav className="flex-1 overflow-y-auto overflow-x-hidden px-4 custom-scrollbar">
                     {Object.entries(sections).map(([section, items]) => (
                         <div key={section} className="mb-8">
                             {isValidSection(section) && (
