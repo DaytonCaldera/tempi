@@ -12,7 +12,7 @@ export default function LobbyPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [companyName, setCompanyName] = useState("");
 
-    if (!session?.user) redirect("/");
+    // if (!session?.user) redirect("/");
 
     const handleJoin = async () => {
         setLoading(true);

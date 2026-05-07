@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         const newDept = {
             name,
             description,
-            clientId: cleanClientIdString,
+            clientId: new ObjectId(cleanClientIdString),
             createdAt: new Date(),
         };
         console.log(newDept);

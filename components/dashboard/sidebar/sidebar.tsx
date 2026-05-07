@@ -11,7 +11,7 @@ import { LayoutGrid, ChevronLeft, Building2 } from "lucide-react";
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
     const { data: session } = useSession();
-    const [organizations, setOrganizations] = useState(session?.user?.organizations || []);
+    const [organizations, setOrganizations] = useState<any[]>([]);
     const pathname = usePathname();
 
     const isValidSection = (section: string) => {
@@ -20,7 +20,13 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
     };
 
     useEffect(() => {
-        setOrganizations(session?.user?.organizations || []);
+        const userOrgs = session?.user?.organizations?.map((org: any) => ({
+            ...org,
+            clientId: org.clientId,
+            clientName: org.clientName || "Unnamed Org",
+            role: org.role
+        })) || [];
+        setOrganizations(userOrgs);
     }, [session?.user?.organizations]);
 
     return (

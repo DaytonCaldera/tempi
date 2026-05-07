@@ -18,14 +18,16 @@ export default async function RunnerPage() {
     const userDoc = await db.collection("users").findOne({
         email: session.user.email
     });
-console.log(session.user.permissions);
 
     // 3. Handle users with no assignments
     const hasValidDepartments = userDoc?.organizations?.some((org:any) => 
         org.departments && org.departments.length > 0
     );
 
-    const userDepartments = userDoc?.organizations?.flatMap((org:any) => org.departments) || [];
+    const userDepartments = userDoc?.organizations?.flatMap((org:any) => (org.clientId == session.user.clientId) ? org.departments : []) || [];
+
+    console.log("User Departments:", userDepartments);
+    
     
     if (!hasValidDepartments) {
         return (
@@ -48,6 +50,8 @@ console.log(session.user.permissions);
         })
         .sort({ productName: 1 })
         .toArray();
+
+    console.log("Fetched Inventory:", inventory);
     
     // 5. Serialize data for Client Component
     const serializedItems = inventory.map(item => ({
@@ -56,6 +60,8 @@ console.log(session.user.permissions);
         departmentId: item.departmentId.toString(),
         departmentName: item.departmentName
     }));
+
+    console.log("Serialized Items:", serializedItems);
 
     return (
         <main className="min-h-screen bg-gray-50 pb-20">

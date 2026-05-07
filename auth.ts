@@ -79,7 +79,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					token.role = effectiveOrg?.role || "new_user";
 					// ALWAYS store as string in the token to avoid BSON Errors in the session
 					token.clientId = effectiveOrg?.clientId?.toString() || null;
-					token.organizations = organizations; // Store all orgs in the token for easy access in the app
+					const orgs = organizations.map((org: any) => ({
+						...org,
+						clientId: org.clientId.toString() // Ensure all clientIds in organizations are strings
+					}));
+					token.organizations = orgs; // Store all orgs in the token for easy access in the app
 					console.log(token);
 					
 				}
