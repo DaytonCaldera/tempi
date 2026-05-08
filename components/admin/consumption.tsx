@@ -73,7 +73,7 @@ export default function ConsumptionReport({ deptId, title = "Reporte de Consumo"
                     <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-3 sm:px-4 sm:py-3 rounded-2xl border border-gray-100 flex-1 lg:flex-none">
 
                         {/* Start Date Wrapper */}
-                        <div className="flex items-center gap-3 min-w-[160px] flex-1 sm:flex-none">
+                        <div className="flex items-center gap-3 min-w-40 flex-1 sm:flex-none">
                             <Calendar size={18} className="text-gray-400 shrink-0" />
                             <input
                                 type="datetime-local"
@@ -88,7 +88,7 @@ export default function ConsumptionReport({ deptId, title = "Reporte de Consumo"
                         <span className="text-gray-300 font-black hidden lg:block shrink-0">→</span>
 
                         {/* End Date Wrapper */}
-                        <div className="flex items-center gap-3 min-w-[160px] flex-1 sm:flex-none  pt-3 mt-1 sm:border-t-0 sm:pt-0 sm:mt-0">
+                        <div className="flex items-center gap-3 min-w-40 flex-1 sm:flex-none  pt-3 mt-1 sm:border-t-0 sm:pt-0 sm:mt-0">
                             <Calendar size={18} className="text-gray-400 shrink-0 lg:hidden" />
                             <input
                                 type="datetime-local"
