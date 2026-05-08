@@ -52,15 +52,22 @@ export default function LobbyPage() {
     };
 
     const handleMaskCode = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const digits = e.target.value.replace(/\D/g, '');
-        const x = digits.match(/(\d{0,3})(\d{0,3})/);
+        // 1. Keep only alphanumeric characters (letters and numbers)
+        const chars = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+        // 2. Match two groups of up to 3 alphanumeric characters
+        // Using [A-Z0-9] in the match since we converted to UpperCase above
+        const x = chars.match(/([A-Z0-9]{0,3})([A-Z0-9]{0,3})/);
+
         if (x) {
-            e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2];
+            // 3. Format as XXX-XXX
+            e.target.value = !x[2] ? x[1] : `${x[1]}-${x[2]}`;
         } else {
             e.target.value = '';
         }
+
         setJoinCode(e.target.value);
-    }
+    };
 
     return (
         <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 relative">

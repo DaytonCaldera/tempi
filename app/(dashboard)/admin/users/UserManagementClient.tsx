@@ -1,13 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
 import { Modal } from "@/components/ui/Modal";
-import { UserCheck, Shield, MapPin, Edit3, Trash2, UserPlus, Ban } from "lucide-react";
+import { 
+    UserCheck, Shield, Edit3, UserPlus, Ban, Copy, Check 
+} from "lucide-react";
 import { ROLES } from "@/lib/constants";
 import { useSession } from "next-auth/react";
 
-export default function UserManagementClient({ users: initialUsers, departments }: { users: any[], departments: any[] }) {
+export default function UserManagementClient({ users: initialUsers, departments, client }: { users: any[], departments: any[], client: any }) {
     const { data: session } = useSession();
     const router = useRouter();
     const [users, setUsers] = useState(initialUsers);
@@ -16,32 +18,37 @@ export default function UserManagementClient({ users: initialUsers, departments 
     const [selectedRole, setSelectedRole] = useState<string>(ROLES.USER);
     const [targetClientId, setTargetClientId] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const [copied, setCopied] = useState(false);
 
-    // Sync state with server props
-    useEffect(() => {
-        setUsers(initialUsers);
-    }, [initialUsers]);
+    // Sync state
+    useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
+    console.log(client);
+    
+    const clientCode = client?.code || "N/A";
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(clientCode.replace('-', '')); // Remove spaces if any
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const openEditModal = (user: any) => {
         setSelectedUser(user);
-        // Ensure we handle the array of strings correctly
         setSelectedDepts(user.departments || []);
         setSelectedRole(user.role || ROLES.USER);
-        setTargetClientId(user.targetClientId || '');
+        setTargetClientId(user.clientId || '');
     };
 
     const handleConfirm = async () => {
         setLoading(true);
-        const newRole = selectedUser.role === ROLES.PENDING_USER ? ROLES.USER : selectedRole;
         const res = await fetch("/api/admin/users/toggle-status", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 userId: selectedUser._id,
-                isActive: true, // Approving or keeping active
-                role: newRole, // Update role if it was pending
+                role: selectedRole,
                 departments: selectedDepts,
-                targetClientId: session?.user.role === ROLES.SUPERADMIN ? targetClientId : undefined // Only send if Superadmin
+                isActive: true
             }),
         });
 
@@ -52,23 +59,6 @@ export default function UserManagementClient({ users: initialUsers, departments 
         setLoading(false);
     };
 
-    const handleApprove = async (userId: string) => {
-        // You would ideally show a Modal here to pick the Department
-        const res = await fetch('/api/admin/users/approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId,
-                deptId: departments[0]._id // Defaulting to the first dept for now
-            })
-        });
-
-        if (res.ok) {
-            // Refresh local state or router.refresh()
-            router.refresh();
-        }
-    };
-
     const tableHeaders = [
         { title: "Usuario" },
         { title: "Rol & Áreas" },
@@ -77,191 +67,140 @@ export default function UserManagementClient({ users: initialUsers, departments 
     ];
 
     return (
-        <>
-            <DataTable headers={tableHeaders}>
-                {users.map((user) => (
-                    <DataTableRow key={user._id}>
-                        {/* 1. USER IDENTITY */}
-                        <DataTableCell>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold border border-gray-200">
-                                    {user.name?.charAt(0) || "U"}
+        <div className="space-y-8">
+            {/* 1. TOP STATS & CODE CARD */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2 bg-white p-8 rounded-[2.5rem] border border-brand/5 shadow-sm flex flex-col justify-center">
+                    <p className="text-[10px] font-black text-brand/40 uppercase tracking-[0.3em] mb-2">Código de Invitación</p>
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-4xl font-black text-brand tracking-tighter">{clientCode}</h2>
+                        <button 
+                            onClick={copyToClipboard}
+                            className="p-3 bg-surface text-brand rounded-2xl hover:bg-brand/5 transition-all active:scale-95"
+                        >
+                            {copied ? <Check size={20} className="text-success" /> : <Copy size={20} />}
+                        </button>
+                    </div>
+                    <p className="mt-4 text-xs text-brand/50 font-medium italic">Comparte este código con tu equipo para que se unan a esta organización.</p>
+                </div>
+                
+                <div className="bg-brand p-8 rounded-[2.5rem] text-white flex flex-col justify-center shadow-xl shadow-brand/20">
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1">Total Personal</p>
+                    <p className="text-5xl font-black tracking-tighter">{users.length}</p>
+                    <div className="mt-4 flex items-center gap-2 text-brand-accent text-xs font-bold">
+                        <UserPlus size={14} />
+                        {users.filter(u => !u.isActive).length} pendientes de aprobación
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. THE TABLE */}
+            <div className="bg-white rounded-[2.5rem] border border-brand/5 shadow-sm overflow-hidden">
+                <DataTable headers={tableHeaders}>
+                    {users.map((user) => (
+                        <DataTableRow key={user._id}>
+                            <DataTableCell>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-surface flex items-center justify-center text-brand font-black border border-brand/5 text-lg">
+                                        {user.name?.charAt(0) || "U"}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-brand leading-tight">{user.name}</span>
+                                        <span className="text-[11px] text-brand/40 font-bold mt-0.5">{user.email}</span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-[#171717] leading-tight">{user.name}</span>
-                                    <span className="text-[10px] text-[#0070f3] font-bold mt-1 uppercase tracking-wider">
-                                        {user.clientCode}
+                            </DataTableCell>
+
+                            <DataTableCell>
+                                <div className="flex flex-col gap-2 min-w-50">
+                                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em]">
+                                        <Shield size={10} strokeWidth={3} />
+                                        {user.role}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {user.departments?.map((deptId: string) => {
+                                            const dept = departments.find(d => d._id === deptId);
+                                            return (
+                                                <span key={deptId} className="px-3 py-1 bg-surface text-brand border border-brand/5 rounded-lg text-[10px] font-bold">
+                                                    {dept?.name || 'Área'}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </DataTableCell>
+
+                            <DataTableCell>
+                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${user.isActive ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-success' : 'bg-warning'}`} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">
+                                        {user.isActive ? "Activo" : "Pendiente"}
                                     </span>
                                 </div>
-                            </div>
-                        </DataTableCell>
+                            </DataTableCell>
 
-                        {/* 2. ROLE & DEPARTMENTS */}
-                        <DataTableCell>
-                            <div className="flex flex-col gap-2 min-w-50">
-                                {/* Role label - Small and clean */}
-                                <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-gray-400">
-                                    <Shield size={10} strokeWidth={3} />
-                                    {user.role}
-                                </div>
-
-                                {/* Departments - Bigger and colorful */}
-                                <div className="flex flex-wrap gap-1.5">
-                                    {user.departments?.length > 0 ? (
-                                        <>
-                                            {user.departments.slice(0, 2).map((deptId: string) => {
-                                                const dept = departments.find(d => d._id === deptId);
-                                                console.log(departments, dept);
-
-                                                return (
-                                                    <span
-                                                        key={deptId}
-                                                        className="px-3 py-1 bg-blue-50 text-[#0070f3] border border-blue-100 rounded-lg text-[10px] font-bold whitespace-nowrap"
-                                                    >
-                                                        {dept?.name || 'Dept'}
-                                                    </span>
-                                                );
-                                            })}
-                                            {user.departments.length > 2 && (
-                                                <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold">
-                                                    +{user.departments.length - 2}
-                                                </span>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <span className="text-[10px] font-medium text-gray-300 italic">
-                                            Sin asignar
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </DataTableCell>
-
-                        {/* 3. STATUS BADGE */}
-                        <DataTableCell>
-                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full ${user.isActive ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
-                                }`}>
-                                <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-orange-500'}`} />
-                                <span className="text-[10px] font-bold uppercase tracking-wide">
-                                    {user.isActive ? "Activo" : "Pendiente"}
-                                </span>
-                            </div>
-                        </DataTableCell>
-
-                        {/* 4. ACTIONS (Department UI Style) */}
-                        <DataTableCell>
-                            <div className="flex items-center justify-end gap-1">
-                                {!user.isActive || (user.role === ROLES.PENDING_USER) ? (
-                                    <button
-                                        onClick={() => openEditModal(user)}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg text-[11px] font-bold hover:bg-green-700 transition-all shadow-sm"
-                                    >
-                                        <UserCheck size={14} />
-                                        APROBAR
-                                    </button>
-                                ) : (
-                                    <>
+                            <DataTableCell>
+                                <div className="flex items-center justify-end gap-2">
+                                    {!user.isActive ? (
                                         <button
                                             onClick={() => openEditModal(user)}
-                                            className="p-2 text-gray-400 hover:text-[#0070f3] hover:bg-blue-50 rounded-lg transition-all"
-                                            title="Editar Departamentos"
+                                            className="px-4 py-2 bg-brand-accent text-brand rounded-xl text-xs font-black hover:brightness-110 transition-all shadow-sm"
                                         >
-                                            <Edit3 size={18} />
+                                            APROBAR
                                         </button>
-                                        <button
-                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                            title="Desactivar Usuario"
-                                        >
-                                            
-                                            <Ban size={18} />
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </DataTableCell>
-                    </DataTableRow>
-                ))}
-            </DataTable>
+                                    ) : (
+                                        <>
+                                            <button onClick={() => openEditModal(user)} className="p-2.5 text-brand/20 hover:text-brand hover:bg-surface rounded-xl transition-all">
+                                                <Edit3 size={18} />
+                                            </button>
+                                            <button className="p-2.5 text-brand/20 hover:text-danger hover:bg-danger/5 rounded-xl transition-all">
+                                                <Ban size={18} />
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </DataTableCell>
+                        </DataTableRow>
+                    ))}
+                </DataTable>
+            </div>
 
-            {/* MODAL - Consistent with Department Style */}
-            <Modal
-                isOpen={!!selectedUser}
-                onClose={() => setSelectedUser(null)}
-                title={selectedUser?.isActive ? "Gestionar Usuario" : "Aprobar Usuario"}
-            >
-                <div className="space-y-6">
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Usuario seleccionado</p>
-                        <p className="text-sm font-bold text-black">{selectedUser?.name}</p>
-                        <p className="text-xs text-gray-500">{selectedUser?.email}</p>
-                    </div>
-                    {(session?.user.role === ROLES.SUPERADMIN) && (
-                        <div className="my-6 border-t border-gray-50">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">
-                                Seleccionar Cliente (Solo Superadmin)
-                            </p>
-                            <select
-                                value={targetClientId}
-                                onChange={(e) => setTargetClientId(e.target.value.toString())}
-
-                                className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-2 ring-blue-500 outline-none"
-                            >
-                                <option value="" disabled>Selecciona un cliente</option>
-                                {/* iterates through the selectedUser.organizations */}
-                                {selectedUser?.organizations?.map((org: any, index: number) => (
-                                    <option key={index} value={org.clientId}>
-                                        {org.clientName}
-                                    </option>
-                                ))}
-                            </select>
+            {/* 3. THE MODAL */}
+            <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="Configurar Usuario">
+                <div className="space-y-8 py-4">
+                    <div className="p-6 bg-surface rounded-[2rem] border border-brand/5 text-center">
+                        <div className="w-16 h-16 bg-brand text-white rounded-3xl flex items-center justify-center text-2xl font-black mx-auto mb-4">
+                            {selectedUser?.name?.charAt(0)}
                         </div>
-                    )}
-                    <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">
-                            Tipo de Acceso (Rol)
-                        </p>
-                        <select
-                            value={selectedRole}
+                        <p className="text-xl font-black text-brand tracking-tighter">{selectedUser?.name}</p>
+                        <p className="text-xs text-brand/40 font-bold uppercase tracking-widest">{selectedUser?.email}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em] ml-2">Rol de Acceso</label>
+                        <select 
+                            value={selectedRole} 
                             onChange={(e) => setSelectedRole(e.target.value)}
-                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-2 ring-blue-500 outline-none"
+                            className="w-full bg-surface border border-brand/5 rounded-2xl px-5 py-4 text-sm font-bold text-brand focus:ring-2 ring-brand-accent/20 outline-none appearance-none"
                         >
-                            {/* These would ideally come from the database, but we can list the slugs here */}
-                            <option value="user">Runner / Operativo</option>
-                            <option value="admin">Administrador (Acceso Total)</option>
-                            {/* We exclude Superadmin here so an Admin can't create another Superadmin */}
+                            <option value={ROLES.USER}>Runner / Operativo</option>
+                            <option value={ROLES.ADMIN}>Administrador</option>
                         </select>
                     </div>
-                    <div className="my-6 border-t border-gray-50" />
-                    <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">
-                            Asignación de Áreas
-                        </p>
 
-                        {/* 2-Column Grid for better readability */}
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em] ml-2">Asignación de Áreas</label>
                         <div className="grid grid-cols-2 gap-3">
                             {departments.map((dept) => {
                                 const isSelected = selectedDepts.includes(dept._id);
                                 return (
                                     <button
                                         key={dept._id}
-                                        type="button"
-                                        onClick={() => setSelectedDepts(prev =>
-                                            prev.includes(dept._id) ? prev.filter(id => id !== dept._id) : [...prev, dept._id]
-                                        )}
-                                        className={`flex items-center justify-between px-4 py-3 rounded-xl border text-xs font-bold transition-all ${isSelected
-                                            ? "bg-blue-50 border-[#0070f3] text-[#0070f3] shadow-sm"
-                                            : "bg-white border-gray-100 text-gray-500 hover:border-gray-300 shadow-sm"
-                                            }`}
+                                        onClick={() => setSelectedDepts(p => p.includes(dept._id) ? p.filter(id => id !== dept._id) : [...p, dept._id])}
+                                        className={`p-4 rounded-2xl border text-xs font-black transition-all text-left flex justify-between items-center ${isSelected ? 'bg-brand text-white border-brand shadow-lg' : 'bg-white text-brand/40 border-brand/5 hover:border-brand/20'}`}
                                     >
-                                        <span className="truncate mr-2">{dept.name}</span>
-
-                                        {/* Visual Checkmark for Selected State */}
-                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected
-                                            ? "bg-[#0070f3] border-[#0070f3]"
-                                            : "border-gray-200"
-                                            }`}>
-                                            {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                                        </div>
+                                        {dept.name}
+                                        {isSelected && <Check size={14} className="text-brand-accent" />}
                                     </button>
                                 );
                             })}
@@ -271,12 +210,12 @@ export default function UserManagementClient({ users: initialUsers, departments 
                     <button
                         onClick={handleConfirm}
                         disabled={loading || selectedDepts.length === 0}
-                        className="w-full bg-[#171717] text-white py-4 rounded-2xl font-bold disabled:opacity-50 transition-all hover:bg-black shadow-lg"
+                        className="w-full bg-brand text-brand-accent py-5 rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {loading ? "Procesando..." : selectedUser?.isActive ? "Actualizar" : "Confirmar y Activar"}
+                        {loading ? "Procesando..." : selectedUser?.isActive ? "Guardar Cambios" : "Activar Miembro"}
                     </button>
                 </div>
             </Modal>
-        </>
+        </div>
     );
 }

@@ -27,18 +27,41 @@ export async function PATCH(req: Request) {
 
         // 2. Security Check: Ensure runner belongs to this department
         const userDoc = await db.collection("users").findOne({ email: session.user.email });
-        if (!userDoc?.role || !allowedRoles.includes(userDoc.role)) {
+
+        const userOrgContext = userDoc?.organizations?.find(
+            (org: any) => org.clientId?.toString() === session.user.clientId
+        );
+
+        // 2. Extract the role from that specific organization
+        // Fallback to the root role only if necessary, or strictly use the org role
+        const effectiveRole = userOrgContext?.role;
+
+        // 3. Perform the authorization check
+        if (!effectiveRole || !allowedRoles.includes(effectiveRole)) {
             return NextResponse.json(
-                { error: "Tu cuenta aún no ha sido autorizada para realizar operaciones." },
+                { error: "Tu cuenta aún no ha sido autorizada para realizar operaciones en esta organización." },
                 { status: 403 }
             );
         }
 
-        // 2. Define the Permissions
-        const isManagement = userDoc.role === ROLES.SUPERADMIN || userDoc.role === ROLES.ADMIN;
-        const isFieldStaff = userDoc.role === ROLES.USER;
+        // if (!userDoc?.role || !allowedRoles.includes(userDoc.role)) {
+        //     return NextResponse.json(
+        //         { error: "Tu cuenta aún no ha sido autorizada para realizar operaciones." },
+        //         { status: 403 }
+        //     );
+        // }
 
-        const userDeptStrings = userDoc.departments?.map((id: any) => id.toString()) || [];
+        // 2. Define the Permissions
+        const isManagement = effectiveRole === ROLES.SUPERADMIN || effectiveRole === ROLES.ADMIN;
+        const isFieldStaff = effectiveRole === ROLES.USER;
+
+        // 1. Find the organization object that matches the current session
+        const currentOrg = userDoc?.organizations?.find(
+            (org: any) => org.clientId?.toString() === session.user.clientId
+        );
+
+        // 2. Extract and stringify only the departments belonging to that organization
+        const userDeptStrings = currentOrg?.departments?.map((id: any) => id.toString()) || [];
         const itemDeptString = currentItem.departmentId.toString();
 
         // 3. The Access Check
@@ -50,7 +73,7 @@ export async function PATCH(req: Request) {
         } else if (isFieldStaff && hasAssignment) {
             // Assigned Users can move their specific stock - carry on
         } else {
-            console.log(isManagement, isFieldStaff, hasAssignment, session.user.role, currentItem.departmentId.toString(), userDoc.departments);
+            console.log(isManagement, isFieldStaff, hasAssignment, session.user.role, currentItem.departmentId.toString(), userDoc?.departments);
 
             // If they are a USER but NOT assigned to this dept, or have no role at all:
             return NextResponse.json(
