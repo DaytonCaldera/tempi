@@ -89,7 +89,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                     <p className="text-5xl font-black tracking-tighter">{users.length}</p>
                     <div className="mt-4 flex items-center gap-2 text-brand-accent text-xs font-bold">
                         <UserPlus size={14} />
-                        {users.filter(u => !u.isActive).length} pendientes de aprobación
+                        {users.filter(u => !u.status).length} pendientes de aprobación
                     </div>
                 </div>
             </div>
@@ -113,7 +113,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
 
                             <DataTableCell>
                                 <div className="flex flex-col gap-2 min-w-50">
-                                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em]">
+                                    <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em]">
                                         <Shield size={10} strokeWidth={3} />
                                         {user.role}
                                     </div>
@@ -134,14 +134,14 @@ export default function UserManagementClient({ users: initialUsers, departments,
                                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${user.isActive ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
                                     <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-success' : 'bg-warning'}`} />
                                     <span className="text-[10px] font-black uppercase tracking-widest">
-                                        {user.isActive ? "Activo" : "Pendiente"}
+                                        {user.status ? "Activo" : "Pendiente"}
                                     </span>
                                 </div>
                             </DataTableCell>
 
                             <DataTableCell>
                                 <div className="flex items-center justify-end gap-2">
-                                    {!user.isActive ? (
+                                    {!user.status ? (
                                         <button
                                             onClick={() => openEditModal(user)}
                                             className="px-4 py-2 bg-brand-accent text-brand rounded-xl text-xs font-black hover:brightness-110 transition-all shadow-sm"

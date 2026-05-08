@@ -58,7 +58,8 @@ export default async function RunnerPage() {
         ...item,
         _id: item._id.toString(),
         departmentId: item.departmentId.toString(),
-        departmentName: item.departmentName
+        departmentName: item.departmentName,
+        clientId: item.clientId.toString(),
     }));
 
     console.log("Serialized Items:", serializedItems);

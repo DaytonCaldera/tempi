@@ -62,7 +62,7 @@ export default function DashboardLayout({
 
                                 {/* CONTENT AREA */}
                                 <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
-                                    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                    <div className="mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
                                         {children}
                                     </div>
                                 </main>

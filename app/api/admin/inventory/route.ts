@@ -33,7 +33,8 @@ export async function GET(req: Request) {
         return NextResponse.json(inventory.map(item => ({
             ...item,
             _id: item._id.toString(),
-            departmentId: item.departmentId.toString()
+            departmentId: item.departmentId.toString(),
+            clientId: item.clientId.toString(),
         })));
 
     } catch (error) {

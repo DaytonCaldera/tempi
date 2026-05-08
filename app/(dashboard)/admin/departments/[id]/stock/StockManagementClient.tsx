@@ -229,9 +229,9 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                         <button onClick={handleOpenModal} className="flex items-center gap-2 px-4 py-2 bg-[#171717] text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
                             <Plus size={16} /> AGREGAR PRODUCTO
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all">
-                            <History size={16} /> VER HISTORIAL
-                        </button>
+                        <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all">
+                            <History size={16} /> VER REPORTE
+                        </Link>
                     </div>
                 </div>
 

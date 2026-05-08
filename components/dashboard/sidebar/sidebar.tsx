@@ -66,7 +66,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 </div>
 
                 {/* ORGANIZATION SWITCHER AREA */}
-                <div className={`px-4 mb-6 transition-all duration-300 ${!isOpen ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+                <div className={`px-4 mb-6 transition-all duration-300 ${!isOpen ? 'opacity-0 scale-95 pointer-events-none w-0 h-0 p-0 m-0' : 'opacity-100 scale-100'}`}>
                     {session?.user?.role !== ROLES.SUPERADMIN && (
                         <div className="bg-white/5 p-4 rounded-4xl border border-white/10 shadow-inner">
                             <div className="flex items-center gap-2 mb-3 px-1">
