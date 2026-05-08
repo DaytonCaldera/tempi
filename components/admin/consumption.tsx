@@ -65,7 +65,7 @@ export default function ConsumptionReport({ deptId, title = "Reporte de Consumo"
     };
 
     return (
-        <div className="space-y-8 max-w-[1400px] mx-auto pb-20">
+        <div className="space-y-8 max-w-350 mx-auto pb-20">
             
             {/* 1. HEADER & FILTER HUB */}
             <div className="bg-white p-8 md:p-10 rounded-[3rem] border-2 border-brand/5 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-8">
@@ -206,7 +206,7 @@ function MovementDetailGrid({ details }: { details: any[] }) {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 {details.map((log: any) => (
                     // Border removed from nested cards
-                    <div key={log._id} className="flex items-center justify-between bg-white p-5 rounded-[1.5rem] shadow-sm hover:shadow-lg transition-all">
+                    <div key={log._id} className="flex items-center justify-between bg-white p-5 rounded-3xl shadow-sm hover:shadow-lg transition-all">
                         <div className="flex items-center gap-4">
                             {/* Jade text on brand navy background - high contrast */}
                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black bg-brand text-brand-accent`}>

@@ -168,7 +168,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
             {/* 3. THE MODAL */}
             <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="Configurar Usuario">
                 <div className="space-y-8 py-4">
-                    <div className="p-6 bg-surface rounded-[2rem] border border-brand/5 text-center">
+                    <div className="p-6 bg-surface rounded-4xl border border-brand/5 text-center">
                         <div className="w-16 h-16 bg-brand text-white rounded-3xl flex items-center justify-center text-2xl font-black mx-auto mb-4">
                             {selectedUser?.name?.charAt(0)}
                         </div>
@@ -210,9 +210,9 @@ export default function UserManagementClient({ users: initialUsers, departments,
                     <button
                         onClick={handleConfirm}
                         disabled={loading || selectedDepts.length === 0}
-                        className="w-full bg-brand text-brand-accent py-5 rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                        className="w-full bg-brand text-brand-accent py-5 rounded-4xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {loading ? "Procesando..." : selectedUser?.isActive ? "Guardar Cambios" : "Activar Miembro"}
+                        {loading ? "Procesando..." : selectedUser?.status ? "Guardar Cambios" : "Activar Miembro"}
                     </button>
                 </div>
             </Modal>
