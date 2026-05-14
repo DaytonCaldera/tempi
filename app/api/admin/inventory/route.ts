@@ -15,6 +15,8 @@ export async function GET(req: Request) {
         const userDoc = await db.collection("users").findOne({ email: session.user.email });
 
         const userDepartments = userDoc?.organizations?.flatMap((org:any) => (org.clientId == session.user.clientId) ? org.departments : []) || [];
+        console.log(userDoc?.organizations, session.user.clientId);
+        
         const hasValidDepartments = userDepartments.length > 0;
 
         if (!hasValidDepartments) {

@@ -1,0 +1,17 @@
+{
+    "common": {
+        "logout": "Salir",
+        "login": "Iniciar sesión",
+        "signup": "Registrarse",
+        "dashboard": "Panel de control",
+        "settings": "Configuración"
+    },
+    "runner": {
+        "title": "Monitoreo de inventario",
+        "assignedAreas": "Área(s) asignada(s)",
+        "quantityTitle": "Cantidad a mover",
+        "search": "Buscar producto...",
+        "department": "Departamento",
+        "reset": "Reiniciar a 1"
+    }
+}

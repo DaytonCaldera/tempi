@@ -64,7 +64,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 				if (user.email === SUPERADMIN_EMAIL) {
 					token.role = ROLES.SUPERADMIN;
-					token.clientId = session?.activeOrganization?.toString() || user.activeOrganization?.toString() || 'all';
+					token.clientId = session?.activeOrganization?.toString() || user.activeOrganization?.toString() || session.clientId?.toString() || null; // Superadmin can have a clientId for context switching, but it's optional
 				} else {
 					// FIX: Find the organization that matches the user's current "assigned" clientId
 					// We use .toString() to ensure we are comparing strings to strings

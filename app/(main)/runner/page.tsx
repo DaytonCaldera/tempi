@@ -4,9 +4,12 @@ import { redirect } from "next/navigation";
 import RunnerInventoryClient from "@/components/main/runner";
 import { LayoutDashboard, Link, LogOut } from "lucide-react";
 import { ROLES } from "@/lib/constants";
+import LanguageSwitcher from "@/components/lang/switcher";
+import { getTranslations } from "next-intl/server";
 
 export default async function RunnerPage() {
     const session = await auth();
+    const t =  await getTranslations('');
 
     // 1. Security Check
     if (!session?.user) redirect("/");
@@ -26,7 +29,6 @@ export default async function RunnerPage() {
 
     const userDepartments = userDoc?.organizations?.flatMap((org:any) => (org.clientId == session.user.clientId) ? org.departments : []) || [];
 
-    console.log("User Departments:", userDepartments);
     
     
     if (!hasValidDepartments) {
@@ -51,7 +53,6 @@ export default async function RunnerPage() {
         .sort({ productName: 1 })
         .toArray();
 
-    console.log("Fetched Inventory:", inventory);
     
     // 5. Serialize data for Client Component
     const serializedItems = inventory.map(item => ({
@@ -62,18 +63,17 @@ export default async function RunnerPage() {
         clientId: item.clientId.toString(),
     }));
 
-    console.log("Serialized Items:", serializedItems);
-
     return (
         <main className="min-h-screen bg-gray-50 pb-20">
+            <LanguageSwitcher />
             {/* Header Area */}
             <div className="bg-white px-6 pt-12 pb-8 rounded-b-[3rem] shadow-sm border-b border-gray-100">
                 <div className="max-w-md mx-auto">
-                    <h1 className="text-3xl font-black text-[#171717]">Monitoreo de inventario</h1>
+                    <h1 className="text-3xl font-black text-[#171717]">{t('runner.title')}</h1>
                     <div className="flex items-center gap-2 mt-2">
                         <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                            {userDepartments.length} Áreas asignadas
+                            {userDepartments.length} {t('runner.assignedAreas')}
                         </p>
                     </div>
                 </div>

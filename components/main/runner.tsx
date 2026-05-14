@@ -3,12 +3,14 @@ import React, { useState, useEffect, use } from "react";
 import { Search, Minus, Plus, Package, Loader2, RotateCcw, LayoutDashboard, Link, LogOut, MapPin } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import useSWR from "swr";
+import { useTranslations } from "next-intl";
 
 // 1. Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function RunnerInventoryClient({ initialItems, userRole, permissions }: { initialItems: any[]; userRole: string; permissions: any }) {
     const { data: session, status } = useSession();
+    const t = useTranslations('');
     
     console.log(userRole);
     
@@ -38,8 +40,6 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
     ) || [];
 
     const groupedItems = filteredItems.reduce((acc: any, item: any) => {
-        console.log(item.departmentName);
-
         const dept = item.departmentName || "General";
         if (!acc[dept]) acc[dept] = [];
         acc[dept].push(item);
@@ -97,7 +97,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
                         href="/dashboard"
                         className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all"
                     >
-                        <LayoutDashboard size={16} /> Dashboard
+                        <LayoutDashboard size={16} /> {t('common.dashboard')}
                     </a>
                 )}
 
@@ -105,7 +105,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-100 text-gray-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-all hover:text-red-500"
                 >
-                    <LogOut size={16} /> Salir
+                    <LogOut size={16} /> {t('common.logout')}  
                 </button>
             </div>
 
@@ -113,7 +113,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
             <div className="sticky top-4 z-30 bg-white p-5 rounded-[2.5rem] shadow-2xl border border-gray-100 ring-4 ring-gray-50/50">
                 <div className="flex flex-col items-center">
                     <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                        Cantidad a mover
+                        {t('runner.quantityTitle')}
                     </p>
 
                     <div className="flex items-center justify-between w-full gap-4">
@@ -146,7 +146,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
                         onClick={() => setGlobalQty(1)}
                         className="mt-4 flex items-center gap-2 text-[11px] font-black text-gray-300 uppercase hover:text-blue-500 transition-colors"
                     >
-                        <RotateCcw size={12} /> Resetear a 1
+                        <RotateCcw size={12} /> {t('runner.reset')}
                     </button>
                 </div>
             </div>
@@ -156,7 +156,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-800" size={20} />
                 <input
                     type="text"
-                    placeholder="Buscar producto..."
+                    placeholder={t('runner.search')}
                     className="w-full bg-white text-gray-800 p-6 pl-16 rounded-3xl text-lg font-bold shadow-sm border border-gray-100 outline-none focus:ring-2 ring-blue-100 transition-all"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}

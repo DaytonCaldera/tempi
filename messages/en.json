@@ -1,0 +1,17 @@
+{
+    "common": {
+        "logout": "Logout",
+        "login": "Login",
+        "signup": "Sign Up",
+        "dashboard": "Dashboard",
+        "settings": "Settings"
+    },
+    "runner": {
+        "title": "Inventory Monitoring",
+        "assignedAreas": "Assigned Area(s)",
+        "quantityTitle": "Quantity to Move",
+        "search": "Search product by name or code",
+        "department": "Department",
+        "reset": "Reset to 1"
+    }
+}

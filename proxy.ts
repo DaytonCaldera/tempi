@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 import { ROLES } from "./lib/constants"
+import createMiddleware from "next-intl/middleware";
 
 export default auth((req) => {
     // 1. Access the session via req.auth
@@ -63,6 +64,13 @@ export default auth((req) => {
     return NextResponse.next();
 })
 
+createMiddleware({
+  locales: ['es', 'en'],
+  defaultLocale: 'es',
+  // Esto es clave: oculta el prefijo de la URL siempre
+  localePrefix: 'never' 
+});
+
 export const config = {
     matcher: [
         '/dashboard/:path*',
@@ -70,3 +78,5 @@ export const config = {
         '/admin/:path*',
     ]
 }
+
+module.exports = { auth, createMiddleware, config}
