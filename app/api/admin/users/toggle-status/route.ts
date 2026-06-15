@@ -50,6 +50,9 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ message: "User or Organization not found" }, { status: 404 });
         }
 
+        console.log(result, role, clientIdToUpdate);
+        
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("PATCH_USER_ERROR:", error);

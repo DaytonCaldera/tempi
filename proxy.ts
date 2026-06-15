@@ -3,6 +3,13 @@ import { NextResponse } from "next/server"
 import { ROLES } from "./lib/constants"
 import createMiddleware from "next-intl/middleware";
 
+const i18nMiddleware = createMiddleware({
+  locales: ['es', 'en'],
+  defaultLocale: 'es',
+  // Esto es clave: oculta el prefijo de la URL siempre
+  localePrefix: 'never' 
+});
+
 export default auth((req) => {
     // 1. Access the session via req.auth
     const session = req.auth;
@@ -14,11 +21,19 @@ export default auth((req) => {
 
     ///api/auth/signin?callbackUrl=F%2
 
+    if (path.startsWith('/api') || path.includes('.')) {
+        return NextResponse.next();
+    }
+
+    const response = i18nMiddleware(req);
+    
+    if (path === '/unauthorized') return response;
+
     if (user && user.isActive === false) {
         return NextResponse.redirect(new URL('/unauthorized', req.url));
     }
 
-    const isLoggedIn = !!auth;
+    const isLoggedIn = !!isAuth;
     const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
 
     if (isAdminRoute && !isLoggedIn) {
@@ -30,23 +45,13 @@ export default auth((req) => {
         return Response.redirect(new URL("/unauthorized", req.nextUrl));
     }
 
-    // if (path.startsWith('/admin') && user?.role !== ROLES.SUPERADMIN) {
-    //     return NextResponse.redirect(new URL('/unauthorized', req.url))
-    // }
-
-    // Dashboard specific checks
-    // if (path.startsWith('/dashboard')) {
-    //     if (!user || [ROLES.NEW_USER, ROLES.PENDING_USER].includes(user.role)) {
-    //         return NextResponse.redirect(new URL('/unauthorized', req.url))
-    //     }
-    // }
-
     // Redirect authenticated users away from login page
     if (isAuthPage) {
         if (isAuth) {
             return NextResponse.redirect(new URL('/dashboard', req.url))
         }
-        return NextResponse.next();
+        return response;
+        
     }
 
     // Redirect unauthenticated users to login
@@ -61,22 +66,15 @@ export default auth((req) => {
         );
     }
 
-    return NextResponse.next();
+    return response;
 })
 
-createMiddleware({
-  locales: ['es', 'en'],
-  defaultLocale: 'es',
-  // Esto es clave: oculta el prefijo de la URL siempre
-  localePrefix: 'never' 
-});
+
 
 export const config = {
     matcher: [
-        '/dashboard/:path*',
-        '/profile/:path*',
-        '/admin/:path*',
+        // '/dashboard/:path*',
+        // '/profile/:path*',
+        // '/admin/:path*',
     ]
 }
-
-module.exports = { auth, createMiddleware, config}

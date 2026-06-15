@@ -1,18 +1,20 @@
 // app/(main)/lobby/page.tsx
 'use client';
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PlusCircle, Hash, Building2, ArrowRight, LogOut, X, Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import Pending from "@/components/main/pending";
+import { ROLES } from "@/lib/constants";
 
 export default function LobbyPage() {
-    const { data: session, update } = useSession();
+    const { data: session, update, status } = useSession();
     const [joinCode, setJoinCode] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [companyName, setCompanyName] = useState("");
 
-    // if (!session?.user) redirect("/");
+
 
     const handleJoin = async () => {
         setLoading(true);
@@ -24,7 +26,7 @@ export default function LobbyPage() {
         if (res.ok) {
             const json = await res.json();
             await update({ clientId: json.clientId });
-            window.location.reload();
+            window.location.href = "/";
         }
         else alert("Código inválido");
         setLoading(false);
@@ -69,7 +71,11 @@ export default function LobbyPage() {
         setJoinCode(e.target.value);
     };
 
-    return (
+
+    return status == "loading" ? (<div className="flex items-center justify-center min-h-screen p-6">
+      <p className="text-gray-500">Cargando...</p>
+    </div>) : (
+        
         <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 relative">
 
             <div className="absolute top-8 right-8">

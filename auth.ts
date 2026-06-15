@@ -64,13 +64,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 				if (user.email === SUPERADMIN_EMAIL) {
 					token.role = ROLES.SUPERADMIN;
-					token.clientId = session?.activeOrganization?.toString() || user.activeOrganization?.toString() || session.clientId?.toString() || null; // Superadmin can have a clientId for context switching, but it's optional
+					token.clientId = session?.activeOrganization?.toString() || user.activeOrganization?.toString() || null; // Superadmin can have a clientId for context switching, but it's optional
 				} else {
 					// FIX: Find the organization that matches the user's current "assigned" clientId
 					// We use .toString() to ensure we are comparing strings to strings
 					const currentId = user.activeOrganization?.toString() || organizations[0]?.clientId?.toString(); // Fallback to first org if activeOrganization is not set
 					const activeOrg = organizations.find((org: any) =>
-						org.clientId.toString() === currentId && org.status === 'active'
+						org.clientId?.toString() === currentId && org.status === 'active'
 					);
 
 					// Fallback: If the user has active orgs but currentId didn't match, pick the first active one
@@ -81,7 +81,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					token.clientId = effectiveOrg?.clientId?.toString() || null;
 					const orgs = organizations.map((org: any) => ({
 						...org,
-						clientId: org.clientId.toString() // Ensure all clientIds in organizations are strings
+						clientId: org.clientId?.toString() // Ensure all clientIds in organizations are strings
 					}));
 					token.organizations = orgs; // Store all orgs in the token for easy access in the app
 					console.log(token);
@@ -98,7 +98,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				if (session.role) {
 					token.role = session.role; console.log(token, 'TOKEN UPDATE');
 				}
-				if (session.clientId) {
+				if (session?.clientId) {
 
 					const clientData = await switchClient(session, token);
 					if (token.role === ROLES.SUPERADMIN) {

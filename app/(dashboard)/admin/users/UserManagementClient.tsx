@@ -183,7 +183,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                             onChange={(e) => setSelectedRole(e.target.value)}
                             className="w-full bg-surface border border-brand/5 rounded-2xl px-5 py-4 text-sm font-bold text-brand focus:ring-2 ring-brand-accent/20 outline-none appearance-none"
                         >
-                            <option value={ROLES.USER}>Runner / Operativo</option>
+                            <option value={ROLES.USER} defaultChecked>Runner / Operativo</option>
                             <option value={ROLES.ADMIN}>Administrador</option>
                         </select>
                     </div>
