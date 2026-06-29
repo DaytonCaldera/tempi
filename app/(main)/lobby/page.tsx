@@ -71,6 +71,12 @@ export default function LobbyPage() {
         setJoinCode(e.target.value);
     };
 
+    useEffect(() => {
+        if (status !== "loading") {
+            setLoading(false);
+        }
+    }, [status]);
+
 
     return status == "loading" ? (<div className="flex items-center justify-center min-h-screen p-6">
       <p className="text-gray-500">Cargando...</p>
@@ -92,8 +98,8 @@ export default function LobbyPage() {
                     </div>
                     <h2 className="text-2xl font-black text-brand mb-2">Unirse a un Equipo</h2>
                     <p className="text-text-muted mb-8 text-sm">Ingresa el código proporcionado por tu administrador.</p>
-                    <input value={joinCode} onChange={handleMaskCode} placeholder="000-000" className="w-full p-4 text-brand bg-surface border-2 border-transparent rounded-xl mb-4 outline-none focus:border-brand-accent transition-all font-mono text-lg tracking-widest" />
-                    <button onClick={handleJoin} disabled={!joinCode || loading} className="mt-auto w-full bg-brand-accent text-brand font-bold py-4 rounded-xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 group">
+                    <input id="joinCode" name="joinCode" value={joinCode} onChange={handleMaskCode} placeholder="000-000" className="w-full p-4 text-brand bg-surface border-2 border-transparent rounded-xl mb-4 outline-none focus:border-brand-accent transition-all font-mono text-lg tracking-widest" />
+                    <button onClick={handleJoin} disabled={!joinCode || joinCode.length < 7} className="mt-auto w-full bg-brand-accent text-brand font-bold py-4 rounded-xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 group">
                         Unirse <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
@@ -152,7 +158,7 @@ export default function LobbyPage() {
 
                             <button
                                 type="submit"
-                                disabled={loading || !companyName}
+                                disabled={!companyName || loading}
                                 className="w-full bg-brand text-white font-bold py-4 rounded-2xl shadow-xl shadow-brand/20 hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                             >
                                 {loading ? <Loader2 className="animate-spin" /> : "Confirmar y Crear"}
