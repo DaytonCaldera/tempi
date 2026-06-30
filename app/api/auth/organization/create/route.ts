@@ -59,6 +59,7 @@ export async function POST(req: Request) {
                     organizations: {
                         clientId: clientId,
                         clientCode: clientCode,
+                        clientName: companyName,
                         role: ROLES.ADMIN,
                         status: "active",
                         departments: [departmentId],
