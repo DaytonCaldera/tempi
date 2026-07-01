@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-    title: "Vitalliz | Gestión de Inventario",
+    title: "Tempi | Gestión de Inventario",
     description: "Sistema inteligente de logística y suministros",
 };
 

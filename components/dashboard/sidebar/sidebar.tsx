@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                             <LayoutGrid className="text-brand" size={20} />
                         </div>
                         <span className={`text-xl font-black tracking-tighter transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>
-                            VITALLIZ
+                            TEMPI
                         </span>
                     </div>
                     

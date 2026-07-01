@@ -7,7 +7,7 @@ export default function Lobby() {
                 System v1.2 Ready
             </div>
             <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 bg-linear-to-b from-white to-purple-400 bg-clip-text text-transparent">
-                VITALLIZ
+                TEMPI
             </h1>
             <p className="max-w-xl text-lg text-gray-400 mb-10 leading-relaxed">
                 The high-performance workspace for your next evolution.
