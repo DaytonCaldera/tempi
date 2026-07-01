@@ -25,7 +25,7 @@ export default async function DepartmentStockPage({ params }: { params: { id: st
         _id: item._id.toString(),
         productId: item._id.toString(),
         departmentId: item.departmentId.toString(),
-        clientId: item.clientId.toString(),
+        clientId: item.clientId,
     }));
 
     return (

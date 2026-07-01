@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Search, Plus, Minus, AlertTriangle, Package, History, ArrowLeft, Hash, Ruler, RefreshCw } from "lucide-react";
+import { Search, Plus, Minus, AlertTriangle, Package, History, ArrowLeft, Hash, Ruler, RefreshCw, Edit } from "lucide-react";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
 import Link from "next/link";
 import { Modal } from "@/components/ui/Modal";
@@ -60,6 +60,12 @@ export default function StockManagementClient({ initialInventory, departmentId, 
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // NEW: tracks whether the modal is being used to create or edit a product
+    const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+    // NEW: holds the _id of the item currently being edited
+    const [editingItemId, setEditingItemId] = useState<string | null>(null);
+
     const [formData, setFormData] = useState({
         name: "",
         sku: "",
@@ -76,11 +82,27 @@ export default function StockManagementClient({ initialInventory, departmentId, 
 
     const handleOpenModal = () => {
         const newSKU = generateSKU(departmentName);
+        setModalMode("add");
+        setEditingItemId(null);
         setFormData({
             ...formData,
             sku: newSKU,
             name: "",
             quantity: 0
+        });
+        setIsModalOpen(true);
+    };
+
+    // NEW: opens the same modal but pre-filled with the item's data, in edit mode
+    const handleOpenEditModal = (item: any) => {
+        setModalMode("edit");
+        setEditingItemId(item._id);
+        setFormData({
+            name: item.productName,
+            sku: item.sku,
+            unit: item.unit,
+            quantity: item.quantity,
+            minStock: item.minStock
         });
         setIsModalOpen(true);
     };
@@ -93,14 +115,27 @@ export default function StockManagementClient({ initialInventory, departmentId, 
 
         setIsSaving(true);
         try {
-            const res = await fetch(`/api/admin/departments/${departmentId}/stock`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
+            const isEditing = modalMode === "edit" && editingItemId;
+
+            const res = await fetch(
+                isEditing
+                    ? `/api/admin/departments/${departmentId}/stock/${editingItemId}`
+                    : `/api/admin/departments/${departmentId}/stock`,
+                {
+                    method: isEditing ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(
+                        isEditing
+                            ? { name: formData.name, sku: formData.sku, unit: formData.unit, minStock: formData.minStock }
+                            : formData
+                    )
+                }
+            );
 
             if (res.ok) {
                 setIsModalOpen(false);
+                setModalMode("add");
+                setEditingItemId(null);
                 setFormData({ name: "", sku: "", unit: "unidades", quantity: 0, minStock: 5 });
                 router.refresh();
             }
@@ -118,7 +153,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title="Registrar Nuevo Producto"
+                title={modalMode === "edit" ? "Editar Producto" : "Registrar Nuevo Producto"}
             >
                 <div className="space-y-5">
                     {/* PRODUCT NAME */}
@@ -140,7 +175,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                         {/* SKU */}
                         <div>
                             <label className="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block ml-1">
-                                SKU Autogenerado
+                                {modalMode === "edit" ? "SKU" : "SKU Autogenerado"}
                             </label>
                             <div className="relative flex items-center">
                                 <Hash className="absolute left-4 text-gray-300" size={16} />
@@ -150,14 +185,16 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                                     className="w-full bg-gray-100 border border-gray-100 rounded-xl py-3 pl-12 pr-12 text-sm font-mono font-bold text-[#0070f3] outline-none"
                                     value={formData.sku}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, sku: generateSKU(departmentName) })}
-                                    className="absolute right-3 p-1.5 text-gray-400 hover:text-[#0070f3] transition-colors"
-                                    title="Generar otro código"
-                                >
-                                    <RefreshCw size={14} />
-                                </button>
+                                {modalMode === "add" && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, sku: generateSKU(departmentName) })}
+                                        className="absolute right-3 p-1.5 text-gray-400 hover:text-[#0070f3] transition-colors"
+                                        title="Generar otro código"
+                                    >
+                                        <RefreshCw size={14} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -185,13 +222,19 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     <div className="grid grid-cols-2 gap-4">
                         {/* INITIAL STOCK */}
                         <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                            <label className="text-[10px] font-black text-[#0070f3] uppercase mb-1 block">Stock Inicial</label>
+                            <label className="text-[10px] font-black text-[#0070f3] uppercase mb-1 block">
+                                {modalMode === "edit" ? "Cantidad Actual" : "Stock Inicial"}
+                            </label>
                             <input
                                 type="number"
-                                className="w-full bg-transparent text-2xl font-black text-[#171717] outline-none"
+                                readOnly={modalMode === "edit"}
+                                className={`w-full bg-transparent text-2xl font-black text-[#171717] outline-none ${modalMode === "edit" ? "opacity-60 text-gray-400 cursor-not-allowed" : ""}`}
                                 value={formData.quantity}
-                                onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
+                                onChange={(e) => modalMode === "add" && setFormData({ ...formData, quantity: Number(e.target.value) })}
                             />
+                            {/* {modalMode === "edit" && (
+                                <p className="text-[9px] text-gray-400 font-bold mt-1">Usa los botones +/- para ajustar cantidad</p>
+                            )} */}
                         </div>
 
                         {/* MIN STOCK */}
@@ -211,7 +254,11 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                         disabled={isSaving}
                         className="w-full bg-[#171717] text-white py-4 rounded-2xl font-black hover:bg-black transition-all flex items-center justify-center gap-2 mt-4 shadow-xl shadow-gray-200"
                     >
-                        {isSaving ? "Guardando..." : "Registrar en Inventario"}
+                        {isSaving
+                            ? "Guardando..."
+                            : modalMode === "edit"
+                                ? "Guardar Cambios"
+                                : "Registrar en Inventario"}
                     </button>
                 </div>
             </Modal>
@@ -308,6 +355,12 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                                         className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 active:scale-90 transition-all"
                                     >
                                         <Plus size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleOpenEditModal(item)}
+                                        className="p-2 bg-gray-100 text-gray-400 rounded-lg hover:bg-gray-100 active:scale-90 transition-all ml-2"
+                                    >
+                                        <Edit size={16} className="text-gray-400 hover:text-[#0070f3] transition-colors " />
                                     </button>
                                 </div>
                             </DataTableCell>
