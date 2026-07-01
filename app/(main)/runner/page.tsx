@@ -53,6 +53,7 @@ export default async function RunnerPage() {
         .sort({ productName: 1 })
         .toArray();
 
+    // console.log(inventory); 
     
     // 5. Serialize data for Client Component
     const serializedItems = inventory.map(item => ({
@@ -60,9 +61,9 @@ export default async function RunnerPage() {
         _id: item._id.toString(),
         departmentId: item.departmentId.toString(),
         departmentName: item.departmentName,
-        clientId: item.clientId,
+        clientId: item.clientId?.toString() ?? null   
     }));
-
+    console.log("Serialized Items:", serializedItems.splice(0, 5)); // Log only the first 5 items for brevity
     return (
         <main className="min-h-screen bg-gray-50 pb-20">
             <LanguageSwitcher />
