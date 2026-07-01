@@ -60,7 +60,7 @@ export default async function RunnerPage() {
         _id: item._id.toString(),
         departmentId: item.departmentId.toString(),
         departmentName: item.departmentName,
-        clientId: item.clientId.toString(),
+        clientId: item.clientId,
     }));
 
     return (

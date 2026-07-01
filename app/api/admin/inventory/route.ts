@@ -15,7 +15,6 @@ export async function GET(req: Request) {
         const userDoc = await db.collection("users").findOne({ email: session.user.email });
 
         const userDepartments = userDoc?.organizations?.flatMap((org:any) => (org.clientId == session.user.clientId) ? org.departments : []) || [];
-        console.log(userDoc?.organizations, session.user.clientId);
         
         const hasValidDepartments = userDepartments.length > 0;
 
@@ -30,16 +29,16 @@ export async function GET(req: Request) {
             })
             .sort({ productName: 1 })
             .toArray();
-
+        
         // 3. Clean up the data for the frontend
         return NextResponse.json(inventory.map(item => ({
             ...item,
             _id: item._id.toString(),
             departmentId: item.departmentId.toString(),
-            clientId: item.clientId.toString(),
+            clientId: item.clientId,
         })));
 
-    } catch (error) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (errorr) {
+        return NextResponse.json({ error: "Internal Server Error: " + errorr }, { status: 500 });
     }
 }
