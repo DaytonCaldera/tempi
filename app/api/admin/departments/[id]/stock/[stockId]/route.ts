@@ -99,3 +99,80 @@ export async function PUT(
         return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
     }
 }
+
+
+/**
+ * DELETE handler - Soft-deletes a stock item (marks it inactive, does not remove from DB)
+ *
+ * @async
+ * @param {Request} req - The incoming request object
+ * @param {Object} params - Route parameters
+ * @param {Promise<{ id: string, stockId: string }>} params - Department ID (id) and inventory item ID (stockId)
+ * @returns {Promise<NextResponse>}
+ * - Success: `{ success: true }`
+ * - Unauthorized: `{ error: "No autorizado" }` with status 401
+ * - Not found / access denied: `{ error: "Producto no encontrado o acceso denegado" }` with status 404
+ * - Server error: `{ error: "Error interno del servidor" }` with status 500
+ *
+ * @requires Authentication session
+ *
+ * @description
+ * - Does not remove the document. Sets isDeleted: true / active: false plus audit fields
+ *   so historical stock_movements records tied to this item remain valid and reportable.
+ * - Quantity is left untouched regardless of its current value.
+ */
+export async function DELETE(
+    req: Request,
+    { params }: { params: Promise<{ id: string; stockId: string }> }
+) {
+    const session = await auth();
+
+    // 1. Security Check
+    if (!session) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    try {
+        const { id: departmentId, stockId } = await params;
+
+        const client = await mongo;
+        const db = client.db(process.env.MONGODB_DB);
+
+        const currentItem = await db.collection('department_stock').findOne({
+            _id: new ObjectId(stockId),
+            departmentId: new ObjectId(departmentId)
+        });
+
+        // ANCHOR: Verify item ownership via department (multi-tenancy)
+        const dept = await db.collection('departments').findOne({
+            _id: new ObjectId(departmentId),
+            clientId: new ObjectId(session.user.clientId)
+        });
+
+        if (!currentItem || !dept) {
+            return NextResponse.json({ error: "Producto no encontrado o acceso denegado" }, { status: 404 });
+        }
+
+        await db.collection('department_stock').updateOne(
+            { _id: new ObjectId(stockId) },
+            {
+                $set: {
+                    isDeleted: true,
+                    active: false,
+                    deletedAt: new Date(),
+                    deletedBy: {
+                        name: session.user?.name || "Usuario Desconocido",
+                        email: session.user?.email
+                    },
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        return NextResponse.json({ success: true });
+
+    } catch (error) {
+        console.error("DELETE Inventory Error:", error);
+        return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    }
+}

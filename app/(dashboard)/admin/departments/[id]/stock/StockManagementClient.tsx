@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Search, Plus, Minus, AlertTriangle, Package, History, ArrowLeft, Hash, Ruler, RefreshCw, Edit } from "lucide-react";
+import { Search, Plus, Minus, AlertTriangle, Package, History, ArrowLeft, Hash, Ruler, RefreshCw, Edit, Trash2 } from "lucide-react";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
 import Link from "next/link";
 import { Modal } from "@/components/ui/Modal";
@@ -147,6 +147,32 @@ export default function StockManagementClient({ initialInventory, departmentId, 
         }
     };
 
+    // NEW: delete confirmation state
+    const [deletingItem, setDeletingItem] = useState<any>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleConfirmDelete = async () => {
+        if (!deletingItem) return;
+        setIsDeleting(true);
+        try {
+            // Optimistic UI: remove immediately
+            const optimisticData = inventory.filter((i: any) => i._id !== deletingItem._id);
+            mutate(optimisticData, false);
+
+            await fetch(`/api/admin/departments/${departmentId}/stock/${deletingItem._id}`, {
+                method: "DELETE"
+            });
+
+            mutate();
+            setDeletingItem(null);
+        } catch (error) {
+            console.error("Error deleting stock item:", error);
+            mutate(); // resync in case of failure
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <>
             {/* THE MODAL */}
@@ -262,6 +288,37 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     </button>
                 </div>
             </Modal>
+
+            {/* DELETE CONFIRMATION MODAL */}
+            <Modal
+                isOpen={!!deletingItem}
+                onClose={() => setDeletingItem(null)}
+                title="Eliminar Producto"
+            >
+                <div className="space-y-5">
+                    <p className="text-sm text-gray-500">
+                        ¿Estás seguro que deseas eliminar{" "}
+                        <span className="font-bold text-[#171717]">{deletingItem?.productName}</span>
+                        {" "}({deletingItem?.sku})? Esta acción lo ocultará del inventario, pero se conservará su historial.
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setDeletingItem(null)}
+                            className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 rounded-2xl font-black hover:bg-gray-50 transition-all"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                            className="flex-1 bg-red-600 text-white py-3 rounded-2xl font-black hover:bg-red-700 transition-all"
+                        >
+                            {isDeleting ? "Eliminando..." : "Eliminar"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <div className="space-y-6">
                 {/* 1. TOP NAVIGATION & ACTION BAR */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -361,6 +418,12 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                                         className="p-2 bg-gray-100 text-gray-400 rounded-lg hover:bg-gray-100 active:scale-90 transition-all ml-2"
                                     >
                                         <Edit size={16} className="text-gray-400 hover:text-[#0070f3] transition-colors " />
+                                    </button>
+                                    <button
+                                        onClick={() => setDeletingItem(item)}
+                                        className="p-2 bg-gray-100 text-gray-400 rounded-lg hover:bg-red-50 active:scale-90 transition-all"
+                                    >
+                                        <Trash2 size={16} className="text-gray-400 hover:text-red-600 transition-colors" />
                                     </button>
                                 </div>
                             </DataTableCell>

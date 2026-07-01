@@ -64,7 +64,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     if (!department) return Response.json({ error: "Access denied" }, { status: 403 });
 
     const inventory = await db.collection('department_stock')
-        .find({ departmentId: new ObjectId(id) })
+        .find({
+            departmentId: new ObjectId(id),
+            isDeleted: { $ne: true } // NEW: hide soft-deleted items from the list
+        })
         .toArray();
 
     return Response.json(inventory.map(item => ({
@@ -73,5 +76,4 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         departmentId: item.departmentId.toString()
     })));
 }
-
 
