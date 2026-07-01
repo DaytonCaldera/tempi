@@ -1,6 +1,7 @@
 'use client';
 import { signOut, useSession } from "next-auth/react";
 import { Menu, LogOut, User, Bell } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface NavbarProps {
     isSidebarOpen: boolean;
@@ -9,6 +10,23 @@ interface NavbarProps {
 
 export default function Navbar({ isSidebarOpen, onToggle }: NavbarProps) {
     const { data: session } = useSession();
+    const [clientName, setClientName] = useState("");
+
+    useEffect(() => {
+        async function fetchClientName() {
+            if (!session?.user?.clientId) return;
+            try {
+                const res = await fetch("/api/admin/clients/name");
+                if (res.ok) {
+                    const data = await res.json();
+                    setClientName(data.name || "");
+                }
+            } catch (error) {
+                console.error("Error fetching client name:", error);
+            }
+        }
+        fetchClientName();
+    }, [session?.user?.clientId]);
 
     return (
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-brand/5 flex items-center justify-between px-6 md:px-10 sticky top-0 z-40 transition-all">
@@ -25,7 +43,7 @@ export default function Navbar({ isSidebarOpen, onToggle }: NavbarProps) {
                 
                 {/* Dynamic Title based on Sidebar State */}
                 <div className={`hidden md:block transition-all duration-500 ${isSidebarOpen ? 'ml-0' : 'ml-4'}`}>
-                     <p className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em]">Gestión de Operaciones</p>
+                     <p className="text-[16px] font-black text-gray-600 uppercase tracking-widest">{clientName}</p>
                 </div>
             </div>
 

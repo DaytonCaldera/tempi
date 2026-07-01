@@ -88,6 +88,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					
 				}
 
+				token.activeOrganization = session?.activeOrganization?.toString() || user.activeOrganization?.toString() || token.clientId; // Keep activeOrganization in sync with clientId
+
 				const { getRolePermissions } = await import("./lib/permissions");
 				token.permissions = await getRolePermissions(token.role as string);
 			}
@@ -112,6 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				}
 				if (session.clientCode) token.clientCode = session.clientCode;
 				if (session.isActive !== undefined) token.isActive = session.isActive;
+				if (session.organizations) token.organizations = session.organizations;
 			}
 			return token;
 		},
@@ -124,6 +127,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				session.user.isActive = token.isActive as boolean;
 				session.user.permissions = token.permissions as any;
 				session.user.organizations = token.organizations as any; // Ensure organizations is always defined
+				session.user.activeOrganization = token.clientId as string; // Keep activeOrganization in sync with clientId
 			}
 			return session;
 		},
