@@ -34,14 +34,14 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
             {/* MOBILE OVERLAY */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-brand/20 z-40 md:hidden backdrop-blur-sm transition-opacity"
+                    className="fixed inset-0 bg-brand/20 z-40 md:hidden backdrop-blur-sm transition-opacity print:hidden"
                     onClick={onToggle}
                 />
             )}
 
             <aside className={`
                 fixed inset-y-0 left-0 z-50 transition-all duration-500 ease-in-out
-                bg-brand text-white shadow-2xl flex flex-col
+                bg-brand text-white shadow-2xl flex flex-col print:hidden
                 ${isOpen ? "w-72 translate-x-0" : "w-0 -translate-x-full md:w-20 md:translate-x-0 overflow-hidden md:overflow-visible"}
             `}>
                 

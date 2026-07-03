@@ -29,7 +29,7 @@ export default function Navbar({ isSidebarOpen, onToggle }: NavbarProps) {
     }, [session?.user?.clientId]);
 
     return (
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-brand/5 flex items-center justify-between px-6 md:px-10 sticky top-0 z-40 transition-all">
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-brand/5 flex items-center justify-between px-6 md:px-10 sticky top-0 z-40 transition-all print:hidden">
             
             {/* 1. LEFT SIDE: MOBILE-ONLY TRIGGER */}
             <div className="flex items-center gap-4">
