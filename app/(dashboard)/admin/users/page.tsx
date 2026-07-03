@@ -27,7 +27,7 @@ export default async function UserManagementPage() {
 
     // 3. Fetch Users
     const usersRaw = await db.collection('users').find(userQuery).toArray();
-    console.log(usersRaw);
+    
 
     const deptsRaw = await db.collection('departments')
         .find(query)

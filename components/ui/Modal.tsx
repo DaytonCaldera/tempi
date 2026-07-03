@@ -1,10 +1,11 @@
 "use client";
 
-export function Modal({ isOpen, onClose, title, children }: { 
+export function Modal({ isOpen, onClose, title, children, footer }: { 
     isOpen: boolean; 
     onClose: () => void; 
     title: string; 
-    children: React.ReactNode 
+    children: React.ReactNode;
+    footer?: React.ReactNode;
 }) {
     if (!isOpen) return null;
 
@@ -14,14 +15,19 @@ export function Modal({ isOpen, onClose, title, children }: {
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
             
             {/* Modal Content */}
-            <div className="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+            <div className="relative bg-white w-full max-w-md max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
                     <h3 className="text-lg font-bold text-[#171717]">{title}</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
                 </div>
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto">
                     {children}
                 </div>
+                {footer && (
+                    <div className="p-6 border-t border-gray-100 shrink-0 bg-white">
+                        {footer}
+                    </div>
+                )}
             </div>
         </div>
     );

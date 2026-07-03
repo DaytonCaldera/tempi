@@ -3,8 +3,8 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
 import { Modal } from "@/components/ui/Modal";
-import { 
-    UserCheck, Shield, Edit3, UserPlus, Ban, Copy, Check 
+import {
+    UserCheck, Shield, Edit3, UserPlus, Ban, Copy, Check
 } from "lucide-react";
 import { ROLES } from "@/lib/constants";
 import { useSession } from "next-auth/react";
@@ -23,7 +23,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
     // Sync state
     useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
     console.log(client);
-    
+
     const clientCode = client?.code || "N/A";
 
     const copyToClipboard = () => {
@@ -74,7 +74,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                     <p className="text-[10px] font-black text-brand/40 uppercase tracking-[0.3em] mb-2">Código de Invitación</p>
                     <div className="flex items-center gap-4">
                         <h2 className="text-4xl font-black text-brand tracking-tighter">{clientCode}</h2>
-                        <button 
+                        <button
                             onClick={copyToClipboard}
                             className="p-3 bg-surface text-brand rounded-2xl hover:bg-brand/5 transition-all active:scale-95"
                         >
@@ -83,7 +83,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                     </div>
                     <p className="mt-4 text-xs text-brand/50 font-medium italic">Comparte este código con tu equipo para que se unan a esta organización.</p>
                 </div>
-                
+
                 <div className="bg-brand p-8 rounded-[2.5rem] text-white flex flex-col justify-center shadow-xl shadow-brand/20">
                     <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1">Total Personal</p>
                     <p className="text-5xl font-black tracking-tighter">{users.length}</p>
@@ -166,7 +166,17 @@ export default function UserManagementClient({ users: initialUsers, departments,
             </div>
 
             {/* 3. THE MODAL */}
-            <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="Configurar Usuario">
+            <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="Configurar Usuario"
+                footer={
+                    <button
+                        onClick={handleConfirm}
+                        disabled={loading || selectedDepts.length === 0}
+                        className="w-full bg-brand text-brand-accent py-5 rounded-4xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                    >
+                        {loading ? "Procesando..." : selectedUser?.status ? "Guardar Cambios" : "Activar Miembro"}
+                    </button>
+                }
+            >
                 <div className="space-y-8 py-4">
                     <div className="p-6 bg-surface rounded-4xl border border-brand/5 text-center">
                         <div className="w-16 h-16 bg-brand text-white rounded-3xl flex items-center justify-center text-2xl font-black mx-auto mb-4">
@@ -178,8 +188,8 @@ export default function UserManagementClient({ users: initialUsers, departments,
 
                     <div className="space-y-4">
                         <label className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em] ml-2">Rol de Acceso</label>
-                        <select 
-                            value={selectedRole} 
+                        <select
+                            value={selectedRole}
                             onChange={(e) => setSelectedRole(e.target.value)}
                             className="w-full bg-surface border border-brand/5 rounded-2xl px-5 py-4 text-sm font-bold text-brand focus:ring-2 ring-brand-accent/20 outline-none appearance-none"
                         >
@@ -207,13 +217,13 @@ export default function UserManagementClient({ users: initialUsers, departments,
                         </div>
                     </div>
 
-                    <button
+                    {/* <button
                         onClick={handleConfirm}
                         disabled={loading || selectedDepts.length === 0}
                         className="w-full bg-brand text-brand-accent py-5 rounded-4xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
                         {loading ? "Procesando..." : selectedUser?.status ? "Guardar Cambios" : "Activar Miembro"}
-                    </button>
+                    </button> */}
                 </div>
             </Modal>
         </div>
