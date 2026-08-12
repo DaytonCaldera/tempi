@@ -8,7 +8,9 @@ export async function GET(req: Request) {
     const start = searchParams.get('start');
     const end = searchParams.get('end');
 
-    if (!inventoryId || !start || !end) return NextResponse.json({ error: "Missing params" }, { status: 400 });
+    if (!inventoryId || !start || !end) {
+        return NextResponse.json({ error: "Missing params" }, { status: 400 });
+    }
 
     const client = await mongo;
     const db = client.db(process.env.MONGODB_DB);
@@ -16,9 +18,11 @@ export async function GET(req: Request) {
     const logs = await db.collection('stock_movements')
         .find({
             inventoryId: new ObjectId(inventoryId),
-            createdAt: { $gte: new Date(start), $lte: new Date(end) }
+            createdAt: { $gte: new Date(start), $lte: new Date(end) },
+            // Ocultamos permanentemente los movimientos de sincronización
+            reason: { $ne: "Sincronización inicial del sistema" }
         })
-        .sort({ createdAt: -1 }) // Newest first
+        .sort({ createdAt: -1 }) // Los más nuevos primero
         .toArray();
 
     return NextResponse.json(logs);
