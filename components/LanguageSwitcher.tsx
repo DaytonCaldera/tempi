@@ -1,19 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useLocale } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { ChevronUp, Globe } from 'lucide-react';
-import { LOCALE_COOKIE, localeNames, locales, type Locale } from '@/i18n/config';
-
-/** Stores the locale in the cookie that i18n/request.ts reads (valid for a year). */
-function saveLocale(locale: Locale) {
-  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
-}
+import { localeNames, locales, type Locale } from '@/i18n/config';
+import { useLocaleSwitcher } from '@/i18n/useLocaleSwitcher';
 
 export default function LanguageSwitcher() {
-  const locale = useLocale();
-  const router = useRouter();
+  const { locale, switchLocale } = useLocaleSwitcher();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -29,12 +22,7 @@ export default function LanguageSwitcher() {
   }, []);
 
   const toggleLanguage = (newLocale: Locale) => {
-    if (newLocale === locale) {
-      setIsOpen(false);
-      return;
-    }
-    saveLocale(newLocale);
-    router.refresh();
+    switchLocale(newLocale);
     setIsOpen(false);
   };
 

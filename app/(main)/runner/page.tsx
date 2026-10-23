@@ -4,7 +4,6 @@ import { auth } from "@/auth";
 import { getDb } from "@/lib/api";
 import { assignedDepartmentIds } from "@/lib/departments";
 import RunnerInventory from "@/components/main/RunnerInventory";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import type { StockItem } from "@/types/models";
 
 async function NoAssignedAreas() {
@@ -27,7 +26,6 @@ export default async function RunnerPage() {
     const session = await auth();
     if (!session?.user) redirect("/");
 
-    const t = await getTranslations('runner');
     const db = await getDb();
 
     const departmentIds = assignedDepartmentIds(session);
@@ -39,19 +37,7 @@ export default async function RunnerPage() {
         .toArray();
 
     return (
-        <main className="min-h-screen bg-gray-50 pb-20">
-            <LanguageSwitcher />
-            <div className="bg-white px-6 pt-12 pb-8 rounded-b-[3rem] shadow-sm border-b border-gray-100">
-                <div className="max-w-md mx-auto">
-                    <h1 className="text-3xl font-black text-[#171717]">{t('title')}</h1>
-                    <div className="flex items-center gap-2 mt-2">
-                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                            {t('assignedAreas', { count: departmentIds.length })}
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <main className="min-h-screen bg-gray-50">
             <RunnerInventory
                 initialItems={inventory.map(item => ({
                     ...item,
@@ -59,6 +45,7 @@ export default async function RunnerPage() {
                     departmentId: item.departmentId.toString(),
                     clientId: item.clientId?.toString(),
                 }))}
+                assignedAreaCount={departmentIds.length}
                 userRole={session.user.role}
                 permissions={session.user.permissions ?? {}}
             />

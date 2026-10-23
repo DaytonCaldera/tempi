@@ -1,18 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Search, Minus, Plus, Loader2, RotateCcw, LayoutDashboard, LogOut, MapPin, X, AlertCircle, Undo2 } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { useDeferredValue, useEffect, useState } from "react";
+import { MapPin, X, AlertCircle, Undo2 } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { useTranslations } from "next-intl";
 import { fetcher, STOCK_REFRESH_INTERVAL } from "@/lib/fetcher";
 import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
-import { labelOf } from "@/i18n/labels";
+import RunnerHeader from "@/components/main/runner/RunnerHeader";
+import QuantityToolbar from "@/components/main/runner/QuantityToolbar";
+import StockRow from "@/components/main/runner/StockRow";
 import type { MovementType, StockItem } from "@/types/models";
 
 type Item = StockItem<string>;
 
 interface RunnerInventoryProps {
     initialItems: Item[];
+    assignedAreaCount: number;
     userRole: string;
     permissions: Record<string, boolean>;
 }
@@ -28,12 +30,15 @@ const INVENTORY_KEY = '/api/admin/inventory';
 /** How long the toast (and its Undo button) stays on screen. */
 const TOAST_DURATION = 5000;
 
-/** Groups items by department, for the department separators. */
+/** Groups items by department, for the area chips and the department separators. */
 const groupByDepartment = (items: Item[], fallbackName: string) =>
-    Object.values(items.reduce<Record<string, { name: string; items: Item[] }>>((groups, item) => {
+    Object.entries(items.reduce<Record<string, { name: string; items: Item[] }>>((groups, item) => {
         (groups[item.departmentId] ||= { name: item.departmentName || fallbackName, items: [] }).items.push(item);
         return groups;
-    }, {}));
+    }, {})).map(([id, group]) => ({ id, ...group }));
+
+/** Lowercase without accents, so "cafe" finds "Café" (product names are mostly Spanish). */
+const normalizeText = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
 const setQuantity = (items: Item[] = [], id: string, quantity: (current: number) => number) =>
     items.map(item => item._id !== id ? item : { ...item, quantity: quantity(item.quantity) });
@@ -52,21 +57,23 @@ async function sendMove(id: string, type: MovementType, amount: number, reason: 
     return body;
 }
 
-export default function RunnerInventory({ initialItems, userRole, permissions }: RunnerInventoryProps) {
+export default function RunnerInventory({ initialItems, assignedAreaCount, userRole, permissions }: RunnerInventoryProps) {
     const t = useTranslations('runner');
     const tCommon = useTranslations('common');
-    const tUnits = useTranslations('units');
 
     const [search, setSearch] = useState("");
     const [globalQty, setGlobalQty] = useState(1);
+    const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
     const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(new Set());
     const [toast, setToast] = useState<Toast | null>(null);
+    const [lastUpdated, setLastUpdated] = useState(() => Date.now());
 
     // Polls so every runner sees stock changes made by others
-    const { data: items = [], mutate } = useSWR<Item[]>(INVENTORY_KEY, fetcher, {
+    const { data: items = [], mutate, isValidating, error } = useSWR<Item[]>(INVENTORY_KEY, fetcher, {
         fallbackData: initialItems,
         refreshInterval: STOCK_REFRESH_INTERVAL,
         revalidateOnFocus: true,
+        onSuccess: () => setLastUpdated(Date.now()),
     });
 
     // The bound mutate can't take a mutation that resolves to something other than the list (the move result)
@@ -79,10 +86,15 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
         return () => clearTimeout(timer);
     }, [toast]);
 
-    const searchTerm = search.toLowerCase();
+    const allDepartments = groupByDepartment(items, tCommon('general'));
+    // A filter for an area that no longer has stock shows everything
+    const activeDepartment = allDepartments.some(d => d.id === departmentFilter) ? departmentFilter : null;
+
+    // Filtering waits for typing to settle, so keystrokes stay responsive on long lists
+    const searchTerm = normalizeText(useDeferredValue(search).trim());
     const filteredItems = items.filter(item =>
-        item.productName.toLowerCase().includes(searchTerm) ||
-        item.sku.toLowerCase().includes(searchTerm)
+        (!activeDepartment || item.departmentId === activeDepartment) &&
+        [item.productName, item.sku, item.departmentName].some(text => normalizeText(text || '').includes(searchTerm))
     );
     const departments = groupByDepartment(filteredItems, tCommon('general'));
     const canOpenDashboard = userRole === ROLES.ADMIN || userRole === ROLES.SUPERADMIN || permissions.view_dashboard === true;
@@ -107,6 +119,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
             });
             return true;
         } catch (error) {
+            navigator.vibrate?.([40, 60, 40]);
             setToast({ kind: 'error', message: (error as Error).message || t('moveFailed') });
             mutate(); // Someone else may have changed the stock: show the real quantity
             return false;
@@ -120,6 +133,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
         if (amount < 1) return;
         const reason = type === 'OUT' ? MOVEMENT_REASONS.RUNNER_CONSUMPTION : MOVEMENT_REASONS.RESTOCK;
         if (await moveStock(item._id, type, amount, reason)) {
+            navigator.vibrate?.(15); // A short buzz confirms the tap without looking (ignored where unsupported)
             setToast({ kind: 'moved', item, type, amount });
         }
     };
@@ -131,132 +145,60 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
         }
     };
 
-    return (
-        <div className="max-w-md mx-auto p-5 space-y-6">
+    const chipClass = (selected: boolean) =>
+        `shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border transition-all active:scale-95 ${selected ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500'}`;
 
-            <div className="flex items-center justify-between gap-4 px-2">
-                {canOpenDashboard && (
-                    <a
-                        href="/dashboard"
-                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all"
-                    >
-                        <LayoutDashboard size={16} /> {tCommon('dashboard')}
-                    </a>
+    return (
+        <>
+            <RunnerHeader
+                assignedAreaCount={assignedAreaCount}
+                canOpenDashboard={canOpenDashboard}
+                sync={{ isValidating, hasError: !!error, lastUpdated }}
+            />
+
+            <QuantityToolbar quantity={globalQty} onQuantityChange={setGlobalQty} search={search} onSearchChange={setSearch} />
+
+            <div className="max-w-md mx-auto px-4 pt-4 pb-24 space-y-6">
+                {/* AREA FILTER: only worth showing with more than one area */}
+                {allDepartments.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 [scrollbar-width:none]">
+                        <button onClick={() => setDepartmentFilter(null)} aria-pressed={!activeDepartment} className={chipClass(!activeDepartment)}>
+                            {t('allAreas')}
+                        </button>
+                        {allDepartments.map(department => (
+                            <button
+                                key={department.id}
+                                onClick={() => setDepartmentFilter(department.id)}
+                                aria-pressed={activeDepartment === department.id}
+                                className={chipClass(activeDepartment === department.id)}
+                            >
+                                {department.name}
+                            </button>
+                        ))}
+                    </div>
                 )}
 
-                <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-100 text-gray-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-all hover:text-red-500"
-                >
-                    <LogOut size={16} /> {tCommon('logout')}
-                </button>
-            </div>
-
-            {/* 1. QUANTITY CONTROLLER (Sticky) */}
-            <div className="sticky top-4 z-30 bg-white p-5 rounded-[2.5rem] shadow-2xl border border-gray-100 ring-4 ring-gray-50/50">
-                <div className="flex flex-col items-center">
-                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                        {t('quantityTitle')}
-                    </p>
-
-                    <div className="flex items-center justify-between w-full gap-4">
-                        <button
-                            onClick={() => setGlobalQty(Math.max(1, globalQty - 1))}
-                            disabled={globalQty <= 1}
-                            className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-600 active:scale-90 transition-all disabled:opacity-30"
-                        >
-                            <Minus size={24} strokeWidth={3} />
-                        </button>
-
-                        <div className="flex-1 flex flex-col items-center">
-                            {/* Can be cleared while typing; it goes back to at least 1 on blur */}
-                            <input
-                                type="number"
-                                min={1}
-                                value={globalQty || ""}
-                                onChange={(e) => setGlobalQty(Math.max(0, parseInt(e.target.value) || 0))}
-                                onBlur={() => setGlobalQty(Math.max(1, globalQty))}
-                                className="w-full text-center text-4xl font-black text-[#171717] outline-none bg-transparent"
-                            />
-                            <div className="h-1.5 w-12 bg-blue-500 rounded-full mt-1"></div>
-                        </div>
-
-                        <button
-                            onClick={() => setGlobalQty(globalQty + 1)}
-                            className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-600 active:scale-90 transition-all"
-                        >
-                            <Plus size={24} strokeWidth={3} />
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={() => setGlobalQty(1)}
-                        className="mt-4 flex items-center gap-2 text-[11px] font-black text-gray-300 uppercase hover:text-blue-500 transition-colors"
-                    >
-                        <RotateCcw size={12} /> {t('reset')}
-                    </button>
-                </div>
-            </div>
-
-            {/* 2. SEARCH */}
-            <div className="relative">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-800" size={20} />
-                <input
-                    type="text"
-                    placeholder={t('search')}
-                    className="w-full bg-white text-gray-800 p-6 pl-16 rounded-3xl text-lg font-bold shadow-sm border border-gray-100 outline-none focus:ring-2 ring-blue-100 transition-all"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
-            </div>
-
-            {/* 3. PRODUCT CARDS */}
-            <div className="space-y-12">
                 {departments.map(department => (
-                    <div key={department.items[0].departmentId} className="space-y-4">
+                    <section key={department.id} aria-labelledby={`area-${department.id}`} className="space-y-2.5">
                         {/* DEPARTMENT SEPARATOR */}
-                        <div className="flex items-center gap-4 px-2">
-                            <div className="flex items-center gap-2.5 px-4 py-2 bg-slate-50/80 rounded-2xl border border-slate-100/50 shadow-sm">
-                                <MapPin size={14} className="text-slate-400" />
-                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] select-none">
-                                    {department.name}
-                                </span>
-                            </div>
-                            {/* Subtle line that fades out */}
+                        <div className="flex items-center gap-3 px-1">
+                            <MapPin size={14} className="text-slate-400 shrink-0" aria-hidden />
+                            <h2 id={`area-${department.id}`} className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] select-none">
+                                {department.name}
+                            </h2>
                             <div className="h-px flex-1 bg-linear-to-r from-slate-200 to-transparent rounded-full"></div>
                         </div>
 
-                        {/* CARDS FOR THIS DEPARTMENT */}
-                        <div className="space-y-4">
-                            {department.items.map(item => {
-                                const isPending = pendingIds.has(item._id);
-                                const cannotMove = isPending || globalQty < 1;
-                                return (
-                                    <div key={item._id} className="bg-white p-7 rounded-[3rem] border border-gray-100 shadow-sm">
-                                        <div className="flex justify-between items-start mb-8">
-                                            <div>
-                                                <h3 className="text-xl font-black text-[#171717] leading-tight mb-1">{item.productName}</h3>
-                                                <span className="text-xs font-bold text-blue-500 uppercase tracking-tighter">{item.sku}</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className={`text-3xl font-black leading-none ${item.quantity <= (item.minStock || 0) ? 'text-red-500' : 'text-[#171717]'}`}>{item.quantity}</p>
-                                                <p className="text-[10px] font-black text-gray-300 uppercase mt-2">{item.unit ? labelOf(tUnits, item.unit) : t('defaultUnit')}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <button onClick={() => handleMove(item, 'OUT')} disabled={cannotMove || item.quantity < globalQty} className="flex flex-row items-center justify-center gap-2 bg-red-50 text-red-600 py-6 rounded-3xl active:scale-95 transition-all disabled:opacity-20">
-                                                {isPending ? <Loader2 className="animate-spin" /> : <><Minus size={32} strokeWidth={3} /><span className="text-2xl font-black uppercase">{globalQty}</span></>}
-                                            </button>
-                                            <button onClick={() => handleMove(item, 'IN')} disabled={cannotMove} className="flex flex-row items-center justify-center gap-2 bg-green-50 text-green-600 py-6 rounded-3xl active:scale-95 transition-all disabled:opacity-20">
-                                                {isPending ? <Loader2 className="animate-spin" /> : <><Plus size={32} strokeWidth={3} /><span className="text-2xl font-black uppercase">{globalQty}</span></>}
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                        {department.items.map(item => (
+                            <StockRow
+                                key={item._id}
+                                item={item}
+                                quantity={globalQty}
+                                isPending={pendingIds.has(item._id)}
+                                onMove={type => handleMove(item, type)}
+                            />
+                        ))}
+                    </section>
                 ))}
 
                 {departments.length === 0 && (
@@ -264,8 +206,8 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                 )}
             </div>
 
-            {/* 4. TOAST: result of the last move, with Undo */}
-            <div aria-live="polite" className="fixed inset-x-4 bottom-20 z-40 flex justify-center pointer-events-none">
+            {/* TOAST: result of the last move, with Undo */}
+            <div aria-live="polite" className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex justify-center pointer-events-none">
                 {toast && (
                     <div
                         role={toast.kind === 'error' ? 'alert' : 'status'}
@@ -291,6 +233,6 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                     </div>
                 )}
             </div>
-        </div>
+        </>
     );
 }
