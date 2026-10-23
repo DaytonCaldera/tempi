@@ -1,45 +1,37 @@
-import { auth } from "@/auth";
-import mongo from '@/lib/mongodb';
-import { ObjectId } from "mongodb";
+import { NextResponse } from "next/server";
+import { requirePermission } from "@/lib/authorize";
+import { PERMISSIONS } from "@/lib/constants";
+import { getDb, toObjectId, unauthorized } from "@/lib/api";
 
+/** GET /api/admin/departments/personnel?deptId= - Users assigned to a department: `{ users: [{ _id, name, isActive, role }] }` */
 export async function GET(req: Request) {
-    const session = await auth();
-    if (!session?.user?.activeOrganization) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
+    if (error) return error;
+    const clientId = toObjectId(session.user.activeOrganization);
+    if (!clientId) return unauthorized();
 
-    const { searchParams } = new URL(req.url);
-    const deptId = searchParams.get('deptId');
-    if (!deptId) return Response.json({ users: [] });
+    const departmentId = toObjectId(new URL(req.url).searchParams.get('deptId'));
+    if (!departmentId) return NextResponse.json({ users: [] });
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
+    const membershipInDepartment = { clientId, departments: departmentId };
 
-    const clientObjectId = new ObjectId(session.user.activeOrganization);
-    const deptObjectId = new ObjectId(deptId);
-
+    const db = await getDb();
     const users = await db.collection('users')
-        .find({
-            organizations: {
-                $elemMatch: {
-                    clientId: clientObjectId,
-                    departments: deptObjectId
-                }
-            }
-        })
+        .find({ organizations: { $elemMatch: membershipInDepartment } })
         .project({
             name: 1,
             isActive: 1,
-            // $elemMatch in a projection returns only the ONE matching array element,
-            // not the whole organizations array
-            organizations: { $elemMatch: { clientId: clientObjectId, departments: deptObjectId } }
+            // $elemMatch in a projection returns only the matching membership, not the whole array
+            organizations: { $elemMatch: membershipInDepartment }
         })
         .toArray();
 
-    const flattened = users.map(user => ({
-        _id: user._id.toString(),
-        name: user.name,
-        isActive: user.isActive,
-        role: user.organizations?.[0]?.role ?? null
-    }));
-
-    return Response.json({ users: flattened });
+    return NextResponse.json({
+        users: users.map(user => ({
+            _id: user._id.toString(),
+            name: user.name,
+            isActive: user.isActive,
+            role: user.organizations?.[0]?.role ?? null
+        }))
+    });
 }

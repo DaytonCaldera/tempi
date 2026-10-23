@@ -1,47 +1,47 @@
-import mongo from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import { auth } from '@/auth';
+import { getDb, toObjectId } from '@/lib/api';
+import { PERMISSIONS } from '@/lib/constants';
+import { findOwnDepartment } from '@/lib/departments';
+import { hasPermission } from '@/lib/permissions';
+import type { StockItem } from '@/types/models';
 import StockManagementClient from './StockManagementClient';
 
-export default async function DepartmentStockPage({ params }: { params: { id: string } }) {
-    const { id } = await params;
+export default async function DepartmentStockPage({ params }: { params: Promise<{ id: string }> }) {
+    const session = await auth();
+    if (!session) redirect("/");
+    if (!hasPermission(session, PERMISSIONS.EDIT_STOCK)) redirect("/unauthorized");
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
-
-    // 1. Fetch Department Details
-    const department = await db.collection('departments').findOne({ 
-        _id: new ObjectId(id) 
-    });
-
+    const departmentId = toObjectId((await params).id);
+    const department = departmentId && await findOwnDepartment(session, departmentId);
     if (!department) notFound();
 
-    const inventoryRaw = await db.collection('department_stock')
-        .find({ departmentId: new ObjectId(id) })
+    const t = await getTranslations('stock');
+    const db = await getDb();
+    const inventory = await db.collection<StockItem>('department_stock')
+        .find({ departmentId: department._id, isDeleted: { $ne: true } })
         .toArray();
-
-    const inventory = inventoryRaw.map(item => ({
-        ...item,
-        _id: item._id.toString(),
-        productId: item._id.toString(),
-        departmentId: item.departmentId.toString(),
-        clientId: item.clientId,
-    }));
 
     return (
         <div className="p-6 lg:p-10">
             <div className="mb-6">
                 <h1 className="text-2xl font-black text-[#171717]">
-                    Inventario: {department.name}
+                    {t('pageTitle', { name: department.name })}
                 </h1>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                    Gestión de existencias y movimientos
+                    {t('pageSubtitle')}
                 </p>
             </div>
 
-            <StockManagementClient 
-                initialInventory={inventory} 
-                departmentId={id} 
+            <StockManagementClient
+                initialInventory={inventory.map(item => ({
+                    ...item,
+                    _id: item._id.toString(),
+                    departmentId: item.departmentId.toString(),
+                    clientId: item.clientId?.toString(),
+                }))}
+                departmentId={department._id.toString()}
                 departmentName={department.name}
             />
         </div>

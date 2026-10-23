@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
-import { getMessages, getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from "next-intl/server";
 
-import { signIn } from "auth"
-import AuthProvider from "@/components/providers/SessionProvider";
+import AuthProvider from "@/components/SessionProvider";
 import { NextIntlClientProvider } from "next-intl";
 
 const geistSans = Geist({
@@ -17,25 +16,25 @@ const geistMono = Geist_Mono({
     subsets: ["latin"],
 });
 
-export const metadata = {
-    title: "Tempi | Gestión de Inventario",
-    description: "Sistema inteligente de logística y suministros",
-};
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations("metadata");
+    return { title: t("title"), description: t("description") };
+}
 
-export default async function AuthLayout({
+export default async function MainLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-
     const locale = await getLocale();
-    const messages = await getMessages();
-    return ( 
-        <html lang="{locale}">
+
+    return (
+        <html lang={locale}>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <main className="min-h-screen bg-[#0a0a0c] text-white selection:bg-purple-500/30">
                     <AuthProvider>
-                        <NextIntlClientProvider messages={messages}>
+                        {/* Inherits locale, messages and timeZone from i18n/request.ts */}
+                        <NextIntlClientProvider>
                             {children}
                         </NextIntlClientProvider>
                     </AuthProvider>

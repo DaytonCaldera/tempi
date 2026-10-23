@@ -1,33 +1,42 @@
-import mongo from '@/lib/mongodb';
-import { ObjectId } from "mongodb";
-import { auth } from "@/auth";
-import { ROLES } from '@/lib/constants';
+import { NextResponse } from 'next/server';
+import { requirePermission } from "@/lib/authorize";
+import { badRequest, getDb, notFound, toObjectId, unauthorized } from '@/lib/api';
+import { PERMISSIONS, ROLES } from '@/lib/constants';
+import { findOwnDepartment } from '@/lib/departments';
+import { forgetCachedUsers } from '@/lib/users';
 
+/**
+ * POST /api/admin/users/approve - Approves a pending user in the admin's organization
+ * and assigns them to a department. Body: { userId, deptId }
+ * Only pending memberships are changed, so it can't be used to demote existing members.
+ */
 export async function POST(req: Request) {
-    const session = await auth();
-    // Only Admins or Superadmins can approve
-    if (!session || session.user.role === ROLES.USER) {
-        return Response.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const { session, error } = await requirePermission(PERMISSIONS.MANAGE_USERS);
+    if (error) return error;
+    const clientId = toObjectId(session.user.clientId);
+    if (!clientId) return unauthorized();
 
     const { userId, deptId } = await req.json();
+    const userObjectId = toObjectId(userId);
+    const departmentId = toObjectId(deptId);
+    if (!userObjectId || !departmentId) return badRequest();
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
+    if (!await findOwnDepartment(session, departmentId)) return notFound("departmentNotFound");
 
-    await db.collection('users').updateOne(
-        { 
-            _id: new ObjectId(userId),
-            "organizations.clientId": new ObjectId(session.user.clientId)
-        },
-        { 
-            $set: { 
-                "organizations.$.role": ROLES.USER, 
+    const db = await getDb();
+    const result = await db.collection('users').updateOne(
+        // '$' below updates the membership matched by $elemMatch
+        { _id: userObjectId, organizations: { $elemMatch: { clientId, role: ROLES.PENDING_USER } } },
+        {
+            $set: {
+                "organizations.$.role": ROLES.USER,
                 "organizations.$.status": 'active',
-                "organizations.$.departments": [new ObjectId(deptId)]
+                "organizations.$.departments": [departmentId]
             }
         }
     );
+    if (result.matchedCount === 0) return notFound("userNotFound");
+    forgetCachedUsers();
 
-    return Response.json({ success: true });
+    return NextResponse.json({ success: true });
 }

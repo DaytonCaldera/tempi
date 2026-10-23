@@ -3,6 +3,7 @@ import { ROLES } from '@/lib/constants';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, ArrowRight } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 export default async function Dashboard() {
 
@@ -16,6 +17,8 @@ export default async function Dashboard() {
         redirect("/");
     }
 
+    const t = await getTranslations('dashboard');
+
     return (
         <div className="p-0 lg:p-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -28,8 +31,8 @@ export default async function Dashboard() {
                             <FileText size={26} className="text-brand-accent" />
                         </div>
                         <div className="space-y-1">
-                            <p className="text-sm font-black uppercase tracking-widest">Reportes de Consumo</p>
-                            <p className="text-xs font-bold text-white/50">Revisa el consumo de tus departamentos</p>
+                            <p className="text-sm font-black uppercase tracking-widest">{t('reportsTitle')}</p>
+                            <p className="text-xs font-bold text-white/50">{t('reportsDescription')}</p>
                         </div>
                     </div>
                     <div className="w-10 h-10 bg-brand-accent text-brand rounded-xl flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">

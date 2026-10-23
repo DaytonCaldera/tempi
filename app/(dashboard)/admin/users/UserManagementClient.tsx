@@ -1,28 +1,46 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
+import { useTranslations } from "next-intl";
+import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import { Modal } from "@/components/ui/Modal";
 import {
-    UserCheck, Shield, Edit3, UserPlus, Ban, Copy, Check
+    Shield, Edit3, UserPlus, Ban, Copy, Check
 } from "lucide-react";
 import { ROLES } from "@/lib/constants";
-import { useSession } from "next-auth/react";
+import { labelOf } from "@/i18n/labels";
+import CloseOrganizationCard from "./CloseOrganizationCard";
 
-export default function UserManagementClient({ users: initialUsers, departments, client }: { users: any[], departments: any[], client: any }) {
-    const { data: session } = useSession();
+/** A user flattened with their membership in the current organization. */
+export type UserRow = {
+    _id: string;
+    name: string;
+    email: string;
+    image?: string;
+    clientId?: string;
+    role: string;
+    isPending: boolean;
+    isActive: boolean;
+    departments: string[];
+};
+
+interface UserManagementClientProps {
+    users: UserRow[];
+    departments: { _id: string; name: string }[];
+    client: { _id: string; code: string; name: string } | null;
+    canCloseOrganization: boolean;
+}
+
+export default function UserManagementClient({ users, departments, client, canCloseOrganization }: UserManagementClientProps) {
+    const t = useTranslations("users");
+    const tCommon = useTranslations("common");
+    const tRoles = useTranslations("roles");
     const router = useRouter();
-    const [users, setUsers] = useState(initialUsers);
-    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
     const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
     const [selectedRole, setSelectedRole] = useState<string>(ROLES.USER);
-    const [targetClientId, setTargetClientId] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
-
-    // Sync state
-    useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
-    console.log(client);
 
     const clientCode = client?.code || "N/A";
 
@@ -32,14 +50,14 @@ export default function UserManagementClient({ users: initialUsers, departments,
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const openEditModal = (user: any) => {
+    const openEditModal = (user: UserRow) => {
         setSelectedUser(user);
         setSelectedDepts(user.departments || []);
         setSelectedRole(user.role || ROLES.USER);
-        setTargetClientId(user.clientId || '');
     };
 
     const handleConfirm = async () => {
+        if (!selectedUser) return;
         setLoading(true);
         const res = await fetch("/api/admin/users/toggle-status", {
             method: "PATCH",
@@ -60,10 +78,10 @@ export default function UserManagementClient({ users: initialUsers, departments,
     };
 
     const tableHeaders = [
-        { title: "Usuario" },
-        { title: "Rol & Áreas" },
-        { title: "Estado" },
-        { title: "Acciones" }
+        { title: t("table.user") },
+        { title: t("table.roleAndAreas") },
+        { title: t("table.status") },
+        { title: tCommon("actions") }
     ];
 
     return (
@@ -71,7 +89,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
             {/* 1. TOP STATS & CODE CARD */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 bg-white p-8 rounded-[2.5rem] border border-brand/5 shadow-sm flex flex-col justify-center">
-                    <p className="text-[10px] font-black text-brand/40 uppercase tracking-[0.3em] mb-2">Código de Invitación</p>
+                    <p className="text-[10px] font-black text-brand/40 uppercase tracking-[0.3em] mb-2">{t("inviteCode")}</p>
                     <div className="flex items-center gap-4">
                         <h2 className="text-4xl font-black text-brand tracking-tighter">{clientCode}</h2>
                         <button
@@ -81,15 +99,15 @@ export default function UserManagementClient({ users: initialUsers, departments,
                             {copied ? <Check size={20} className="text-success" /> : <Copy size={20} />}
                         </button>
                     </div>
-                    <p className="mt-4 text-xs text-brand/50 font-medium italic">Comparte este código con tu equipo para que se unan a esta organización.</p>
+                    <p className="mt-4 text-xs text-brand/50 font-medium italic">{t("inviteHint")}</p>
                 </div>
 
                 <div className="bg-brand p-8 rounded-[2.5rem] text-white flex flex-col justify-center shadow-xl shadow-brand/20">
-                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1">Total Personal</p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1">{t("totalStaff")}</p>
                     <p className="text-5xl font-black tracking-tighter">{users.length}</p>
                     <div className="mt-4 flex items-center gap-2 text-brand-accent text-xs font-bold">
                         <UserPlus size={14} />
-                        {users.filter(u => !u.status).length} pendientes de aprobación
+                        {t("pendingApproval", { count: users.filter(u => u.isPending).length })}
                     </div>
                 </div>
             </div>
@@ -115,14 +133,14 @@ export default function UserManagementClient({ users: initialUsers, departments,
                                 <div className="flex flex-col gap-2 min-w-50">
                                     <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em]">
                                         <Shield size={10} strokeWidth={3} />
-                                        {user.role}
+                                        {labelOf(tRoles, user.role)}
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {user.departments?.map((deptId: string) => {
+                                        {user.departments.map(deptId => {
                                             const dept = departments.find(d => d._id === deptId);
                                             return (
                                                 <span key={deptId} className="px-3 py-1 bg-surface text-brand border border-brand/5 rounded-lg text-[10px] font-bold">
-                                                    {dept?.name || 'Área'}
+                                                    {dept?.name || t("defaultArea")}
                                                 </span>
                                             );
                                         })}
@@ -131,22 +149,22 @@ export default function UserManagementClient({ users: initialUsers, departments,
                             </DataTableCell>
 
                             <DataTableCell>
-                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${user.isActive ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-success' : 'bg-warning'}`} />
+                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${user.isActive && !user.isPending ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${user.isActive && !user.isPending ? 'bg-success' : 'bg-warning'}`} />
                                     <span className="text-[10px] font-black uppercase tracking-widest">
-                                        {user.status ? "Activo" : "Pendiente"}
+                                        {user.isPending ? tCommon("pending") : user.isActive ? tCommon("active") : tCommon("inactive")}
                                     </span>
                                 </div>
                             </DataTableCell>
 
                             <DataTableCell>
                                 <div className="flex items-center justify-end gap-2">
-                                    {!user.status ? (
+                                    {user.isPending ? (
                                         <button
                                             onClick={() => openEditModal(user)}
-                                            className="px-4 py-2 bg-brand-accent text-brand rounded-xl text-xs font-black hover:brightness-110 transition-all shadow-sm"
+                                            className="px-4 py-2 bg-brand-accent text-brand rounded-xl text-xs font-black uppercase hover:brightness-110 transition-all shadow-sm"
                                         >
-                                            APROBAR
+                                            {t("approve")}
                                         </button>
                                     ) : (
                                         <>
@@ -165,15 +183,18 @@ export default function UserManagementClient({ users: initialUsers, departments,
                 </DataTable>
             </div>
 
-            {/* 3. THE MODAL */}
-            <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="Configurar Usuario"
+            {/* 3. DANGER ZONE */}
+            {canCloseOrganization && client && <CloseOrganizationCard organizationName={client.name} />}
+
+            {/* 4. THE MODAL */}
+            <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title={t("configureTitle")}
                 footer={
                     <button
                         onClick={handleConfirm}
                         disabled={loading || selectedDepts.length === 0}
                         className="w-full bg-brand text-brand-accent py-5 rounded-4xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {loading ? "Procesando..." : selectedUser?.status ? "Guardar Cambios" : "Activar Miembro"}
+                        {loading ? t("processing") : selectedUser?.isPending ? t("activateMember") : tCommon("saveChanges")}
                     </button>
                 }
             >
@@ -187,19 +208,19 @@ export default function UserManagementClient({ users: initialUsers, departments,
                     </div>
 
                     <div className="space-y-4">
-                        <label className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em] ml-2">Rol de Acceso</label>
+                        <label className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em] ml-2">{t("accessRole")}</label>
                         <select
                             value={selectedRole}
                             onChange={(e) => setSelectedRole(e.target.value)}
                             className="w-full bg-surface border border-brand/5 rounded-2xl px-5 py-4 text-sm font-bold text-brand focus:ring-2 ring-brand-accent/20 outline-none appearance-none"
                         >
-                            <option value={ROLES.USER} defaultChecked>Runner / Operativo</option>
-                            <option value={ROLES.ADMIN}>Administrador</option>
+                            <option value={ROLES.USER}>{tRoles(ROLES.USER)}</option>
+                            <option value={ROLES.ADMIN}>{tRoles(ROLES.ADMIN)}</option>
                         </select>
                     </div>
 
                     <div className="space-y-4">
-                        <label className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em] ml-2">Asignación de Áreas</label>
+                        <label className="text-[10px] font-black text-brand/30 uppercase tracking-[0.3em] ml-2">{t("areaAssignment")}</label>
                         <div className="grid grid-cols-2 gap-3">
                             {departments.map((dept) => {
                                 const isSelected = selectedDepts.includes(dept._id);
@@ -217,13 +238,6 @@ export default function UserManagementClient({ users: initialUsers, departments,
                         </div>
                     </div>
 
-                    {/* <button
-                        onClick={handleConfirm}
-                        disabled={loading || selectedDepts.length === 0}
-                        className="w-full bg-brand text-brand-accent py-5 rounded-4xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
-                    >
-                        {loading ? "Procesando..." : selectedUser?.status ? "Guardar Cambios" : "Activar Miembro"}
-                    </button> */}
                 </div>
             </Modal>
         </div>

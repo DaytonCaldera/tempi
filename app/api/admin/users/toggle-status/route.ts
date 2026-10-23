@@ -1,61 +1,48 @@
-import mongo from '@/lib/mongodb';
-import { auth } from "@/auth";
-import { ROLES } from "@/lib/constants";
-import { ObjectId } from "mongodb";
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { requirePermission } from "@/lib/authorize";
+import { badRequest, forbidden, getDb, notFound, serverError, toObjectId } from '@/lib/api';
+import { PERMISSIONS, ROLES } from "@/lib/constants";
+import { forgetCachedUsers } from "@/lib/users";
 
-export async function PATCH(request: NextRequest) {
-    const session = await auth();
-
-    const allowedRoles = [ROLES.ADMIN, ROLES.SUPERADMIN];
-    if (!session || !allowedRoles.includes(session.user.role)) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+/**
+ * PATCH /api/admin/users/toggle-status
+ * Updates a user's membership in an organization: active/inactive, role and departments.
+ * Body: { userId, isActive, departments: string[], role, targetClientId (superadmin only) }
+ */
+export async function PATCH(request: Request) {
+    const { session, error } = await requirePermission(PERMISSIONS.MANAGE_USERS);
+    if (error) return error;
+    const isSuperadmin = session.user.role === ROLES.SUPERADMIN;
 
     try {
         const { userId, isActive, departments, role, targetClientId } = await request.json();
-        
 
-        if (role === ROLES.SUPERADMIN && session.user.role !== ROLES.SUPERADMIN) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-        }
+        if (role === ROLES.SUPERADMIN && !isSuperadmin) return forbidden();
 
-        // Determine which organization we are modifying
-        // If not a Superadmin, we MUST use the admin's own clientId
-        const clientIdToUpdate = session.user.role === ROLES.SUPERADMIN 
-            ? new ObjectId(targetClientId) 
-            : new ObjectId(session.user.clientId);
+        // Admins can only edit memberships of their own organization
+        const clientId = toObjectId(isSuperadmin ? targetClientId : session.user.clientId);
+        const userObjectId = toObjectId(userId);
+        if (!clientId || !userObjectId) return badRequest();
 
-        const client = await mongo;
-        const db = client.db(process.env.MONGODB_DB);
-
+        const db = await getDb();
         const result = await db.collection('users').updateOne(
-            {
-                _id: new ObjectId(userId),
-                // Find the specific organization entry in the array
-                "organizations.clientId": clientIdToUpdate
-            },
+            { _id: userObjectId, "organizations.clientId": clientId },
             {
                 $set: {
-                    // Using the '$' operator to update the matched array element
+                    // '$' updates the membership matched in the filter
                     "organizations.$.status": isActive ? 'active' : 'inactive',
                     "organizations.$.role": role,
-                    "organizations.$.departments": departments.map((id: string) => new ObjectId(id)),
-                    activeOrganization: clientIdToUpdate
+                    "organizations.$.departments": (departments as string[]).map(toObjectId).filter(Boolean),
+                    activeOrganization: clientId
                 }
             }
         );
-
-        if (result.matchedCount === 0) {
-            return NextResponse.json({ message: "User or Organization not found" }, { status: 404 });
-        }
-
-        console.log(result, role, clientIdToUpdate);
-        
+        if (result.matchedCount === 0) return notFound("userOrOrganizationNotFound");
+        forgetCachedUsers();
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("PATCH_USER_ERROR:", error);
-        return NextResponse.json({ message: "Server error" }, { status: 500 });
+        console.error("PATCH user status error:", error);
+        return serverError();
     }
 }

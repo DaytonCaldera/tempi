@@ -26,32 +26,55 @@ export const PERMISSIONS = {
     VIEW_ALL_CLIENTS: "view_all_clients", // Only for God Mode
 }
 
-export const isSuperAdmin = (session: any) => {
-    if (!process.env.ADMIN_EMAILS) return false;
-    const masterEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || [];
-    return session?.user?.role === ROLES.SUPERADMIN && masterEmails.includes(session.user.email);
-};
-
 /**
  * Placeholder clientId that older sign-ups stored before the user belonged to any organization.
  * It is not a real organization and must never be used to resolve a user's role.
  */
 export const PLACEHOLDER_CLIENT_ID = "sup22";
 
-export const isPlaceholderOrg = (org: any) => !org?.clientId || org.clientId.toString() === PLACEHOLDER_CLIENT_ID;
+export const isPlaceholderOrg = (org: { clientId?: { toString(): string } | null } | null | undefined) =>
+    !org?.clientId || org.clientId.toString() === PLACEHOLDER_CLIENT_ID;
 
-//return the admin email from SUPERADMIN_EMAIL env variable, if not set return the default email
-export const getSuperAdminEmail = (): string => {
-    return process.env.SUPERADMIN_EMAIL || "superadmin@tempi.pro";
+/** The superadmin's email from SUPERADMIN_EMAIL, lowercased. Without it nobody is superadmin (fails closed). */
+export const getSuperAdminEmail = (): string | null => {
+    return process.env.SUPERADMIN_EMAIL?.trim().toLowerCase() || null;
 }
 
+/** Details shown on the privacy policy and terms pages (app/(main)/privacy, app/(main)/terms). */
+export const LEGAL = {
+    contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@tempi.pro",
+    // Bump when the text in the "legal" messages changes
+    effectiveDate: "2026-10-23",
+};
+
+/** Permission needed to see each sidebar section (see components/dashboard/menuItems.json) */
 export const sectionPermissions: Record<string, string> = {
-    admin: PERMISSIONS.MANAGE_USERS,       // O el permiso que definas en tu JSON de roles
+    admin: PERMISSIONS.MANAGE_USERS,
     inventory: PERMISSIONS.VIEW_STOCK,
     reports: PERMISSIONS.VIEW_REPORTS
 };
 
-export const sectionItemPermissions: Record<string, string> = {
-    "admin_users": "manage_users",
-    "admin_clients": "manage_clients"
-};
+/**
+ * Reasons written to stock_movements.reason. They are stored data (the reports filter on INITIAL_SYNC),
+ * so the values stay as they are; the UI shows them through the "movementReasons" messages.
+ * INITIAL_STOCK is the IN recorded when an item is created with a quantity, so reports can work
+ * backwards from the current quantity to any past date.
+ */
+export const MOVEMENT_REASONS = {
+    ADMIN_QUICK_ADJUSTMENT: "Ajuste rápido Admin",
+    RUNNER_CONSUMPTION: "Consumo Runner",
+    RESTOCK: "Reabastecimiento",
+    MANUAL_ADJUSTMENT: "Ajuste manual",
+    INITIAL_SYNC: "Sincronización inicial del sistema",
+    INITIAL_STOCK: "Inventario inicial",
+    // Written by scripts/repair-stock-movements.js for quantity changes that were never logged
+    RECONCILIATION: "Conciliación de inventario",
+    // Reverses an earlier movement (the runner Undo); reports subtract it from the column it reverses
+    CORRECTION: "Corrección",
+} as const;
+
+/** Units a stock item can be counted in. Stored as-is in department_stock.unit; labels are in the "units" messages. */
+export const STOCK_UNITS = ["unidades", "kg", "cajas", "litros"] as const;
+
+/** Name of the plan new organizations start on ("plans" collection). */
+export const DEFAULT_PLAN_NAME = "Plan Gratuito";

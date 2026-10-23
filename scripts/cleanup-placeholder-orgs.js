@@ -1,35 +1,36 @@
-// Limpieza de usuarios afectados por el bucle del lobby.
+// Cleans up users affected by the lobby redirect loop.
 //
-// Antes, al registrarse, cada usuario recibía una organización falsa "sup22" que quedaba como
-// organización activa. Al volver a iniciar sesión, esa entrada ganaba sobre la organización real
-// y el usuario regresaba al lobby. Este script, por cada usuario:
-//   - quita las entradas "sup22" de organizations
-//   - quita entradas duplicadas de la misma organización (se queda con la que no está pendiente)
-//   - corrige activeOrganization si apunta a "sup22" o a una organización que el usuario no tiene
-//   - quita el clientId "sup22" de nivel superior
-// También lista los dueños con varias organizaciones creadas (posibles duplicados del bucle),
-// pero NO borra ninguna: revísalas a mano.
+// Sign-up used to give every user a fake "sup22" organization that stayed as their active
+// organization. On the next sign-in that entry won over the real organization and sent the user
+// back to the lobby. For each user, this script:
+//   - removes the "sup22" entries from organizations
+//   - removes duplicate entries of the same organization (keeping the one that isn't pending)
+//   - fixes activeOrganization when it points to "sup22" or to an organization the user doesn't have
+//   - removes the top-level "sup22" clientId
+// It also lists owners with several created organizations (possible duplicates from the loop),
+// but deletes NONE of them: review those by hand.
 //
-// Uso:
-//   node scripts/cleanup-placeholder-orgs.js          -> solo muestra lo que cambiaría
-//   node scripts/cleanup-placeholder-orgs.js --apply  -> aplica los cambios
+// Usage:
+//   node scripts/cleanup-placeholder-orgs.js          -> only shows what would change
+//   node scripts/cleanup-placeholder-orgs.js --apply  -> applies the changes
 
 require('dotenv').config({ path: '.env.local' });
 const { MongoClient } = require('mongodb');
 const chalk = require('chalk');
 const dns = require('node:dns/promises');
 
-// Forzar el uso de servidores DNS públicos para evitar el error querySrv ECONNREFUSED
+// Use public DNS servers to avoid the querySrv ECONNREFUSED error
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const PLACEHOLDER_CLIENT_ID = 'sup22';
 const PENDING_ROLE = 'pending_user';
 const APPLY = process.argv.includes('--apply');
 
-const URI_MONGO = process.env.MONGODB_URI;
-const NOMBRE_BD = process.env.MONGODB_DB;
-if (!URI_MONGO || !NOMBRE_BD) {
-    console.error(chalk.red.bold('\n[ERROR CRÍTICO] Faltan MONGODB_URI o MONGODB_DB en el archivo .env.local\n'));
+const MONGO_URI = process.env.MONGODB_URI;
+// Same as the app: without MONGODB_DB, the database named in the URI is used
+const DB_NAME = process.env.MONGODB_DB;
+if (!MONGO_URI) {
+    console.error(chalk.red.bold('\n[FATAL] MONGODB_URI was not found in .env.local\n'));
     process.exit(1);
 }
 
@@ -37,12 +38,12 @@ const idToString = (id) => (id == null ? null : id.toString());
 const isPlaceholder = (org) => !org?.clientId || idToString(org.clientId) === PLACEHOLDER_CLIENT_ID;
 
 /**
- * Calcula el estado corregido de un usuario. Devuelve null si no hay nada que cambiar.
+ * Works out the fixed state of a user. Returns null when there is nothing to change.
  */
 function buildFix(user) {
     const organizations = user.organizations || [];
 
-    // Una entrada por organización, prefiriendo la que ya fue aprobada
+    // One entry per organization, preferring the one that was already approved
     const byClient = new Map();
     for (const org of organizations) {
         if (isPlaceholder(org)) continue;
@@ -71,17 +72,17 @@ function buildFix(user) {
     return {
         update,
         summary: `orgs ${organizations.length} -> ${cleanOrgs.length}, activeOrganization ${activeId} -> ${idToString(newActive)}` +
-            (clientIdIsPlaceholder ? ', quita clientId "sup22"' : '')
+            (clientIdIsPlaceholder ? ', removes clientId "sup22"' : '')
     };
 }
 
 async function main() {
-    const clienteMongo = new MongoClient(URI_MONGO);
-    await clienteMongo.connect();
-    const db = clienteMongo.db(NOMBRE_BD);
+    const mongoClient = new MongoClient(MONGO_URI);
+    await mongoClient.connect();
+    const db = mongoClient.db(DB_NAME);
 
     try {
-        console.log(chalk.cyan.bold(`\n${APPLY ? 'APLICANDO CAMBIOS' : 'SIMULACIÓN (usa --apply para guardar)'} en ${NOMBRE_BD}\n`));
+        console.log(chalk.cyan.bold(`\n${APPLY ? 'APPLYING CHANGES' : 'DRY RUN (use --apply to save)'} on ${db.databaseName}\n`));
 
         const users = await db.collection('users').find({
             $or: [
@@ -101,9 +102,9 @@ async function main() {
                 await db.collection('users').updateOne({ _id: user._id }, fix.update);
             }
         }
-        console.log(chalk.green.bold(`\n${changed} de ${users.length} usuarios ${APPLY ? 'corregidos' : 'por corregir'}.`));
+        console.log(chalk.green.bold(`\n${changed} of ${users.length} users ${APPLY ? 'fixed' : 'to fix'}.`));
 
-        // Organizaciones creadas varias veces por el mismo dueño: solo se reportan
+        // Organizations created several times by the same owner: only reported
         const duplicates = await db.collection('clients').aggregate([
             { $match: { ownerEmail: { $exists: true } } },
             { $group: { _id: '$ownerEmail', count: { $sum: 1 }, orgs: { $push: { id: '$_id', name: '$name', createdAt: '$createdAt' } } } },
@@ -111,7 +112,7 @@ async function main() {
         ]).toArray();
 
         if (duplicates.length > 0) {
-            console.log(chalk.cyan.bold('\nDueños con varias organizaciones (revisar a mano, no se borran):'));
+            console.log(chalk.cyan.bold('\nOwners with several organizations (review by hand, nothing is deleted):'));
             for (const owner of duplicates) {
                 console.log(chalk.yellow(owner._id));
                 for (const org of owner.orgs) {
@@ -120,7 +121,7 @@ async function main() {
             }
         }
     } finally {
-        await clienteMongo.close();
+        await mongoClient.close();
     }
 }
 

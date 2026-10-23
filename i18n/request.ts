@@ -1,14 +1,17 @@
 import { getRequestConfig } from 'next-intl/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+import { defaultLocale, isLocale, LOCALE_COOKIE, matchAcceptLanguage, timeZone } from './config';
 
 export default getRequestConfig(async () => {
-  const cookieStore = await cookies();
-  // Buscamos la cookie que setea el middleware
-  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'es';
+  // The cookie set by LanguageSwitcher wins; first visits follow the browser's language
+  const cookieLocale = (await cookies()).get(LOCALE_COOKIE)?.value;
+  const locale = isLocale(cookieLocale)
+    ? cookieLocale
+    : matchAcceptLanguage((await headers()).get('accept-language')) ?? defaultLocale;
 
   return {
     locale,
     messages: (await import(`@/messages/${locale}.json`)).default,
-    timeZone: 'America/Costa_Rica' // Seteamos tu zona horaria por defecto
+    timeZone,
   };
 });

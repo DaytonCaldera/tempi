@@ -1,25 +1,23 @@
-import mongo from '@/lib/mongodb';
-import { auth } from "@/auth";
 import { NextResponse } from 'next/server';
+import { auth } from "@/auth";
+import { getDb, serverError, unauthorized } from '@/lib/api';
 import { ROLES } from '@/lib/constants';
+import { OPEN_ORGANIZATION } from '@/lib/organizations';
 
+/** GET /api/admin/clients - Id and name of every organization, for the superadmin's switcher. */
 export async function GET() {
     const session = await auth();
-    if (session?.user?.role !== ROLES.SUPERADMIN) {
-        return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-    }
+    if (session?.user?.role !== ROLES.SUPERADMIN) return unauthorized();
 
     try {
-        const client = await mongo;
-        const db = client.db(process.env.MONGODB_DB);
-        
-        // Traemos solo el ID y el Nombre para el selector
+        const db = await getDb();
         const clients = await db.collection('clients')
-            .find({}, { projection: { name: 1 } })
+            .find(OPEN_ORGANIZATION, { projection: { name: 1 } })
             .toArray();
 
         return NextResponse.json(clients);
     } catch (error) {
-        return NextResponse.json({ message: "Error al cargar clientes" }, { status: 500 });
+        console.error("GET clients error:", error);
+        return serverError();
     }
 }

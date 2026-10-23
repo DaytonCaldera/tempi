@@ -1,48 +1,34 @@
-import mongo from '@/lib/mongodb';
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import DepartmentManagementClient from './DeparmentsManagementClient';
+import { auth } from "@/auth";
+import { getDb } from '@/lib/api';
 import { ROLES } from '@/lib/constants';
+import { OPEN_ORGANIZATION } from '@/lib/organizations';
+import { hasPermission } from '@/lib/permissions';
 import { getTenantQuery } from '@/lib/tenant-guard';
-import { hasPermission } from '@/lib/hasPermissions';
+import DepartmentsManagementClient from './DepartmentsManagementClient';
 
-export default async function DepartmentManagementPage() {
+export default async function DepartmentsManagementPage() {
     const session = await auth();
     if (!session) redirect("/");
+    if (!hasPermission(session, "manage_departments")) redirect("/unauthorized");
 
-    if (!hasPermission(session, "manage_departments")) {
-        redirect("/unauthorized"); // Or back to dashboard
-    }
+    const db = await getDb();
+    const departments = await db.collection('departments').find(getTenantQuery(session)).toArray();
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
-
-    const isSuperAdmin = session.user.role === ROLES.SUPERADMIN;
-    
-    // If Superadmin, get all depts. If Admin, filter by their clientId.
-    const query = getTenantQuery(session);
-    console.log(query);
-    
-    
-    const deptsRaw = await db.collection('departments').find(query).toArray();
-    
-    // Also fetch clients list ONLY if user is Superadmin (for the dropdown)
-    let clients:any = [];
-    if (isSuperAdmin) {
-        const clientsRaw = await db.collection('clients').find({}).toArray();
-        clients = clientsRaw.map(c => ({ _id: c._id.toString(), name: c.name }));
-    }
-
-    const departments = deptsRaw.map(dept => ({
-        ...dept,
-        _id: dept._id.toString(),
-        clientId: dept.clientId?.toString(),
-    }));
+    // Superadmins pick the organization of a new department from a dropdown
+    const clients = session.user.role === ROLES.SUPERADMIN
+        ? (await db.collection('clients').find(OPEN_ORGANIZATION).toArray()).map(c => ({ _id: c._id.toString(), name: c.name }))
+        : [];
 
     return (
         <div className="p-0 lg:p-10">
-            <DepartmentManagementClient 
-                initialDepartments={departments} 
+            <DepartmentsManagementClient
+                departments={departments.map(dept => ({
+                    _id: dept._id.toString(),
+                    name: dept.name,
+                    description: dept.description,
+                    clientId: dept.clientId?.toString(),
+                }))}
                 clients={clients}
                 userRole={session.user.role}
                 userClientId={session.user.clientId}
