@@ -28,7 +28,7 @@ export function useConsumptionReport(deptId?: string) {
     const [data, setData] = useState<ConsumptionReportDepartment[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [details, setDetails] = useState<MovementLog[]>([]);
+    const [loadedDetails, setLoadedDetails] = useState<{ query: string | null; logs: MovementLog[] }>({ query: null, logs: [] });
 
     useEffect(() => {
         if (!range.start || !range.end) return;
@@ -47,15 +47,33 @@ export function useConsumptionReport(deptId?: string) {
         loadReport();
     }, [range, deptId]);
 
-    /** Expands a product row and loads its movements, or collapses it if already open. */
-    const toggleDetails = async (inventoryId: string) => {
-        if (expandedId === inventoryId) {
-            setExpandedId(null);
-            return;
-        }
-        setExpandedId(inventoryId);
-        const res = await fetch(`/api/admin/reports/consumption/details?inventoryId=${inventoryId}&${rangeQuery(range)}`);
-        setDetails(res.ok ? await res.json() : []);
+    // Movements of the expanded row, reloaded when the range changes. Each result is stored with the
+    // request it answers, so a slow response never shows under another row or range.
+    const detailsQuery = expandedId && range.start && range.end
+        ? `inventoryId=${expandedId}&${rangeQuery(range)}`
+        : null;
+    const details = loadedDetails.query === detailsQuery ? loadedDetails.logs : [];
+
+    useEffect(() => {
+        if (!detailsQuery) return;
+
+        const controller = new AbortController();
+        const loadDetails = async () => {
+            try {
+                const res = await fetch(`/api/admin/reports/consumption/details?${detailsQuery}`, { signal: controller.signal });
+                const logs: MovementLog[] = res.ok ? await res.json() : [];
+                setLoadedDetails({ query: detailsQuery, logs });
+            } catch (error) {
+                if (!controller.signal.aborted) console.error("Error fetching movements:", error);
+            }
+        };
+        loadDetails();
+        return () => controller.abort();
+    }, [detailsQuery]);
+
+    /** Expands a product row (its movements load in the effect above), or collapses it if already open. */
+    const toggleDetails = (inventoryId: string) => {
+        setExpandedId(current => (current === inventoryId ? null : inventoryId));
     };
 
     return { range, setRange, data, loading, expandedId, details, toggleDetails };

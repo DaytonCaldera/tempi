@@ -17,6 +17,7 @@ class ImportDepartmentStock {
             const clientId = new ObjectId(clientIdStr);
             const departmentsCol = db.collection('departments');
             const stockCol = db.collection('department_stock');
+            const movementsCol = db.collection('stock_movements');
 
             const data = this.readJsonFile(fileName);
 
@@ -88,7 +89,27 @@ class ImportDepartmentStock {
                         };
 
                         if (!dryRun) {
-                            await stockCol.insertOne(newStock);
+                            const { insertedId } = await stockCol.insertOne(newStock);
+
+                            // The starting quantity is a movement too: reports work backwards from today's quantity
+                            const quantity = Number(item.cantidad) || 0;
+                            if (quantity !== 0) {
+                                await movementsCol.insertOne({
+                                    inventoryId: insertedId,
+                                    departmentId: department._id,
+                                    departmentName: department.name,
+                                    clientId: clientId,
+                                    productName: item.item,
+                                    sku: sku,
+                                    type: quantity > 0 ? 'IN' : 'OUT',
+                                    amount: Math.abs(quantity),
+                                    previousBalance: 0,
+                                    newBalance: quantity,
+                                    reason: 'Inventario inicial', // MOVEMENT_REASONS.INITIAL_STOCK in lib/constants.ts
+                                    user: { id: null, name: null },
+                                    createdAt: newStock.createdAt
+                                });
+                            }
                         }
                         report.itemsInserted++;
                     }

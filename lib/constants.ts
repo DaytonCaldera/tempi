@@ -50,6 +50,8 @@ export const sectionPermissions: Record<string, string> = {
 /**
  * Reasons written to stock_movements.reason. They are stored data (the reports filter on INITIAL_SYNC),
  * so the values stay as they are; the UI shows them through the "movementReasons" messages.
+ * INITIAL_STOCK is the IN recorded when an item is created with a quantity, so reports can work
+ * backwards from the current quantity to any past date.
  */
 export const MOVEMENT_REASONS = {
     ADMIN_QUICK_ADJUSTMENT: "Ajuste rápido Admin",
@@ -57,6 +59,9 @@ export const MOVEMENT_REASONS = {
     RESTOCK: "Reabastecimiento",
     MANUAL_ADJUSTMENT: "Ajuste manual",
     INITIAL_SYNC: "Sincronización inicial del sistema",
+    INITIAL_STOCK: "Inventario inicial",
+    // Written by scripts/repair-stock-movements.js for quantity changes that were never logged
+    RECONCILIATION: "Conciliación de inventario",
 } as const;
 
 /** Units a stock item can be counted in. Stored as-is in department_stock.unit; labels are in the "units" messages. */

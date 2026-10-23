@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getDb, notFound, serverError, toObjectId, unauthorized } from '@/lib/api';
+import { MOVEMENT_REASONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 
 type Params = { params: Promise<{ id: string }> };
@@ -21,6 +22,8 @@ export async function POST(req: Request, { params }: Params) {
 
         const body = await req.json();
         const db = await getDb();
+        const quantity = Number(body.quantity) || 0;
+        const now = new Date();
 
         const result = await db.collection('department_stock').insertOne({
             departmentId: department._id,
@@ -28,11 +31,30 @@ export async function POST(req: Request, { params }: Params) {
             productName: body.name,
             sku: body.sku,
             unit: body.unit,
-            quantity: Number(body.quantity),
+            quantity,
             minStock: Number(body.minStock),
-            updatedAt: new Date(),
-            createdAt: new Date()
+            updatedAt: now,
+            createdAt: now
         });
+
+        // The starting quantity is a movement too: reports work backwards from today's quantity
+        if (quantity !== 0) {
+            await db.collection('stock_movements').insertOne({
+                inventoryId: result.insertedId,
+                departmentId: department._id,
+                departmentName: department.name,
+                clientId: department.clientId,
+                productName: body.name,
+                sku: body.sku,
+                type: quantity > 0 ? "IN" : "OUT",
+                amount: Math.abs(quantity),
+                previousBalance: 0,
+                newBalance: quantity,
+                reason: MOVEMENT_REASONS.INITIAL_STOCK,
+                user: { id: session.user.id, name: session.user.name, email: session.user.email },
+                createdAt: now
+            });
+        }
 
         return NextResponse.json({ success: true, id: result.insertedId });
     } catch (error) {

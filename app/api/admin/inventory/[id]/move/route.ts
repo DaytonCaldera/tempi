@@ -45,16 +45,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return forbidden("moveNotAllowed");
         }
 
-        const previousBalance = item.quantity || 0;
-        const newBalance = previousBalance + (type === "IN" ? quantity : -quantity);
-        if (newBalance < 0) return badRequest("insufficientStock");
+        // Atomic $inc: concurrent moves can't overwrite each other, and an OUT only matches while there is enough stock
+        const delta = type === "IN" ? quantity : -quantity;
+        const stock = db.collection<StockItem>('department_stock');
+        const updated = await stock.findOneAndUpdate(
+            { _id: itemId, isDeleted: { $ne: true }, ...(type === "OUT" && { quantity: { $gte: quantity } }) },
+            { $inc: { quantity: delta }, $set: { updatedAt: new Date() } },
+            { returnDocument: "after" }
+        );
+        if (!updated) return badRequest("insufficientStock");
 
-        await Promise.all([
-            db.collection('department_stock').updateOne(
-                { _id: itemId },
-                { $set: { quantity: newBalance, updatedAt: new Date() } }
-            ),
-            db.collection('stock_movements').insertOne({
+        const newBalance = updated.quantity;
+        const previousBalance = newBalance - delta;
+
+        try {
+            await db.collection('stock_movements').insertOne({
                 inventoryId: itemId,
                 departmentId: item.departmentId,
                 departmentName: department.name,
@@ -68,8 +73,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 reason: reason || MOVEMENT_REASONS.MANUAL_ADJUSTMENT,
                 user: { id: userDoc?._id, name: session.user.name, email: session.user.email },
                 createdAt: new Date()
-            }),
-        ]);
+            });
+        } catch (error) {
+            // Without its movement the change would break the reports: undo it
+            await stock.updateOne({ _id: itemId }, { $inc: { quantity: -delta } });
+            throw error;
+        }
 
         return NextResponse.json({ success: true, newQuantity: newBalance });
     } catch (error) {

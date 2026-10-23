@@ -73,6 +73,8 @@
         "RESTOCK": "Reabastecimiento",
         "MANUAL_ADJUSTMENT": "Ajuste manual",
         "INITIAL_SYNC": "Sincronización inicial del sistema",
+        "INITIAL_STOCK": "Inventario inicial",
+        "RECONCILIATION": "Conciliación de inventario",
         "none": "Sin justificación"
     },
     "nav": {

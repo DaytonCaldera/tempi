@@ -73,6 +73,8 @@
         "RESTOCK": "Restock",
         "MANUAL_ADJUSTMENT": "Manual adjustment",
         "INITIAL_SYNC": "Initial system sync",
+        "INITIAL_STOCK": "Initial stock",
+        "RECONCILIATION": "Inventory reconciliation",
         "none": "No reason given"
     },
     "nav": {

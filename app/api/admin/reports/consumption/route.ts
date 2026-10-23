@@ -3,6 +3,7 @@ import type { Document } from 'mongodb';
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { badRequest, getDb, toObjectId, unauthorized } from '@/lib/api';
+import { MOVEMENT_REASONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
 import type { ConsumptionReportDepartment } from '@/types/models';
 
@@ -49,13 +50,29 @@ export async function GET(req: Request) {
 
     for (const department of departments) {
         const items = await db.collection('department_stock').aggregate([
-            { $match: { departmentId: department._id } },
+            {
+                $match: {
+                    departmentId: department._id,
+                    $and: [
+                        // Items created after the range didn't exist yet
+                        { $or: [{ createdAt: { $exists: false } }, { createdAt: { $lte: endDate } }] },
+                        // Deleted items only while they still existed during the range
+                        { $or: [{ isDeleted: { $ne: true } }, { deletedAt: { $gte: startDate } }] },
+                    ]
+                }
+            },
             {
                 $lookup: {
                     from: "stock_movements",
                     let: { stockId: "$_id" },
                     pipeline: [
-                        { $match: { $expr: { $eq: ["$inventoryId", "$$stockId"] } } },
+                        {
+                            $match: {
+                                $expr: { $eq: ["$inventoryId", "$$stockId"] },
+                                // Sync movements never changed the quantity, so they must not be undone or counted
+                                reason: { $ne: MOVEMENT_REASONS.INITIAL_SYNC }
+                            }
+                        },
                         {
                             $facet: {
                                 inRange: sumMovements({ $gte: startDate, $lte: endDate }),
