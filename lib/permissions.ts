@@ -1,19 +1,11 @@
-'use server'
-import mongo from "@/lib/mongodb";
+import type { Session } from "next-auth";
+import { ROLES } from "./constants";
+
 /**
- * Checks if a specific role has a required permission.
- * In a real-world scenario, you might fetch this from the DB and cache it.
- * For now, we use the session data which will contain the role's permission set.
+ * Checks a permission against the session (safe to use in server and client components).
+ * The session's permissions are loaded from the role at sign-in, see lib/roles.
  */
-
-
-export async function getRolePermissions(roleSlug: string) {
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
-    
-    // Look up the role document you seeded in the 'roles' collection
-    const roleDoc = await db.collection('roles').findOne({ slug: roleSlug });
-    
-    // Return the permissions object (e.g., { manage_users: true, ... }) or an empty object
-    return roleDoc?.permissions || {};
-}
+export const hasPermission = (session: Session | null | undefined, permissionKey: string): boolean => {
+    if (session?.user?.role === ROLES.SUPERADMIN) return true;
+    return !!session?.user?.permissions?.[permissionKey];
+};

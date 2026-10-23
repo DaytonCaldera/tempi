@@ -1,16 +1,12 @@
-// app/(main)/lobby/page.tsx
 'use client';
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PlusCircle, Hash, Building2, ArrowRight, LogOut, X, Loader2 } from "lucide-react";
-import { redirect } from "next/navigation";
-import Pending from "@/components/main/pending";
-import { ROLES } from "@/lib/constants";
 
 export default function LobbyPage() {
-    const { data: session, update, status } = useSession();
+    const { update, status } = useSession();
     const [joinCode, setJoinCode] = useState("");
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [companyName, setCompanyName] = useState("");
 
@@ -70,12 +66,6 @@ export default function LobbyPage() {
 
         setJoinCode(e.target.value);
     };
-
-    useEffect(() => {
-        if (status !== "loading") {
-            setLoading(false);
-        }
-    }, [status]);
 
 
     return status == "loading" ? (<div className="flex items-center justify-center min-h-screen p-6">

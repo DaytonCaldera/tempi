@@ -3,9 +3,9 @@ import { useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Building2, Check, RefreshCw } from "lucide-react";
+import type { SessionMembership } from "@/types/models";
 
-export default function OrgSwitcher({ className, userOrgs }: { className?: string; userOrgs: any[] }) {
-    
+export default function OrganizationSwitcher({ className, userOrgs }: { className?: string; userOrgs: SessionMembership[] }) {
     const { data: session, update } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [isSwitching, setIsSwitching] = useState(false);
@@ -39,10 +39,9 @@ export default function OrgSwitcher({ className, userOrgs }: { className?: strin
         return () => document.removeEventListener("mousedown", handler);
     }, [isOpen]);
 
-    const handleSwitch = async (clientId: any) => {
-        console.log(clientId, session?.user?.clientId?.toString());
-        
-        if (clientId === session?.user?.clientId?.toString()) return;
+    // Saves the choice for the next sign-in, then switches the current session and reloads
+    const handleSwitch = async (clientId: string) => {
+        if (clientId === session?.user?.clientId) return;
         await fetch('/api/user/update-organization', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

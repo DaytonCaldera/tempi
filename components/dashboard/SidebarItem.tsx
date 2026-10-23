@@ -1,11 +1,14 @@
 'use client';
 import Link from "next/link";
-import * as LucideIcons from "lucide-react";
+import { CheckSquare, Home, Layers, LayoutDashboard, Package, Users, type LucideIcon } from "lucide-react";
+
+// Icons that menuItems.json can reference by name. Add new ones here.
+const ICONS: Record<string, LucideIcon> = { CheckSquare, Home, Layers, LayoutDashboard, Users };
 
 type SidebarItemProps = {
     href: string;
     label: string;
-    iconName?: string; // Passed from menu_items.json
+    iconName?: string; // From menuItems.json
     isActive?: boolean;
     isCollapsed?: boolean;
 };
@@ -18,8 +21,7 @@ export default function SidebarItem({
     isCollapsed = false 
 }: SidebarItemProps) {
     
-    // Dynamically resolve the icon component
-    const Icon = iconName ? (LucideIcons as any)[iconName] : LucideIcons.Package;
+    const Icon = (iconName && ICONS[iconName]) || Package;
 
     return (
         <Link 

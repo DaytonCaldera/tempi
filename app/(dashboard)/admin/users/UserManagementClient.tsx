@@ -1,28 +1,39 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
+import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import { Modal } from "@/components/ui/Modal";
 import {
-    UserCheck, Shield, Edit3, UserPlus, Ban, Copy, Check
+    Shield, Edit3, UserPlus, Ban, Copy, Check
 } from "lucide-react";
 import { ROLES } from "@/lib/constants";
-import { useSession } from "next-auth/react";
 
-export default function UserManagementClient({ users: initialUsers, departments, client }: { users: any[], departments: any[], client: any }) {
-    const { data: session } = useSession();
+/** A user flattened with their membership in the current organization. */
+export type UserRow = {
+    _id: string;
+    name: string;
+    email: string;
+    image?: string;
+    clientId?: string;
+    role: string;
+    isPending: boolean;
+    isActive: boolean;
+    departments: string[];
+};
+
+interface UserManagementClientProps {
+    users: UserRow[];
+    departments: { _id: string; name: string }[];
+    client: { _id: string; code: string; name: string } | null;
+}
+
+export default function UserManagementClient({ users, departments, client }: UserManagementClientProps) {
     const router = useRouter();
-    const [users, setUsers] = useState(initialUsers);
-    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
     const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
     const [selectedRole, setSelectedRole] = useState<string>(ROLES.USER);
-    const [targetClientId, setTargetClientId] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
-
-    // Sync state
-    useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
-    console.log(client);
 
     const clientCode = client?.code || "N/A";
 
@@ -32,14 +43,14 @@ export default function UserManagementClient({ users: initialUsers, departments,
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const openEditModal = (user: any) => {
+    const openEditModal = (user: UserRow) => {
         setSelectedUser(user);
         setSelectedDepts(user.departments || []);
         setSelectedRole(user.role || ROLES.USER);
-        setTargetClientId(user.clientId || '');
     };
 
     const handleConfirm = async () => {
+        if (!selectedUser) return;
         setLoading(true);
         const res = await fetch("/api/admin/users/toggle-status", {
             method: "PATCH",
@@ -89,7 +100,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                     <p className="text-5xl font-black tracking-tighter">{users.length}</p>
                     <div className="mt-4 flex items-center gap-2 text-brand-accent text-xs font-bold">
                         <UserPlus size={14} />
-                        {users.filter(u => !u.status).length} pendientes de aprobación
+                        {users.filter(u => u.isPending).length} pendientes de aprobación
                     </div>
                 </div>
             </div>
@@ -118,7 +129,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                                         {user.role}
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {user.departments?.map((deptId: string) => {
+                                        {user.departments.map(deptId => {
                                             const dept = departments.find(d => d._id === deptId);
                                             return (
                                                 <span key={deptId} className="px-3 py-1 bg-surface text-brand border border-brand/5 rounded-lg text-[10px] font-bold">
@@ -131,17 +142,17 @@ export default function UserManagementClient({ users: initialUsers, departments,
                             </DataTableCell>
 
                             <DataTableCell>
-                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${user.isActive ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-success' : 'bg-warning'}`} />
+                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${user.isActive && !user.isPending ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${user.isActive && !user.isPending ? 'bg-success' : 'bg-warning'}`} />
                                     <span className="text-[10px] font-black uppercase tracking-widest">
-                                        {user.status ? "Activo" : "Pendiente"}
+                                        {user.isPending ? "Pendiente" : user.isActive ? "Activo" : "Inactivo"}
                                     </span>
                                 </div>
                             </DataTableCell>
 
                             <DataTableCell>
                                 <div className="flex items-center justify-end gap-2">
-                                    {!user.status ? (
+                                    {user.isPending ? (
                                         <button
                                             onClick={() => openEditModal(user)}
                                             className="px-4 py-2 bg-brand-accent text-brand rounded-xl text-xs font-black hover:brightness-110 transition-all shadow-sm"
@@ -173,7 +184,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                         disabled={loading || selectedDepts.length === 0}
                         className="w-full bg-brand text-brand-accent py-5 rounded-4xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {loading ? "Procesando..." : selectedUser?.status ? "Guardar Cambios" : "Activar Miembro"}
+                        {loading ? "Procesando..." : selectedUser?.isPending ? "Activar Miembro" : "Guardar Cambios"}
                     </button>
                 }
             >
@@ -222,7 +233,7 @@ export default function UserManagementClient({ users: initialUsers, departments,
                         disabled={loading || selectedDepts.length === 0}
                         className="w-full bg-brand text-brand-accent py-5 rounded-4xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {loading ? "Procesando..." : selectedUser?.status ? "Guardar Cambios" : "Activar Miembro"}
+                        {loading ? "Procesando..." : selectedUser?.isPending ? "Activar Miembro" : "Guardar Cambios"}
                     </button> */}
                 </div>
             </Modal>

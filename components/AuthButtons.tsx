@@ -1,5 +1,5 @@
 import { signIn, signOut } from "next-auth/react"
-import Button from "./ui/button"
+import Button from "./ui/Button"
 import { useTranslations } from "next-intl";
 
 export function SignIn({

@@ -1,72 +1,68 @@
-import { auth } from "@/auth";
-import mongo from "@/lib/mongodb";
-import { PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { apiError, badRequest, getDb, serverError, unauthorized } from "@/lib/api";
+import { PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
 
+const DEFAULT_PLAN_NAME = "Plan Gratuito";
+
+/** Random join code in the format "ABC-123". */
+const generateClientCode = () => {
+    const part = () => Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `${part()}-${part()}`;
+};
+
+/**
+ * POST /api/auth/organization/create
+ * Creates an organization on the free plan with a default "General" department,
+ * and makes the current user its admin. Body: { companyName }
+ */
 export async function POST(req: Request) {
-    const defaultPlanName = "Plan Gratuito";
+    const session = await auth();
+    if (!session?.user?.email) return unauthorized();
 
     try {
-        const session = await auth();
-        if (!session?.user?.email) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-
         const { companyName } = await req.json();
-        if (!companyName) return NextResponse.json({ message: "Nombre de empresa requerido" }, { status: 400 });
+        if (!companyName) return badRequest("Nombre de empresa requerido");
 
-        const client = await mongo;
-        const db = client.db(process.env.MONGODB_DB);
+        const db = await getDb();
 
-        // 1. Generate a unique Client Code
-        const clientCode = Math.random().toString(36).substring(2, 5).toUpperCase() + "-" +
-                           Math.random().toString(36).substring(2, 5).toUpperCase();
+        const defaultPlan = await db.collection("plans").findOne({ name: DEFAULT_PLAN_NAME });
+        if (!defaultPlan) return apiError("Plan predeterminado no encontrado", 500);
 
-        const defaultPlan = await db.collection("plans").findOne({ name: defaultPlanName });
-        if (!defaultPlan) {
-            return NextResponse.json({ message: "Plan predeterminado no encontrado" }, { status: 500 });
-        }
-
-        // 2. Create the Client Document
-        const newClient = await db.collection("clients").insertOne({
+        const clientCode = generateClientCode();
+        const { insertedId: clientId } = await db.collection("clients").insertOne({
             name: companyName,
-            clientCode: clientCode,
+            clientCode,
             planId: defaultPlan._id,
             ownerEmail: session.user.email,
             createdAt: new Date(),
         });
 
-        const clientId = newClient.insertedId;
-
-        // 3. Create default "General" Department
-        const defaultDepartment = await db.collection('departments').insertOne({
+        const { insertedId: departmentId } = await db.collection('departments').insertOne({
             name: "General",
             description: "Departamento inicial predeterminado",
-            clientId: clientId,
+            clientId,
             createdAt: new Date()
         });
 
-        const departmentId = defaultDepartment.insertedId;
-
-        // 4. Remove the old placeholder org, otherwise it is picked over this one on the next sign-in
+        // Remove the old placeholder org, otherwise it is picked over this one on the next sign-in
         // (separate update: Mongo can't $pull and $addToSet the same array in one operation)
         await db.collection("users").updateOne(
             { email: session.user.email },
-            { $pull: { organizations: { clientId: PLACEHOLDER_CLIENT_ID } } } as any
+            { $pull: { organizations: { clientId: PLACEHOLDER_CLIENT_ID } } } as object
         );
 
-        // 5. MULTI-ORG UPDATE: Use $addToSet to add to the array, don't overwrite!
         await db.collection("users").updateOne(
             { email: session.user.email },
             {
-                // We keep role/clientId at top-level for backwards compatibility
-                // but the "Source of Truth" is now the organizations array
                 $set: {
                     isActive: true,
                     activeOrganization: clientId, // Sign-in resolves the role from this org
                 },
                 $addToSet: {
                     organizations: {
-                        clientId: clientId,
-                        clientCode: clientCode,
+                        clientId,
+                        clientCode,
                         clientName: companyName,
                         role: ROLES.ADMIN,
                         status: "active",
@@ -77,13 +73,9 @@ export async function POST(req: Request) {
             }
         );
 
-        return NextResponse.json({
-            message: "Organización creada",
-            clientCode,
-            clientId: clientId.toString()
-        });
+        return NextResponse.json({ message: "Organización creada", clientCode, clientId: clientId.toString() });
     } catch (error) {
-        console.error("Creation Error:", error);
-        return NextResponse.json({ message: "Error al crear organización" }, { status: 500 });
+        console.error("Create organization error:", error);
+        return serverError();
     }
 }

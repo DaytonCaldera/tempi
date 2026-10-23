@@ -1,77 +1,71 @@
 "use client";
-import React, { useState, useEffect, use } from "react";
-import { Search, Minus, Plus, Package, Loader2, RotateCcw, LayoutDashboard, Link, LogOut, MapPin } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useState } from "react";
+import { Search, Minus, Plus, Loader2, RotateCcw, LayoutDashboard, LogOut, MapPin } from "lucide-react";
+import { signOut } from "next-auth/react";
 import useSWR from "swr";
 import { useTranslations } from "next-intl";
+import { fetcher } from "@/lib/fetcher";
+import { ROLES } from "@/lib/constants";
+import type { MovementType, StockItem } from "@/types/models";
 
-// 1. Fetcher function for SWR
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+type Item = StockItem<string>;
 
-export default function RunnerInventoryClient({ initialItems, userRole, permissions }: { initialItems: any[]; userRole: string; permissions: any }) {
-    const { data: session, status } = useSession();
+interface RunnerInventoryProps {
+    initialItems: Item[];
+    userRole: string;
+    permissions: Record<string, boolean>;
+}
+
+/** Groups items by department name, for the department separators. */
+const groupByDepartment = (items: Item[]) =>
+    items.reduce<Record<string, Item[]>>((groups, item) => {
+        const department = item.departmentName || "General";
+        (groups[department] ||= []).push(item);
+        return groups;
+    }, {});
+
+export default function RunnerInventory({ initialItems, userRole, permissions }: RunnerInventoryProps) {
     const t = useTranslations('');
-    
-    console.log(userRole);
-    
 
     const [search, setSearch] = useState("");
     const [globalQty, setGlobalQty] = useState(1);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
-    // 2. Real-Time Sync using SWR
-    // We fetch based on the department(s) the user has access to.
-    // Note: In a real scenario, you'd pass the deptIds to this endpoint.
-    const { data: items, mutate } = useSWR(
-        '/api/admin/inventory', // Or your specific runner-inventory endpoint
-        fetcher,
-        {
-            fallbackData: initialItems,
-            refreshInterval: 2500, // Polls every 2.5 seconds for background updates,
-            revalidateOnFocus: true, // Re-fetches data when the window regains focus
-            dedupingInterval: 2000 // Prevents duplicate requests within 2 seconds
-        }
+    // Polls so every runner sees stock changes made by others
+    const { data: items = [], mutate } = useSWR<Item[]>('/api/admin/inventory', fetcher, {
+        fallbackData: initialItems,
+        refreshInterval: 2500,
+        revalidateOnFocus: true,
+        dedupingInterval: 2000
+    });
+
+    const searchTerm = search.toLowerCase();
+    const filteredItems = items.filter(item =>
+        item.productName.toLowerCase().includes(searchTerm) ||
+        item.sku.toLowerCase().includes(searchTerm)
     );
+    const groupedItems = groupByDepartment(filteredItems);
+    const canOpenDashboard = userRole === ROLES.ADMIN || userRole === ROLES.SUPERADMIN || permissions.view_dashboard === true;
 
-    // Filter Logic (using the SWR data 'items')
-    const filteredItems = items?.filter((item: any) =>
-        item.productName.toLowerCase().includes(search.toLowerCase()) ||
-        item.sku.toLowerCase().includes(search.toLowerCase())
-    ) || [];
-
-    const groupedItems = filteredItems.reduce((acc: any, item: any) => {
-        const dept = item.departmentName || "General";
-        if (!acc[dept]) acc[dept] = [];
-        acc[dept].push(item);
-        return acc;
-    }, {});
-
-    const handleUpdate = async (id: string, type: 'IN' | 'OUT') => {
+    const handleUpdate = async (id: string, type: MovementType) => {
         if (globalQty <= 0) return;
         setProcessingId(id);
 
-        // Optimistic UI Update: Change the number locally before the server responds
-        const currentItem = items.find((i: any) => i._id === id);
-        const optimisticQty = type === 'IN'
-            ? currentItem.quantity + globalQty
-            : Math.max(0, currentItem.quantity - globalQty);
-
-        const updatedItems = items.map((i: any) =>
-            i._id === id ? { ...i, quantity: optimisticQty } : i
-        );
-
-        // Tell SWR to show the new number immediately
+        // Optimistic update: show the new quantity before the server responds
+        const updatedItems = items.map(item => item._id !== id ? item : {
+            ...item,
+            quantity: type === 'IN' ? item.quantity + globalQty : Math.max(0, item.quantity - globalQty)
+        });
         mutate(updatedItems, false);
 
         try {
-            const res = await fetch(`/api/admin/inventory/move`, {
+            const res = await fetch(`/api/admin/inventory/${id}/move`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id,
                     amount: globalQty,
                     type,
-                    user: { name: session?.user?.name, email: session?.user?.email }
+                    reason: type === 'OUT' ? "Consumo Runner" : "Reabastecimiento"
                 })
             });
 
@@ -81,7 +75,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
             mutate();
             setGlobalQty(1);
         } catch (error) {
-            console.error("Update failed");
+            console.error("Stock update failed:", error);
             mutate(); // Rollback to server data if it fails
         } finally {
             setProcessingId(null);
@@ -92,7 +86,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
         <div className="max-w-md mx-auto p-5 space-y-6">
 
             <div className="flex items-center justify-between gap-4 px-2">
-                {((userRole === 'admin' || userRole === 'superadmin') || permissions.view_dashboard === true) && (
+                {canOpenDashboard && (
                     <a
                         href="/dashboard"
                         className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all"
@@ -165,7 +159,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
 
             {/* 3. PRODUCT CARDS */}
             <div className="space-y-12">
-                {Object.entries(groupedItems).map(([deptName, items]: [string, any]) => (
+                {Object.entries(groupedItems).map(([deptName, deptItems]) => (
                     <div key={deptName} className="space-y-4">
                         {/* DEPARTMENT SEPARATOR */}
                         <div className="flex items-center gap-4 px-2">
@@ -181,7 +175,7 @@ export default function RunnerInventoryClient({ initialItems, userRole, permissi
 
                         {/* CARDS FOR THIS DEPARTMENT */}
                         <div className="space-y-4">
-                            {items.map((item: any) => (
+                            {deptItems.map(item => (
                                 <div key={item._id} className="bg-white p-7 rounded-[3rem] border border-gray-100 shadow-sm">
                                     <div className="flex justify-between items-start mb-8">
                                         <div>

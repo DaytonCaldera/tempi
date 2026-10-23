@@ -1,7 +1,7 @@
 // ESTE ES UN SERVER COMPONENT (sin 'use client')
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
-import AuthProvider from "@/components/providers/SessionProvider";
+import AuthProvider from "@/components/SessionProvider";
 import { Geist, Geist_Mono } from 'next/font/google';
 import '@/app/globals.css';
 import DashboardClientWrapper from "./DashboardClientWrapper";

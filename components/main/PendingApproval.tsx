@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { SignOut } from "../auth-components";
+import { SignOut } from "@/components/AuthButtons";
 
 // How often to re-check if an admin approved the user
 const APPROVAL_CHECK_INTERVAL = 15000;
 
-export default function Pending() {
+export default function PendingApproval() {
     const { update } = useSession();
 
     // The session re-reads the membership for pending users, so once approved the home page redirects them

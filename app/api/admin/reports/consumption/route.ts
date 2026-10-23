@@ -1,73 +1,63 @@
-import { auth } from '@/auth';
-import mongo from '@/lib/mongodb';
-import { getTenantQuery } from '@/lib/tenant-guard';
-import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
+import type { Document } from 'mongodb';
+import { auth } from '@/auth';
+import { badRequest, getDb, toObjectId, unauthorized } from '@/lib/api';
+import { getTenantQuery } from '@/lib/tenant-guard';
+import type { ConsumptionReportDepartment } from '@/types/models';
 
+/** Sums IN and OUT amounts of the movements that match `createdAt`. */
+const sumMovements = (createdAt: Document) => [
+    { $match: { createdAt } },
+    {
+        $group: {
+            _id: null,
+            in: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$amount", 0] } },
+            out: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$amount", 0] } }
+        }
+    }
+];
+
+/**
+ * GET /api/admin/reports/consumption?start=&end=&deptId=
+ * For each department (or only deptId) and each of its products: the stock at the start of the range,
+ * what came in and went out during the range, and the stock at the end of the range.
+ */
 export async function GET(req: Request) {
     const session = await auth();
+    if (!session?.user) return unauthorized();
+
     const { searchParams } = new URL(req.url);
-    const start = searchParams.get('start'); 
-    const end = searchParams.get('end');     
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
     const deptId = searchParams.get('deptId');
 
-    if (!start || !end) {
-        return NextResponse.json({ error: "Fechas requeridas" }, { status: 400 });
-    }
+    if (!start || !end) return badRequest("Fechas requeridas");
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
+    const departmentId = deptId ? toObjectId(deptId) : null;
+    if (deptId && !departmentId) return badRequest("Departamento inválido");
 
-    const tenantQuery = getTenantQuery(session);
-    const deptMatch: any = { ...tenantQuery };
-    
-    if (deptId) {
-        deptMatch._id = new ObjectId(deptId);
-    }
+    const db = await getDb();
+    const departments = await db.collection('departments')
+        .find({ ...getTenantQuery(session), ...(departmentId && { _id: departmentId }) })
+        .toArray();
 
-    const departments = await db.collection('departments').find(deptMatch).toArray();
-    const report = [];
+    const report: ConsumptionReportDepartment[] = [];
 
-    for (const dept of departments) {
-        
-        const stockMatch = { departmentId: dept._id };
-        
+    for (const department of departments) {
         const items = await db.collection('department_stock').aggregate([
-            { $match: stockMatch },
+            { $match: { departmentId: department._id } },
             {
                 $lookup: {
                     from: "stock_movements",
                     let: { stockId: "$_id" },
                     pipeline: [
-                        {
-                            $match: {
-                                $expr: { $eq: ["$inventoryId", "$$stockId"] }
-                            }
-                        },
+                        { $match: { $expr: { $eq: ["$inventoryId", "$$stockId"] } } },
                         {
                             $facet: {
-                                // Movimientos estrictamente dentro de las fechas elegidas
-                                inRange: [
-                                    { $match: { createdAt: { $gte: new Date(start), $lte: new Date(end) } } },
-                                    {
-                                        $group: {
-                                            _id: null,
-                                            in: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$amount", 0] } },
-                                            out: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$amount", 0] } }
-                                        }
-                                    }
-                                ],
-                                // Movimientos que ocurrieron DESPUÉS de la fecha final (hasta el presente)
-                                afterEnd: [
-                                    { $match: { createdAt: { $gt: new Date(end) } } },
-                                    {
-                                        $group: {
-                                            _id: null,
-                                            in: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$amount", 0] } },
-                                            out: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$amount", 0] } }
-                                        }
-                                    }
-                                ]
+                                inRange: sumMovements({ $gte: startDate, $lte: endDate }),
+                                afterEnd: sumMovements({ $gt: endDate }), // From the end of the range until now
                             }
                         }
                     ],
@@ -76,44 +66,28 @@ export async function GET(req: Request) {
             }
         ]).toArray();
 
-        const processedItems = items.map(item => {
-            const range = item.movements[0]?.inRange[0] || { in: 0, out: 0 };
-            const after = item.movements[0]?.afterEnd[0] || { in: 0, out: 0 };
-
-            // 1. La cantidad real que existe hoy en la base de datos
-            const currentQuantity = item.quantity || 0;
-
-            // 2. Todos los movimientos que ocurrieron DESDE la fecha de inicio hasta HOY
-            const totalInAfterStart = range.in + after.in;
-            const totalOutAfterStart = range.out + after.out;
-
-            // 3. INGENIERÍA INVERSA: Descubrimos cuánto había exactamente al inicio del rango elegido
-            const initialQuantity = currentQuantity - totalInAfterStart + totalOutAfterStart; 
-            
-            // 4. Los movimientos dentro del rango
-            const totalIn = range.in;
-            const totalOut = range.out;
-            const finalBalance = totalIn - totalOut;
-            
-            // 5. El inventario al final de ese rango específico
-            const finalQuantity = initialQuantity + finalBalance;
-
-            return {
-                inventoryId: item._id.toString(),
-                productName: item.productName || "Sin Nombre",
-                sku: item.sku || "N/A",
-                initialQuantity,
-                totalIn,
-                totalOut,
-                finalBalance,
-                finalQuantity
-            };
-        });
-
         report.push({
-            _id: dept._id,
-            departmentName: dept.name,
-            items: processedItems
+            _id: department._id.toString(),
+            departmentName: department.name,
+            items: items.map(item => {
+                const range = item.movements[0]?.inRange[0] || { in: 0, out: 0 };
+                const after = item.movements[0]?.afterEnd[0] || { in: 0, out: 0 };
+
+                // Work backwards from today's quantity: undo everything that happened since the range started
+                const initialQuantity = (item.quantity || 0) - (range.in + after.in) + (range.out + after.out);
+                const finalBalance = range.in - range.out;
+
+                return {
+                    inventoryId: item._id.toString(),
+                    productName: item.productName || "Sin Nombre",
+                    sku: item.sku || "N/A",
+                    initialQuantity,
+                    totalIn: range.in,
+                    totalOut: range.out,
+                    finalBalance,
+                    finalQuantity: initialQuantity + finalBalance,
+                };
+            }),
         });
     }
 

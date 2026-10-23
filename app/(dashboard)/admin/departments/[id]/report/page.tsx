@@ -1,24 +1,23 @@
-import ConsumptionReport from '@/components/admin/consumption';
-import { ObjectId } from 'mongodb';
-import mongo from '@/lib/mongodb';
 import Link from "next/link";
-import { ArrowLeft, Plus } from 'lucide-react';
-export default async function Dashboard({ params }: { params: { id: string } }) {
-    const { id } = await params;
+import { notFound, redirect } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import { auth } from '@/auth';
+import { toObjectId } from '@/lib/api';
+import { findOwnDepartment } from '@/lib/departments';
+import ConsumptionReport from '@/components/admin/consumption/ConsumptionReport';
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
-    const department = await db.collection('departments').findOne({
-        _id: new ObjectId(id)
-    });
+export default async function DepartmentReportPage({ params }: { params: Promise<{ id: string }> }) {
+    const session = await auth();
+    if (!session) redirect("/");
 
-    const departmentSerialized = department ? {
-        ...department,
-        _id: department._id.toString()
-    } : null;
+    const departmentId = toObjectId((await params).id);
+    const department = departmentId && await findOwnDepartment(session, departmentId);
+    if (!department) notFound();
+
+    const id = department._id.toString();
 
     return (
-        <div className={"p-6 lg:p-10"}>
+        <div className="p-6 lg:p-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
                 <Link
                     href={`/admin/departments/${id}/stock`}
@@ -27,7 +26,7 @@ export default async function Dashboard({ params }: { params: { id: string } }) 
                     <ArrowLeft size={14} /> VOLVER AL DEPARTAMENTO
                 </Link>
             </div>
-            <ConsumptionReport deptId={departmentSerialized?._id} title={`Reporte del departamento: ${department?.name}`} />
+            <ConsumptionReport deptId={id} title={`Reporte del departamento: ${department.name}`} />
         </div>
     );
 }

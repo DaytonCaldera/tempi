@@ -1,0 +1,28 @@
+{
+    "general": [
+        {
+            "href": "/",
+            "label": "Inicio",
+            "icon": "Home"
+        },
+        {
+            "href": "/dashboard",
+            "label": "Dashboard",
+            "icon": "LayoutDashboard"
+        }
+    ],
+    "admin": [
+        {
+            "href": "/admin/departments",
+            "label": "Departamentos",
+            "icon": "Layers",
+            "permission": "manage_departments"
+        },
+        {
+            "href": "/admin/users",
+            "label": "Personal",
+            "icon": "Users",
+            "permission": "manage_users"
+        }
+    ]
+}

@@ -5,6 +5,11 @@ import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronUp, Globe } from 'lucide-react'; // Asumiendo que usas lucide-react
 
+/** Stores the locale in the cookie that i18n/request.ts reads (valid for a year). */
+function saveLocale(locale: string) {
+  document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000`;
+}
+
 export default function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
@@ -32,7 +37,7 @@ export default function LanguageSwitcher() {
       setIsOpen(false);
       return;
     }
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`;
+    saveLocale(newLocale);
     router.refresh();
     setIsOpen(false);
   };

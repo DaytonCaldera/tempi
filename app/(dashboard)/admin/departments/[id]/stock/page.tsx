@@ -1,32 +1,22 @@
-import mongo from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { auth } from '@/auth';
+import { getDb, toObjectId } from '@/lib/api';
+import { findOwnDepartment } from '@/lib/departments';
+import type { StockItem } from '@/types/models';
 import StockManagementClient from './StockManagementClient';
 
-export default async function DepartmentStockPage({ params }: { params: { id: string } }) {
-    const { id } = await params;
+export default async function DepartmentStockPage({ params }: { params: Promise<{ id: string }> }) {
+    const session = await auth();
+    if (!session) redirect("/");
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
-
-    // 1. Fetch Department Details
-    const department = await db.collection('departments').findOne({ 
-        _id: new ObjectId(id) 
-    });
-
+    const departmentId = toObjectId((await params).id);
+    const department = departmentId && await findOwnDepartment(session, departmentId);
     if (!department) notFound();
 
-    const inventoryRaw = await db.collection('department_stock')
-        .find({ departmentId: new ObjectId(id) })
+    const db = await getDb();
+    const inventory = await db.collection<StockItem>('department_stock')
+        .find({ departmentId: department._id, isDeleted: { $ne: true } })
         .toArray();
-
-    const inventory = inventoryRaw.map(item => ({
-        ...item,
-        _id: item._id.toString(),
-        productId: item._id.toString(),
-        departmentId: item.departmentId.toString(),
-        clientId: item.clientId,
-    }));
 
     return (
         <div className="p-6 lg:p-10">
@@ -39,9 +29,14 @@ export default async function DepartmentStockPage({ params }: { params: { id: st
                 </p>
             </div>
 
-            <StockManagementClient 
-                initialInventory={inventory} 
-                departmentId={id} 
+            <StockManagementClient
+                initialInventory={inventory.map(item => ({
+                    ...item,
+                    _id: item._id.toString(),
+                    departmentId: item.departmentId.toString(),
+                    clientId: item.clientId?.toString(),
+                }))}
+                departmentId={department._id.toString()}
                 departmentName={department.name}
             />
         </div>

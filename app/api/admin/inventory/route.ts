@@ -1,44 +1,33 @@
-import { auth } from '@/auth';
-import mongo from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { getDb, serverError, unauthorized } from '@/lib/api';
+import type { User } from '@/types/models';
 
-export async function GET(req: Request) {
+/** GET /api/admin/inventory - Stock of the departments the user is assigned to in their active organization. */
+export async function GET() {
+    const session = await auth();
+    if (!session?.user) return unauthorized();
+
     try {
-        const session = await auth();
-        if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const db = await getDb();
+        const userDoc = await db.collection<User>("users").findOne({ email: session.user.email ?? undefined });
 
-        const client = await mongo;
-        const db = client.db(process.env.MONGODB_DB);
+        const membership = userDoc?.organizations?.find(m => m.clientId.toString() === session.user.clientId);
+        const departmentIds = membership?.departments || [];
+        if (departmentIds.length === 0) return NextResponse.json([]);
 
-        // 1. Get the user's assigned departments
-        const userDoc = await db.collection("users").findOne({ email: session.user.email });
-
-        const userDepartments = userDoc?.organizations?.flatMap((org:any) => (org.clientId == session.user.clientId) ? org.departments : []) || [];
-        
-        const hasValidDepartments = userDepartments.length > 0;
-
-        if (!hasValidDepartments) {
-            return NextResponse.json([]);
-        }
-
-        // 2. Fetch inventory only for those specific departments
         const inventory = await db.collection('department_stock')
-            .find({
-                departmentId: { $in: userDepartments }
-            })
+            .find({ departmentId: { $in: departmentIds }, isDeleted: { $ne: true } })
             .sort({ productName: 1 })
             .toArray();
-        
-        // 3. Clean up the data for the frontend
+
         return NextResponse.json(inventory.map(item => ({
             ...item,
             _id: item._id.toString(),
             departmentId: item.departmentId.toString(),
-            clientId: item.clientId,
         })));
-
-    } catch (errorr) {
-        return NextResponse.json({ error: "Internal Server Error: " + errorr }, { status: 500 });
+    } catch (error) {
+        console.error("GET inventory error:", error);
+        return serverError();
     }
 }

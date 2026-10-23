@@ -1,125 +1,79 @@
-import { auth } from "@/auth";
-import { ObjectId } from "mongodb";
 import { NextResponse } from "next/server";
-import mongo from "@/lib/mongodb";
+import { auth } from "@/auth";
+import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
+import { ROLES } from "@/lib/constants";
+import { findOwnDepartment } from "@/lib/departments";
+import type { MovementType, StockItem, User } from "@/types/models";
 
+const MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.SUPERADMIN];
 
 /**
- * PATCH handler - Updates inventory quantity with movement tracking and audit logging
- * 
- * @async
- * @param {Request} req - The incoming request object containing adjustment details
- * @param {Object} params - Route parameters
- * @param {Promise<{ id: string }>} params.id - Promise that resolves to the inventory item ID
- * @returns {Promise<NextResponse>}
- * - Success: `{ success: true, newQuantity: number, movementId: ObjectId }`
- * - Unauthorized: `{ error: "No autorizado" }` with status 401
- * - Not found: `{ error: "Producto no encontrado" }` with status 404
- * - Insufficient stock: `{ error: "Stock insuficiente" }` with status 400
- * - Server error: `{ error: "Error interno del servidor" }` with status 500
- * 
- * @requires Authentication session
- * @throws Will return 401 if user is not authenticated
- * 
- * @example
- * PATCH /api/admin/departments/[id]/stock
+ * PATCH /api/admin/inventory/[id]/move
+ * Adds or removes stock and records the change in stock_movements (the audit log reports are built from).
  * Body: { amount: number, type: "IN" | "OUT", reason?: string }
- * 
- * @description
- * - Validates user authentication
- * - Calculates new inventory balance
- * - Prevents negative stock levels
- * - Creates audit log in stock_movements collection
- * - Tracks user information for compliance
+ *
+ * - Admins can move stock in any department of their organization.
+ * - Users (runners) only in the departments they are assigned to.
+ * - Stock can't go below zero.
  */
-export async function PATCH(
-    req: Request,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
-
-    // 1. Security Check
-    if (!session) {
-        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    if (!session?.user) return unauthorized();
 
     try {
-        const { id } = await params; // This is the inventory item ID
-        const { amount, type, reason } = await req.json(); // type: "IN" or "OUT"
+        const itemId = toObjectId((await params).id);
+        const { amount, type, reason } = await req.json() as { amount: number; type: MovementType; reason?: string };
 
-        const client = await mongo;
-        const db = client.db(process.env.MONGODB_DB);
+        const quantity = Math.abs(Number(amount));
+        if (!itemId || !quantity || (type !== "IN" && type !== "OUT")) return badRequest("Faltan datos");
 
-        const currentItem = await db.collection('department_stock').findOne({
-            _id: new ObjectId(id)
-        });
+        const db = await getDb();
+        const item = await db.collection<StockItem>('department_stock').findOne({ _id: itemId, isDeleted: { $ne: true } });
+        const department = item && await findOwnDepartment(session, item.departmentId);
+        if (!item || !department) return notFound("Producto no encontrado o acceso denegado");
 
-        // ANCHOR: Verify item ownership via department
-        const dept = await db.collection('departments').findOne({
-            _id: currentItem?.departmentId,
-            clientId: new ObjectId(session.user.clientId) // Added check
-        });
+        // Read the role from the DB: an admin may have changed it after the user signed in
+        const userDoc = await db.collection<User>('users').findOne({ email: session.user.email ?? undefined });
+        const membership = userDoc?.organizations?.find(m => m.clientId.toString() === session.user.clientId);
+        const role = session.user.role === ROLES.SUPERADMIN ? ROLES.SUPERADMIN : membership?.role;
 
-        if (!currentItem || !dept) {
-            return NextResponse.json({ error: "Producto no encontrado o acceso denegado" }, { status: 404 });
+        const isManagement = !!role && MANAGEMENT_ROLES.includes(role);
+        const isAssignedUser = role === ROLES.USER &&
+            !!membership?.departments?.some(id => id.toString() === item.departmentId.toString());
+
+        if (!isManagement && !isAssignedUser) {
+            return forbidden("No tienes permiso para mover inventario en esta área.");
         }
 
-        if (!currentItem) {
-            return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
-        }
+        const previousBalance = item.quantity || 0;
+        const newBalance = previousBalance + (type === "IN" ? quantity : -quantity);
+        if (newBalance < 0) return badRequest("Stock insuficiente");
 
-        // 3. Calculate Logic
-        // If type is "OUT", we subtract. If "IN", we add.
-        const adjustment = type === "IN" ? Math.abs(amount) : -Math.abs(amount);
-        const newQuantity = (currentItem.quantity || 0) + adjustment;
+        await Promise.all([
+            db.collection('department_stock').updateOne(
+                { _id: itemId },
+                { $set: { quantity: newBalance, updatedAt: new Date() } }
+            ),
+            db.collection('stock_movements').insertOne({
+                inventoryId: itemId,
+                departmentId: item.departmentId,
+                departmentName: department.name,
+                clientId: department.clientId,
+                productName: item.productName,
+                sku: item.sku,
+                type,
+                amount: quantity,
+                previousBalance,
+                newBalance,
+                reason: reason || "Ajuste manual",
+                user: { id: userDoc?._id, name: session.user.name, email: session.user.email },
+                createdAt: new Date()
+            }),
+        ]);
 
-        // Prevent negative stock if desired (Optional)
-        if (newQuantity < 0) {
-            return NextResponse.json({ error: "Stock insuficiente" }, { status: 400 });
-        }
-
-        // 4. Update the main Inventory document
-        await db.collection('department_stock').updateOne(
-            { _id: new ObjectId(id) },
-            {
-                $set: {
-                    quantity: newQuantity,
-                    updatedAt: new Date()
-                }
-            }
-        );
-
-        // 5. Create the Movement Log (This is what powers your Reports)
-        const movementLog = {
-            inventoryId: new ObjectId(id),
-            departmentId: currentItem.departmentId, // Handy for filtering by dept later
-            departmentName: dept?.name || "Depto. Desconocido",
-            clientId: new ObjectId(session.user.clientId), // Added clientId for multi-tenancy
-            productName: currentItem.productName,
-            sku: currentItem.sku,
-            type: type, // "IN" or "OUT"
-            amount: Math.abs(amount),
-            previousBalance: currentItem.quantity,
-            newBalance: newQuantity,
-            reason: reason || "Ajuste manual",
-            user: {
-                name: session.user?.name || "Usuario Desconocido",
-                email: session.user?.email
-            },
-            createdAt: new Date()
-        };
-
-
-        await db.collection('stock_movements').insertOne(movementLog);
-
-        return NextResponse.json({
-            success: true,
-            newQuantity,
-            movementId: movementLog.inventoryId
-        });
-
+        return NextResponse.json({ success: true, newQuantity: newBalance });
     } catch (error) {
-        console.error("PATCH Inventory Error:", error);
-        return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+        console.error("Move stock error:", error);
+        return serverError();
     }
 }

@@ -1,6 +1,6 @@
-import { SignIn } from "../auth-components";
+import { SignIn } from "@/components/AuthButtons";
 
-export default function Lobby() {
+export default function Landing() {
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
             <div className="inline-block px-4 py-1.5 mb-6 text-sm font-medium tracking-wider uppercase border rounded-full border-purple-500/30 bg-purple-500/10 text-purple-400">

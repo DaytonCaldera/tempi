@@ -1,37 +1,28 @@
-import { auth } from "@/auth";
-import mongo from "@/lib/mongodb";
 import { NextResponse } from "next/server";
-import { ObjectId } from "mongodb";
+import { auth } from "@/auth";
+import { badRequest, getDb, serverError, toObjectId, unauthorized } from "@/lib/api";
 
+/**
+ * POST /api/user/update-organization - Saves the organization the user switched to,
+ * so the next sign-in starts there. Body: { clientId }
+ */
 export async function POST(req: Request) {
+    const session = await auth();
+    if (!session?.user?.email) return unauthorized();
+
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const clientId = toObjectId((await req.json()).clientId);
+        if (!clientId) return badRequest("Falta el ID de la organización");
 
-        const { clientId } = await req.json();
-        if (!clientId) {
-            return NextResponse.json({ error: "Missing Client ID" }, { status: 400 });
-        }
-
-        const client = await mongo;
-        const db = client.db(process.env.MONGODB_DB);
-
-        // Update the user's root 'clientId' field. 
-        // This acts as their "Preferred/Last Active" organization.
+        const db = await getDb();
         await db.collection("users").updateOne(
             { email: session.user.email },
-            { 
-                $set: { 
-                    activeOrganization: new ObjectId(clientId) 
-                } 
-            }
+            { $set: { activeOrganization: clientId } }
         );
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("UPDATE_ORG_ERROR", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        console.error("Update active organization error:", error);
+        return serverError();
     }
 }

@@ -1,81 +1,45 @@
+import type { Session } from "next-auth";
 import { ObjectId } from "mongodb";
 import { ROLES } from "./constants";
 
-export const getTenantQuery = (session: any) => {
-    if (session?.user?.role === ROLES.SUPERADMIN) {
-        console.log(session.user.clientId);
-        
-        // Si el superadmin eligió un cliente en el switcher, filtramos por ese.
-        // Si no (clientId es 'all' o null), devolvemos {} para ver todo.
-        if (session.user.clientId && session.user.clientId !== 'all' && session.user.clientId !== 'sup') {
-            return { clientId: new ObjectId(session.user.clientId) };
-        }
-        return {}; 
-    }
-
-    // 2. Si es Admin regular, forzamos su clientId
-    if (session?.user?.clientId) {
-        return { clientId: new ObjectId(session.user.clientId) };
-    }
-
-    return { _id: new ObjectId("000000000000000000000000")   };
-};
-
-
-export const getUserTenantQuery = (session: any) => {
-    // 1. Logic for SUPERADMIN
-    if (session?.user?.role === ROLES.SUPERADMIN) {
-        // If superadmin selected a specific client in the switcher
-        if (
-            session.user.clientId && 
-            session.user.clientId !== 'all' && 
-            session.user.clientId !== 'sup'
-        ) {
-            return { "organizations.clientId": new ObjectId(session.user.clientId) };
-        }
-        
-        // If 'all' or 'sup', return empty query to see all users across all orgs
-        return {}; 
-    }
-
-    // 2. Logic for Regular Admin / User
-    // We filter users who belong to the same organization as the current user
-    if (session?.user?.clientId) {
-        return { "organizations.clientId": new ObjectId(session.user.clientId) };
-    }
-
-    // 3. Fallback: return a query that matches nothing if session is invalid
-    return { _id: new ObjectId("000000000000000000000000") };
-};
-
 /**
- * Returns a filter query specifically for the "clients" collection.
- * This is used to restrict which client/organization documents a user can see.
+ * Multi-tenancy filters: each returns a MongoDB filter that limits a query to the
+ * organization the user is working in.
+ * - Superadmin: the organization picked in the switcher, or everything when none is picked ('all').
+ * - Everyone else: their active organization.
+ * - No valid session: a filter that matches nothing.
  */
-export const getClientTenantQuery = (session: any) => {
-    // 1. Logic for SUPERADMIN
+
+const MATCH_NOTHING = { _id: new ObjectId("000000000000000000000000") };
+
+/** The organization id to filter by, or null when a superadmin is viewing all organizations. */
+function scopedOrgId(session: Session | null): ObjectId | null | undefined {
+    const clientId = session?.user?.clientId;
+    const hasSelection = !!clientId && clientId !== 'all' && clientId !== 'sup';
+
     if (session?.user?.role === ROLES.SUPERADMIN) {
-        
-        // If the superadmin has a specific client selected in the switcher
-        if (
-            session.user.clientId && 
-            session.user.clientId !== 'all' && 
-            session.user.clientId !== 'sup'
-        ) {
-            // In the clients collection, we match against the document's _id
-            return { _id: new ObjectId(session.user.clientId) };
-        }
-        
-        // If 'all' or 'sup', return empty query to allow access to all client documents
-        return {}; 
+        return hasSelection ? new ObjectId(clientId) : null;
     }
+    return clientId ? new ObjectId(clientId) : undefined;
+}
 
-    // 2. Logic for Regular Admin / User
-    // They should only ever be able to see/access their own client document
-    if (session?.user?.clientId) {
-        return { _id: new ObjectId(session.user.clientId) };
-    }
+/** Filter for collections that store a `clientId` field (departments, stock_movements, ...). */
+export const getTenantQuery = (session: Session | null) => {
+    const orgId = scopedOrgId(session);
+    if (orgId === undefined) return MATCH_NOTHING;
+    return orgId ? { clientId: orgId } : {};
+};
 
-    // 3. Fallback: match a non-existent ID if the session is invalid
-    return { _id: new ObjectId("000000000000000000000000") };
+/** Filter for the "users" collection, matching users that belong to the organization. */
+export const getUserTenantQuery = (session: Session | null) => {
+    const orgId = scopedOrgId(session);
+    if (orgId === undefined) return MATCH_NOTHING;
+    return orgId ? { "organizations.clientId": orgId } : {};
+};
+
+/** Filter for the "clients" (organizations) collection itself. */
+export const getClientTenantQuery = (session: Session | null) => {
+    const orgId = scopedOrgId(session);
+    if (orgId === undefined) return MATCH_NOTHING;
+    return orgId ? { _id: orgId } : {};
 };

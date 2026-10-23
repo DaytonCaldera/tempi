@@ -1,33 +1,28 @@
 'use client';
 import { usePathname } from "next/navigation";
-import sections from "./items/menu_items.json";
-import SidebarItem from "./items/sidebar_item";
+import sections from "./menuItems.json";
+import SidebarItem from "./SidebarItem";
 import { useSession } from "next-auth/react";
-import { hasPermission } from "@/lib/hasPermissions";
-import { ROLES, sectionPermissions, sectionItemPermissions } from "@/lib/constants";
-import OrgSwitcher from "@/components/main/organizationSwitcher";
-import { useEffect, useState } from "react";
+import { hasPermission } from "@/lib/permissions";
+import { ROLES, sectionPermissions } from "@/lib/constants";
+import OrganizationSwitcher from "@/components/dashboard/OrganizationSwitcher";
 import { LayoutGrid, ChevronLeft, Building2 } from "lucide-react";
+
+type MenuItem = { href: string; label: string; icon: string; permission?: string };
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
     const { data: session } = useSession();
-    const [organizations, setOrganizations] = useState<any[]>([]);
     const pathname = usePathname();
+
+    const organizations = (session?.user?.organizations || []).map(org => ({
+        ...org,
+        clientName: org.clientName || "Unnamed Org",
+    }));
 
     const isValidSection = (section: string) => {
         if (section === "general") return true;
         return hasPermission(session, sectionPermissions[section]);
     };
-
-    useEffect(() => {
-        const userOrgs = session?.user?.organizations?.map((org: any) => ({
-            ...org,
-            clientId: org.clientId,
-            clientName: org.clientName || "Unnamed Org",
-            role: org.role
-        })) || [];
-        setOrganizations(userOrgs);
-    }, [session?.user?.organizations]);
 
     return (
         <>
@@ -73,14 +68,14 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                                 <Building2 size={12} className="text-brand-accent" />
                                 <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Espacio de Trabajo</p>
                             </div>
-                            <OrgSwitcher userOrgs={organizations} /> 
+                            <OrganizationSwitcher userOrgs={organizations} /> 
                         </div>
                     )}
                 </div>
 
                 {/* NAVIGATION MENU */}
                 <nav className="flex-1 overflow-y-auto overflow-x-hidden px-4 custom-scrollbar">
-                    {Object.entries(sections).map(([section, items]) => (
+                    {Object.entries(sections as Record<string, MenuItem[]>).map(([section, items]) => (
                         <div key={section} className="mb-8">
                             {isValidSection(section) && (
                                 <>
@@ -92,12 +87,12 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        {items.map((item: any) => (
+                                        {items.map(item => (
                                             <SidebarItem
                                                 key={item.href}
                                                 href={item.href}
                                                 label={item.label}
-                                                iconName={item.icon} // Ensure SidebarItem handles icons
+                                                iconName={item.icon}
                                                 isActive={pathname === item.href}
                                                 isCollapsed={!isOpen}
                                             />

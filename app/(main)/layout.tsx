@@ -1,10 +1,8 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { getMessages, getLocale } from 'next-intl/server';
 
-import { signIn } from "auth"
-import AuthProvider from "@/components/providers/SessionProvider";
+import AuthProvider from "@/components/SessionProvider";
 import { NextIntlClientProvider } from "next-intl";
 
 const geistSans = Geist({
@@ -31,7 +29,7 @@ export default async function AuthLayout({
     const locale = await getLocale();
     const messages = await getMessages();
     return ( 
-        <html lang="{locale}">
+        <html lang={locale}>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <main className="min-h-screen bg-[#0a0a0c] text-white selection:bg-purple-500/30">
                     <AuthProvider>

@@ -1,4 +1,4 @@
-import ConsumptionReport from '@/components/admin/consumption';
+import ConsumptionReport from '@/components/admin/consumption/ConsumptionReport';
 import Link from "next/link";
 import { ArrowLeft } from 'lucide-react';
 

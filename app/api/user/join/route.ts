@@ -1,45 +1,48 @@
-// app/api/user/join/route.ts
-import mongo from '@/lib/mongodb';
-import { auth } from "@/auth";
 import { NextResponse } from 'next/server';
+import { auth } from "@/auth";
+import { getDb, notFound, unauthorized } from '@/lib/api';
 import { PLACEHOLDER_CLIENT_ID, ROLES } from '@/lib/constants';
+import type { User } from '@/types/models';
 
+/**
+ * POST /api/user/join - Joins the organization with the given code as a pending user,
+ * until an admin approves them. Body: { code }
+ */
 export async function POST(req: Request) {
-    const { code } = await req.json();
     const session = await auth();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user) return unauthorized();
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
+    const { code } = await req.json();
+    const db = await getDb();
 
-    // 1. Find the client with this code
-    const targetClient = await db.collection('clients').findOne({ clientCode: code });
-    if (!targetClient) return NextResponse.json({ error: "Code not found" }, { status: 404 });
+    const organization = await db.collection('clients').findOne({ clientCode: code });
+    if (!organization) return notFound("Código no válido");
+
+    const users = db.collection<User>('users');
 
     // Remove the old placeholder org, otherwise it is picked over the joined org on the next sign-in
-    await db.collection('users').updateOne(
-        { email: session.user.email },
-        { $pull: { organizations: { clientId: PLACEHOLDER_CLIENT_ID } } } as any
+    await users.updateOne(
+        { email: session.user.email ?? undefined },
+        { $pull: { organizations: { clientId: PLACEHOLDER_CLIENT_ID } } } as object
     );
 
-    const userDoc = await db.collection('users').findOne({ email: session.user.email });
+    const userDoc = await users.findOne({ email: session.user.email ?? undefined });
 
-    // 2. Add this organization to the user's array, unless they already belong to it.
-    // ($addToSet alone doesn't prevent duplicates because joinedAt is different on every call)
-    const alreadyMember = userDoc?.organizations?.some((org: any) => org.clientId?.toString() === targetClient._id.toString());
+    // $addToSet alone doesn't prevent duplicates because joinedAt is different on every call
+    const alreadyMember = userDoc?.organizations?.some(m => m.clientId.toString() === organization._id.toString());
 
-    await db.collection('users').updateOne(
+    await users.updateOne(
         { _id: userDoc?._id },
         {
-            $set: { activeOrganization: targetClient._id }, // Sign-in resolves the role from this org
+            $set: { activeOrganization: organization._id }, // Sign-in resolves the role from this org
             ...(!alreadyMember && {
                 $addToSet: {
                     organizations: {
-                        clientId: targetClient._id,
-                        role: ROLES.PENDING_USER, // They start as new_user until admin approves
+                        clientId: organization._id,
+                        clientName: organization.name,
+                        role: ROLES.PENDING_USER,
                         status: "active",
                         joinedAt: new Date(),
-                        clientName: targetClient.name
                     }
                 }
             })
@@ -47,10 +50,10 @@ export async function POST(req: Request) {
     );
 
     await db.collection('client_users').updateOne(
-        { userId: session.user.id, clientId: targetClient._id },
-        { $set: { updatedAt: new Date(), userId: userDoc?._id, clientId: targetClient._id } },
+        { userId: session.user.id, clientId: organization._id },
+        { $set: { updatedAt: new Date(), userId: userDoc?._id, clientId: organization._id } },
         { upsert: true }
     );
 
-    return NextResponse.json({ success: true, clientId: targetClient._id });
+    return NextResponse.json({ success: true, clientId: organization._id });
 }

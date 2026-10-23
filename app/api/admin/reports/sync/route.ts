@@ -1,18 +1,18 @@
-import { auth } from '@/auth';
-import mongo from '@/lib/mongodb';
-import { getTenantQuery } from '@/lib/tenant-guard';
-import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { apiError, getDb, unauthorized } from '@/lib/api';
+import { getTenantQuery } from '@/lib/tenant-guard';
 
+/**
+ * GET /api/admin/reports/sync?confirm=true
+ * Finds stock items whose quantity doesn't match the sum of their movements and inserts
+ * compensating movements so reports add up. Without ?confirm=true it only explains how to run it.
+ */
 export async function GET(req: Request) {
     const session = await auth();
-    
-    // 1. Verificación básica de sesión
-    if (!session) {
-        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    if (!session?.user) return unauthorized();
 
-    // 2. Seguro contra ejecuciones accidentales
+    // Safety check against running it by accident
     const { searchParams } = new URL(req.url);
     const confirm = searchParams.get('confirm');
     
@@ -22,8 +22,7 @@ export async function GET(req: Request) {
         });
     }
 
-    const client = await mongo;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = await getDb();
     const tenantQuery = getTenantQuery(session);
 
     try {
@@ -115,6 +114,6 @@ export async function GET(req: Request) {
 
     } catch (error) {
         console.error("Error durante la sincronización de inventario:", error);
-        return NextResponse.json({ error: "Fallo al ejecutar la sincronización masiva" }, { status: 500 });
+        return apiError("Fallo al ejecutar la sincronización masiva", 500);
     }
 }

@@ -1,12 +1,15 @@
 'use client';
 import { useState, useEffect } from "react";
-import Navbar from "@/components/dashboard/navbar/navbar";
-import Sidebar from "@/components/dashboard/sidebar/sidebar";
+import Navbar from "@/components/dashboard/Navbar";
+import Sidebar from "@/components/dashboard/Sidebar";
 
 export default function DashboardClientWrapper({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
+    // Start collapsed on small screens. Window size is only known after mounting,
+    // so this can't be the initial state without a hydration mismatch.
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (window.innerWidth < 1024) setSidebarOpen(false);
     }, []);
 

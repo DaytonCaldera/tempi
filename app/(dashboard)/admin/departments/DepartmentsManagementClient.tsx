@@ -1,23 +1,33 @@
 "use client";
-import { useEffect, useState } from "react";
-import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/Datatable";
+import { useState } from "react";
+import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import { Modal } from "@/components/ui/Modal";
 import { ROLES } from "@/lib/constants";
-import { Users, Package, Edit3, Plus, Building2 } from "lucide-react";
+import { Users, Package, Edit3, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function DepartmentManagementClient({
-    initialDepartments,
+type DepartmentRow = { _id: string; name: string; description?: string; clientId?: string };
+type Personnel = { _id: string; name: string; isActive: boolean; role: string | null };
+type DepartmentForm = { name: string; clientId: string };
+
+interface DepartmentsManagementClientProps {
+    departments: DepartmentRow[];
+    clients: { _id: string; name: string }[];
+    userRole: string;
+    userClientId?: string;
+}
+
+export default function DepartmentsManagementClient({
+    departments,
     clients,
     userRole,
     userClientId
-}: any) {
-    const [depts, setDepts] = useState(initialDepartments);
+}: DepartmentsManagementClientProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingDept, setEditingDept] = useState<any>(null);
+    const [editingDept, setEditingDept] = useState<DepartmentRow | null>(null);
 
-    const [viewingPersonnel, setViewingPersonnel] = useState<any[] | null>(null);
+    const [viewingPersonnel, setViewingPersonnel] = useState<Personnel[] | null>(null);
     const [activeDeptName, setActiveDeptName] = useState("");
 
     const handleViewPersonnel = async (deptId: string, deptName: string) => {
@@ -37,10 +47,10 @@ export default function DepartmentManagementClient({
     // Form State
     const [formData, setFormData] = useState({ name: "", clientId: userClientId || "" });
 
-    const openModal = (dept: any = null) => {
+    const openModal = (dept: DepartmentRow | null = null) => {
         if (dept) {
             setEditingDept(dept);
-            setFormData({ name: dept.name, clientId: dept.clientId });
+            setFormData({ name: dept.name, clientId: dept.clientId || "" });
         } else {
             setEditingDept(null);
             setFormData({ name: "", clientId: userClientId || "" });
@@ -48,14 +58,10 @@ export default function DepartmentManagementClient({
         setIsModalOpen(true);
     };
 
-    useEffect(() => {
-        setDepts(initialDepartments);
-    }, [initialDepartments]);
-
     const [isSaving, setIsSaving] = useState(false);
     const router = useRouter();
 
-    const fetchEditingDept = async (deptId: string, formData: any) => {
+    const fetchEditingDept = async (deptId: string, formData: DepartmentForm) => {
         return await fetch("/api/admin/departments", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -67,7 +73,7 @@ export default function DepartmentManagementClient({
         });
     }
 
-    const fetchInsertDept = async (formData: any) => {
+    const fetchInsertDept = async (formData: DepartmentForm) => {
         return await fetch("/api/admin/departments", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -87,12 +93,9 @@ export default function DepartmentManagementClient({
 
         setIsSaving(true);
         try {
-            let res: any;
-            if (editingDept) {
-                res = await fetchEditingDept(editingDept._id, formData);
-            } else {
-                res = await fetchInsertDept(formData);
-            }
+            const res = editingDept
+                ? await fetchEditingDept(editingDept._id, formData)
+                : await fetchInsertDept(formData);
 
             if (res.ok) {
                 setIsModalOpen(false);
@@ -102,7 +105,7 @@ export default function DepartmentManagementClient({
                 const data = await res.json();
                 alert(data.error || "Error al guardar");
             }
-        } catch (err) {
+        } catch {
             alert("Error de conexión");
         } finally {
             setIsSaving(false);
@@ -122,7 +125,7 @@ export default function DepartmentManagementClient({
             </div>
 
             <DataTable headers={tableHeaders}>
-                {depts.map((dept: any) => (
+                {departments.map((dept) => (
                     <DataTableRow key={dept._id}>
                         <DataTableCell>
                             <div className="flex items-center gap-3">
@@ -187,7 +190,7 @@ export default function DepartmentManagementClient({
                                 onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
                             >
                                 <option value="">Seleccionar Cliente</option>
-                                {clients.map((c: any) => (
+                                {clients.map((c) => (
                                     <option key={c._id} value={c._id}>{c.name}</option>
                                 ))}
                             </select>
