@@ -69,6 +69,8 @@ export const MOVEMENT_REASONS = {
     INITIAL_STOCK: "Inventario inicial",
     // Written by scripts/repair-stock-movements.js for quantity changes that were never logged
     RECONCILIATION: "Conciliación de inventario",
+    // Reverses an earlier movement (the runner Undo); reports subtract it from the column it reverses
+    CORRECTION: "Corrección",
 } as const;
 
 /** Units a stock item can be counted in. Stored as-is in department_stock.unit; labels are in the "units" messages. */

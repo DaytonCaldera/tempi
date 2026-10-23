@@ -5,16 +5,34 @@ import { requirePermission } from '@/lib/authorize';
 import { badRequest, getDb, toObjectId } from '@/lib/api';
 import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
-import type { ConsumptionReportDepartment } from '@/types/models';
+import type { ConsumptionReportDepartment, MovementType } from '@/types/models';
 
-/** Sums IN and OUT amounts of the movements that match `createdAt`. */
+/** Amount of a movement of `type`, and minus the amount of a correction that reverses one (so an undone OUT isn't consumption). */
+const signedAmount = (type: MovementType) => {
+    const reversed = type === "IN" ? "OUT" : "IN";
+    const isCorrection = { $eq: ["$reason", MOVEMENT_REASONS.CORRECTION] };
+    return {
+        $switch: {
+            branches: [
+                { case: { $and: [{ $eq: ["$type", reversed] }, isCorrection] }, then: { $multiply: ["$amount", -1] } },
+                { case: { $and: [{ $eq: ["$type", type] }, { $not: [isCorrection] }] }, then: "$amount" },
+            ],
+            default: 0
+        }
+    };
+};
+
+/**
+ * Sums IN and OUT amounts of the movements that match `createdAt`.
+ * Corrections move between the columns, so `in - out` (and the balances built from it) is unchanged.
+ */
 const sumMovements = (createdAt: Document) => [
     { $match: { createdAt } },
     {
         $group: {
             _id: null,
-            in: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$amount", 0] } },
-            out: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$amount", 0] } }
+            in: { $sum: signedAmount("IN") },
+            out: { $sum: signedAmount("OUT") }
         }
     }
 ];

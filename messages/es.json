@@ -76,6 +76,7 @@
         "INITIAL_SYNC": "Sincronización inicial del sistema",
         "INITIAL_STOCK": "Inventario inicial",
         "RECONCILIATION": "Conciliación de inventario",
+        "CORRECTION": "Corrección (deshacer)",
         "none": "Sin justificación"
     },
     "nav": {
@@ -139,6 +140,10 @@
         "reset": "Reiniciar a 1",
         "noProducts": "No se encontraron productos.",
         "defaultUnit": "uds",
+        "undo": "Deshacer",
+        "undone": "Deshecho: {product}",
+        "moveFailed": "No se pudo actualizar el stock. Intenta de nuevo.",
+        "dismiss": "Cerrar",
         "noAreas": {
             "title": "Acceso restringido",
             "description": "Tu usuario no tiene áreas asignadas. Contacta a un administrador para habilitar tu inventario."
