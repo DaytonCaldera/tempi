@@ -133,7 +133,7 @@ export default function RunnerHeader({ assignedAreaCount, canOpenDashboard, sync
         <header className="bg-white px-4 pt-6 pb-4 border-b border-gray-100">
             <div className="max-w-md mx-auto flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                    <h1 className="text-2xl font-black text-[#171717] leading-tight">{t('title')}</h1>
+                    <h1 className="text-2xl font-black text-foreground leading-tight">{t('title')}</h1>
                     <p className="mt-1 text-[11px] font-black text-gray-400 uppercase tracking-widest">
                         {t('assignedAreas', { count: assignedAreaCount })}
                     </p>

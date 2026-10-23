@@ -36,7 +36,7 @@ export default function QuantityToolbar({ quantity, onQuantityChange, search, on
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => onQuantityChange(Math.max(0, parseInt(e.target.value) || 0))}
                         onBlur={() => onQuantityChange(Math.max(1, quantity))}
-                        className="w-full min-w-0 h-11 text-center text-2xl font-black text-[#171717] outline-none bg-transparent rounded-xl focus-visible:bg-blue-50"
+                        className="w-full min-w-0 h-11 text-center text-2xl font-black text-foreground outline-none bg-transparent rounded-xl focus-visible:bg-blue-50"
                     />
                     <button onClick={() => onQuantityChange(quantity + 1)} aria-label={t('increaseQuantity')} className={stepClass}>
                         <Plus size={20} strokeWidth={3} />

@@ -1,5 +1,5 @@
 "use client";
-import { useDeferredValue, useEffect, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, X, AlertCircle, Undo2 } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { useTranslations } from "next-intl";
@@ -68,9 +68,11 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
     const [toast, setToast] = useState<Toast | null>(null);
     const [lastUpdated, setLastUpdated] = useState(() => Date.now());
 
-    // Polls so every runner sees stock changes made by others
+    // Polls so every runner sees stock changes made by others. The server just rendered fresh data,
+    // so there's no fetch on mount: the first one comes with the interval or when the tab regains focus.
     const { data: items = [], mutate, isValidating, error } = useSWR<Item[]>(INVENTORY_KEY, fetcher, {
         fallbackData: initialItems,
+        revalidateOnMount: false,
         refreshInterval: STOCK_REFRESH_INTERVAL,
         revalidateOnFocus: true,
         onSuccess: () => setLastUpdated(Date.now()),
@@ -86,17 +88,22 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
         return () => clearTimeout(timer);
     }, [toast]);
 
-    const allDepartments = groupByDepartment(items, tCommon('general'));
+    const fallbackName = tCommon('general');
+    const allDepartments = useMemo(() => groupByDepartment(items, fallbackName), [items, fallbackName]);
     // A filter for an area that no longer has stock shows everything
     const activeDepartment = allDepartments.some(d => d.id === departmentFilter) ? departmentFilter : null;
 
-    // Filtering waits for typing to settle, so keystrokes stay responsive on long lists
-    const searchTerm = normalizeText(useDeferredValue(search).trim());
-    const filteredItems = items.filter(item =>
-        (!activeDepartment || item.departmentId === activeDepartment) &&
-        [item.productName, item.sku, item.departmentName].some(text => normalizeText(text || '').includes(searchTerm))
-    );
-    const departments = groupByDepartment(filteredItems, tCommon('general'));
+    // Filtering waits for typing to settle, so keystrokes stay responsive on long lists.
+    // Memoized so a toast or a pending move doesn't re-filter the whole list.
+    const deferredSearch = useDeferredValue(search);
+    const departments = useMemo(() => {
+        const searchTerm = normalizeText(deferredSearch.trim());
+        const filteredItems = items.filter(item =>
+            (!activeDepartment || item.departmentId === activeDepartment) &&
+            [item.productName, item.sku, item.departmentName].some(text => normalizeText(text || '').includes(searchTerm))
+        );
+        return groupByDepartment(filteredItems, fallbackName);
+    }, [items, activeDepartment, deferredSearch, fallbackName]);
     const canOpenDashboard = userRole === ROLES.ADMIN || userRole === ROLES.SUPERADMIN || permissions.view_dashboard === true;
 
     const setPending = (id: string, pending: boolean) => setPendingIds(ids => {
@@ -137,6 +144,11 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
             setToast({ kind: 'moved', item, type, amount });
         }
     };
+
+    // Rows are memoized: give them one callback that never changes but always runs the latest handleMove
+    const handleMoveRef = useRef(handleMove);
+    useEffect(() => { handleMoveRef.current = handleMove; });
+    const onRowMove = useCallback((item: Item, type: MovementType) => handleMoveRef.current(item, type), []);
 
     const handleUndo = async (item: Item, type: MovementType, amount: number) => {
         setToast(null);
@@ -195,7 +207,7 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
                                 item={item}
                                 quantity={globalQty}
                                 isPending={pendingIds.has(item._id)}
-                                onMove={type => handleMove(item, type)}
+                                onMove={onRowMove}
                             />
                         ))}
                     </section>

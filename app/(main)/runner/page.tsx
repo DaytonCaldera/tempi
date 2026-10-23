@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
-import { getDb } from "@/lib/api";
-import { assignedDepartmentIds } from "@/lib/departments";
+import { assignedDepartmentIds, assignedStock } from "@/lib/departments";
 import RunnerInventory from "@/components/main/RunnerInventory";
-import type { StockItem } from "@/types/models";
 
 async function NoAssignedAreas() {
     const t = await getTranslations('runner.noAreas');
@@ -26,29 +24,18 @@ export default async function RunnerPage() {
     const session = await auth();
     if (!session?.user) redirect("/");
 
-    const db = await getDb();
-
     const departmentIds = assignedDepartmentIds(session);
     if (departmentIds.length === 0) return <NoAssignedAreas />;
 
-    const inventory = await db.collection<StockItem>("department_stock")
-        .find({ departmentId: { $in: departmentIds }, isDeleted: { $ne: true } })
-        .sort({ productName: 1 })
-        .toArray();
-
+    // A <div>: the (main) layout already renders the page's <main>
     return (
-        <main className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50">
             <RunnerInventory
-                initialItems={inventory.map(item => ({
-                    ...item,
-                    _id: item._id.toString(),
-                    departmentId: item.departmentId.toString(),
-                    clientId: item.clientId?.toString(),
-                }))}
+                initialItems={await assignedStock(session)}
                 assignedAreaCount={departmentIds.length}
                 userRole={session.user.role}
                 permissions={session.user.permissions ?? {}}
             />
-        </main>
+        </div>
     );
 }
