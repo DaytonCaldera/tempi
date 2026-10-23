@@ -8,7 +8,7 @@ import { hasPermission } from '@/lib/hasPermissions';
 
 export default async function DepartmentManagementPage() {
     const session = await auth();
-    if (!session) redirect("/login");
+    if (!session) redirect("/");
 
     if (!hasPermission(session, "manage_departments")) {
         redirect("/unauthorized"); // Or back to dashboard

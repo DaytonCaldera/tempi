@@ -14,7 +14,7 @@ export default async function UserManagementPage() {
     }
 
     // 1. Security Check
-    if (!session) redirect("/login");
+    if (!session) redirect("/");
 
     // 2. Database Connection
     const client = await mongo;

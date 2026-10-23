@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import mongo from "@/lib/mongodb";
-import { ROLES } from "@/lib/constants";
+import { PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -46,14 +46,22 @@ export async function POST(req: Request) {
 
         const departmentId = defaultDepartment.insertedId;
 
-        // 4. MULTI-ORG UPDATE: Use $addToSet to add to the array, don't overwrite!
+        // 4. Remove the old placeholder org, otherwise it is picked over this one on the next sign-in
+        // (separate update: Mongo can't $pull and $addToSet the same array in one operation)
+        await db.collection("users").updateOne(
+            { email: session.user.email },
+            { $pull: { organizations: { clientId: PLACEHOLDER_CLIENT_ID } } } as any
+        );
+
+        // 5. MULTI-ORG UPDATE: Use $addToSet to add to the array, don't overwrite!
         await db.collection("users").updateOne(
             { email: session.user.email },
             {
-                // We keep role/clientId at top-level for backwards compatibility 
+                // We keep role/clientId at top-level for backwards compatibility
                 // but the "Source of Truth" is now the organizations array
                 $set: {
                     isActive: true,
+                    activeOrganization: clientId, // Sign-in resolves the role from this org
                 },
                 $addToSet: {
                     organizations: {
