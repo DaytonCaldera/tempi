@@ -99,7 +99,8 @@
     },
     "landing": {
         "badge": "Sistema v1.2 listo",
-        "tagline": "El espacio de trabajo de alto rendimiento para tu próxima evolución. Seguro, rápido y hecho para la vanguardia digital."
+        "tagline": "El espacio de trabajo de alto rendimiento para tu próxima evolución. Seguro, rápido y hecho para la vanguardia digital.",
+        "legalNotice": "Al iniciar sesión acepta los <terms>Términos de Servicio</terms> y la <privacy>Política de Privacidad</privacy>."
     },
     "pending": {
         "title": "Acceso pendiente",
@@ -264,6 +265,174 @@
             "ready": "Ruta de sincronización lista. Añade '?confirm=true' a la URL para ejecutar las correcciones.",
             "alreadySynced": "La base de datos ya está 100% sincronizada. No se requiere acción.",
             "done": "{count, plural, one {¡Sincronización exitosa! Se corrigió # artículo.} other {¡Sincronización exitosa! Se corrigieron # artículos.}}"
+        }
+    },
+    "legal": {
+        "lastUpdated": "Última actualización: {date}",
+        "contactTitle": "Contacto",
+        "contactBody": "Si tiene preguntas sobre este documento o desea ejercer sus derechos, escriba a <email></email>.",
+        "privacy": {
+            "title": "Política de Privacidad",
+            "intro": "Esta política explica qué información recopila TEMPI (\"nosotros\", \"el servicio\") cuando usa la aplicación de gestión de inventario, cómo la usamos y qué opciones tiene. Al iniciar sesión en TEMPI acepta las prácticas aquí descritas.",
+            "sections": {
+                "collect": {
+                    "title": "Información que recopilamos",
+                    "paragraphs": [
+                        "Solo recopilamos la información necesaria para operar el servicio:"
+                    ],
+                    "bullets": [
+                        "Información de la cuenta de Google: su nombre, correo electrónico y foto de perfil, que recibimos cuando inicia sesión con Google.",
+                        "Información de organizaciones: los nombres de las empresas que crea, las organizaciones a las que se une o solicita unirse, su rol y estado en cada una y los departamentos que tiene asignados.",
+                        "Actividad de inventario: productos, cantidades y departamentos que crea o edita, y un registro de auditoría de cada movimiento de stock, que guarda la cantidad, el motivo, la fecha y el nombre y correo de la persona que lo realizó.",
+                        "Información técnica: cookies de sesión necesarias para mantenerlo conectado, su preferencia de idioma y los registros estándar de solicitudes que guarda nuestro proveedor de hosting (como dirección IP, tipo de navegador y hora de la solicitud)."
+                    ]
+                },
+                "google": {
+                    "title": "Datos de usuario de Google",
+                    "paragraphs": [
+                        "TEMPI usa el inicio de sesión de Google únicamente para autenticarlo. Solicitamos solo los permisos básicos \"openid\", \"email\" y \"profile\": no accedemos a su Gmail, Google Drive, Calendar, contactos ni a ningún otro servicio de Google.",
+                        "Su nombre, correo y foto de perfil de Google se usan exclusivamente para crear e identificar su cuenta de TEMPI, mostrar quién es dentro de su organización y atribuirle los movimientos de inventario en el registro de auditoría. No usamos los datos de usuario de Google para publicidad, no los vendemos y no los transferimos a terceros, salvo cuando sea necesario para prestar el servicio o lo exija la ley.",
+                        "El uso y la transferencia que TEMPI hace de la información recibida de las API de Google se ajustan a la Política de Datos de Usuario de los Servicios de API de Google (Google API Services User Data Policy), incluidos los requisitos de Uso Limitado."
+                    ]
+                },
+                "use": {
+                    "title": "Cómo usamos la información",
+                    "paragraphs": [
+                        "Usamos la información descrita para:"
+                    ],
+                    "bullets": [
+                        "Iniciar su sesión y mantenerla activa.",
+                        "Permitirle crear organizaciones o unirse a ellas, y permitir a los administradores aprobar miembros y asignar roles y departamentos.",
+                        "Registrar y mostrar niveles de inventario, movimientos de stock y reportes de consumo.",
+                        "Mantener el servicio seguro, prevenir abusos y corregir problemas.",
+                        "Contactarlo sobre su cuenta o cambios importantes en el servicio."
+                    ]
+                },
+                "sharing": {
+                    "title": "Quién puede ver su información",
+                    "paragraphs": [
+                        "Dentro de la aplicación, los administradores y miembros de una organización a la que pertenece pueden ver su nombre, correo, foto de perfil y rol en esa organización, así como los movimientos de stock que realizó en ella. Las organizaciones no pueden ver su actividad en otras organizaciones.",
+                        "No vendemos ni alquilamos información personal. Solo la compartimos con los proveedores que alojan la aplicación y su base de datos, que la procesan en nuestro nombre y únicamente para operar TEMPI, o cuando lo exija la ley."
+                    ]
+                },
+                "storage": {
+                    "title": "Almacenamiento y seguridad",
+                    "paragraphs": [
+                        "Los datos se guardan en una base de datos MongoDB y la aplicación se ejecuta en Vercel; estos proveedores pueden procesar datos en servidores fuera de su país. Las conexiones se cifran con HTTPS, el acceso está restringido por rol y organización, y las sesiones están firmadas para que no puedan alterarse.",
+                        "Ningún sistema es completamente seguro, pero tomamos medidas razonables para proteger su información contra pérdida, mal uso y acceso no autorizado."
+                    ]
+                },
+                "retention": {
+                    "title": "Conservación de datos",
+                    "paragraphs": [
+                        "Conservamos la información de su cuenta mientras esté activa. Los registros de inventario y el historial de movimientos pertenecen a la organización que los creó y se conservan mientras esa organización use el servicio, porque los reportes dependen de ese historial.",
+                        "Si nos pide eliminar su cuenta, borramos su perfil y sus membresías. Los movimientos que realizó en el historial de una organización pueden conservarse con su nombre y correo para que los registros de la organización sigan siendo exactos, salvo que la ley disponga otra cosa."
+                    ]
+                },
+                "rights": {
+                    "title": "Sus derechos",
+                    "paragraphs": [
+                        "Puede solicitarnos el acceso, la rectificación o la supresión de su información personal, u oponerse a su tratamiento, escribiendo a la dirección indicada abajo. Estos derechos incluyen los reconocidos por la Ley 8968 de Protección de la Persona frente al Tratamiento de sus Datos Personales de Costa Rica y leyes similares del lugar donde vive.",
+                        "También puede revocar en cualquier momento el acceso de TEMPI a su cuenta de Google desde la configuración de su Cuenta de Google (Seguridad → Aplicaciones de terceros con acceso a la cuenta)."
+                    ]
+                },
+                "cookies": {
+                    "title": "Cookies",
+                    "paragraphs": [
+                        "TEMPI usa solo cookies esenciales: cookies de autenticación que mantienen su sesión y protegen el inicio de sesión, y una cookie que recuerda su idioma. No usamos cookies publicitarias ni de seguimiento de terceros."
+                    ]
+                },
+                "children": {
+                    "title": "Menores de edad",
+                    "paragraphs": [
+                        "TEMPI es una herramienta empresarial y no está dirigida a menores de 13 años. No recopilamos a sabiendas información de menores."
+                    ]
+                },
+                "changes": {
+                    "title": "Cambios a esta política",
+                    "paragraphs": [
+                        "Podemos actualizar esta política ocasionalmente. Cuando lo hagamos, cambiaremos la fecha de \"última actualización\" indicada arriba y, si los cambios son importantes, se lo informaremos dentro de la aplicación."
+                    ]
+                }
+            }
+        },
+        "terms": {
+            "title": "Términos de Servicio",
+            "intro": "Estos términos regulan el uso de TEMPI, una aplicación de gestión de inventario y logística. Al iniciar sesión o usar el servicio acepta estos términos. Si usa TEMPI en nombre de una empresa, confirma que está autorizado para aceptarlos en su nombre.",
+            "sections": {
+                "acceptance": {
+                    "title": "Aceptación",
+                    "paragraphs": [
+                        "Si no está de acuerdo con estos términos, no use el servicio. Nuestra Política de Privacidad, que explica cómo tratamos la información personal, forma parte de estos términos."
+                    ]
+                },
+                "service": {
+                    "title": "El servicio",
+                    "paragraphs": [
+                        "TEMPI permite a las organizaciones gestionar departamentos, productos y niveles de stock, registrar movimientos de inventario y generar reportes de consumo. Las funciones y los límites pueden depender del plan que use su organización."
+                    ]
+                },
+                "accounts": {
+                    "title": "Cuentas",
+                    "paragraphs": [
+                        "Usted inicia sesión con su cuenta de Google. Es responsable de la actividad que ocurra con su cuenta y de mantener seguro el acceso a su cuenta de Google. Avísenos de inmediato si cree que su cuenta se ha usado sin permiso."
+                    ]
+                },
+                "organizations": {
+                    "title": "Organizaciones y roles",
+                    "paragraphs": [
+                        "Quien crea una organización se convierte en su administrador. Los administradores deciden quién puede unirse, qué rol y departamentos tiene cada miembro, y pueden desactivar miembros. Cada organización es responsable de la información que ingresan sus miembros y de cómo usa TEMPI con su personal."
+                    ]
+                },
+                "acceptableUse": {
+                    "title": "Uso aceptable",
+                    "paragraphs": [
+                        "Al usar TEMPI se compromete a no:"
+                    ],
+                    "bullets": [
+                        "Acceder a organizaciones, datos o funciones a los que no se le ha dado acceso, ni intentar evadir los permisos.",
+                        "Interferir con el servicio o interrumpirlo, ni sobrecargarlo con solicitudes automatizadas.",
+                        "Usar el servicio con fines ilícitos o para almacenar contenido ilícito.",
+                        "Copiar, revender o aplicar ingeniería inversa al servicio, salvo donde la ley lo permita."
+                    ]
+                },
+                "data": {
+                    "title": "Sus datos",
+                    "paragraphs": [
+                        "Su organización conserva la titularidad de los datos de inventario que ingresa. Nos autoriza a almacenar y procesar esos datos únicamente para prestar y mejorar el servicio. La información personal se trata según lo descrito en la Política de Privacidad."
+                    ]
+                },
+                "availability": {
+                    "title": "Disponibilidad y cambios",
+                    "paragraphs": [
+                        "Trabajamos para que TEMPI esté disponible y sea preciso, pero el servicio se ofrece \"tal cual\" y \"según disponibilidad\", sin garantía de que funcione sin interrupciones ni errores. Podemos cambiar, agregar o quitar funciones, y procuraremos avisar de los cambios que le afecten de forma importante. Guarde sus propias copias de los registros que esté obligado a conservar."
+                    ]
+                },
+                "termination": {
+                    "title": "Suspensión y terminación",
+                    "paragraphs": [
+                        "Puede dejar de usar TEMPI en cualquier momento y pedirnos que eliminemos su cuenta. Podemos suspender o terminar el acceso de cuentas u organizaciones que incumplan estos términos o pongan en riesgo el servicio o a otros usuarios."
+                    ]
+                },
+                "liability": {
+                    "title": "Limitación de responsabilidad",
+                    "paragraphs": [
+                        "En la medida en que la ley lo permita, TEMPI y sus operadores no son responsables por daños indirectos, incidentales o consecuentes, ni por pérdida de ganancias, datos o negocios, derivados del uso o la imposibilidad de usar el servicio. Las cifras de inventario y los reportes dependen de los datos ingresados por los usuarios y deben verificarse antes de usarlos para decisiones importantes."
+                    ]
+                },
+                "law": {
+                    "title": "Ley aplicable",
+                    "paragraphs": [
+                        "Estos términos se rigen por las leyes de la República de Costa Rica. Cualquier controversia se someterá a los tribunales competentes de Costa Rica, salvo que la ley de su país le otorgue el derecho de presentarla en otro lugar."
+                    ]
+                },
+                "changes": {
+                    "title": "Cambios a estos términos",
+                    "paragraphs": [
+                        "Podemos actualizar estos términos. La fecha de \"última actualización\" indicada arriba muestra cuándo cambiaron por última vez. Si sigue usando TEMPI después de un cambio, acepta los términos actualizados."
+                    ]
+                }
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { SignIn } from "@/components/AuthButtons";
+import LegalLinks from "@/components/legal/LegalLinks";
 
 export default function Landing() {
     const t = useTranslations("landing");
@@ -15,6 +17,15 @@ export default function Landing() {
                 {t("tagline")}
             </p>
             <SignIn />
+            <p className="max-w-md mt-6 text-xs text-gray-500">
+                {t.rich("legalNotice", {
+                    privacy: (chunks) => <Link href="/privacy" className="underline hover:text-white">{chunks}</Link>,
+                    terms: (chunks) => <Link href="/terms" className="underline hover:text-white">{chunks}</Link>,
+                })}
+            </p>
+            <footer className="mt-16">
+                <LegalLinks />
+            </footer>
         </div>
     )
 }

@@ -40,6 +40,13 @@ export const getSuperAdminEmail = (): string => {
     return process.env.SUPERADMIN_EMAIL || "superadmin@tempi.pro";
 }
 
+/** Details shown on the privacy policy and terms pages (app/(main)/privacy, app/(main)/terms). */
+export const LEGAL = {
+    contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@tempi.pro",
+    // Bump when the text in the "legal" messages changes
+    effectiveDate: "2026-10-23",
+};
+
 /** Permission needed to see each sidebar section (see components/dashboard/menuItems.json) */
 export const sectionPermissions: Record<string, string> = {
     admin: PERMISSIONS.MANAGE_USERS,

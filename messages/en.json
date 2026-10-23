@@ -99,7 +99,8 @@
     },
     "landing": {
         "badge": "System v1.2 ready",
-        "tagline": "The high-performance workspace for your next evolution. Secure, fast, and built for the digital vanguard."
+        "tagline": "The high-performance workspace for your next evolution. Secure, fast, and built for the digital vanguard.",
+        "legalNotice": "By signing in you agree to the <terms>Terms of Service</terms> and the <privacy>Privacy Policy</privacy>."
     },
     "pending": {
         "title": "Access pending",
@@ -264,6 +265,174 @@
             "ready": "Sync route ready. Add '?confirm=true' to the URL to apply the corrections.",
             "alreadySynced": "The database is already 100% in sync. No action needed.",
             "done": "{count, plural, one {Sync complete! # item was corrected.} other {Sync complete! # items were corrected.}}"
+        }
+    },
+    "legal": {
+        "lastUpdated": "Last updated: {date}",
+        "contactTitle": "Contact",
+        "contactBody": "If you have questions about this document or want to exercise your rights, write to <email></email>.",
+        "privacy": {
+            "title": "Privacy Policy",
+            "intro": "This policy explains what information TEMPI (\"we\", \"the service\") collects when you use the inventory management application, how we use it, and the choices you have. By signing in to TEMPI you agree to the practices described here.",
+            "sections": {
+                "collect": {
+                    "title": "Information we collect",
+                    "paragraphs": [
+                        "We only collect the information needed to run the service:"
+                    ],
+                    "bullets": [
+                        "Account information from Google: your name, email address and profile picture, received when you sign in with Google.",
+                        "Organization information: the company names you create, the organizations you join or request to join, your role and status in each one, and the departments you are assigned to.",
+                        "Inventory activity: products, quantities and departments you create or edit, and an audit log of every stock movement, which records the amount, the reason, the date and the name and email of the person who made it.",
+                        "Technical information: session cookies needed to keep you signed in, your language preference, and the standard request logs kept by our hosting provider (such as IP address, browser type and time of the request)."
+                    ]
+                },
+                "google": {
+                    "title": "Google user data",
+                    "paragraphs": [
+                        "TEMPI uses Google Sign-In only to authenticate you. We request the basic \"openid\", \"email\" and \"profile\" scopes and nothing else: we do not access your Gmail, Google Drive, Calendar, contacts or any other Google service.",
+                        "Your Google name, email and profile picture are used solely to create and identify your TEMPI account, show who you are inside your organization, and attribute inventory movements to you in the audit log. We do not use Google user data for advertising, we do not sell it, and we do not transfer it to third parties except as needed to provide the service or as required by law.",
+                        "TEMPI's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements."
+                    ]
+                },
+                "use": {
+                    "title": "How we use information",
+                    "paragraphs": [
+                        "We use the information described above to:"
+                    ],
+                    "bullets": [
+                        "Sign you in and keep your session active.",
+                        "Let you create or join organizations and let administrators approve members, assign roles and departments.",
+                        "Record and display inventory levels, stock movements and consumption reports.",
+                        "Keep the service secure, prevent abuse and fix problems.",
+                        "Contact you about your account or important changes to the service."
+                    ]
+                },
+                "sharing": {
+                    "title": "Who can see your information",
+                    "paragraphs": [
+                        "Inside the application, administrators and members of an organization you belong to can see your name, email, profile picture and role in that organization, and the stock movements you made there. Organizations cannot see your activity in other organizations.",
+                        "We do not sell or rent personal information. We share it only with the service providers that host the application and its database, who process it on our behalf and only to run TEMPI, or when required by law."
+                    ]
+                },
+                "storage": {
+                    "title": "Storage and security",
+                    "paragraphs": [
+                        "Data is stored in a MongoDB database and the application runs on Vercel; these providers may process data on servers outside your country. Connections are encrypted with HTTPS, access is restricted by role and organization, and sessions are signed so they cannot be altered.",
+                        "No system is completely secure, but we take reasonable measures to protect your information against loss, misuse and unauthorized access."
+                    ]
+                },
+                "retention": {
+                    "title": "Data retention",
+                    "paragraphs": [
+                        "We keep your account information while your account is active. Inventory records and the movement audit log belong to the organization that created them and are kept while that organization uses the service, because reports depend on that history.",
+                        "If you ask us to delete your account, we remove your profile and memberships. Movements you made in an organization's audit log may be kept with your name and email so the organization's records stay accurate, unless the law requires otherwise."
+                    ]
+                },
+                "rights": {
+                    "title": "Your rights",
+                    "paragraphs": [
+                        "You can ask us to access, correct or delete your personal information, or object to its processing, by contacting us at the address below. These rights include those granted by Costa Rica's Law 8968 on the Protection of Individuals with regard to the Processing of their Personal Data, and similar laws where you live.",
+                        "You can also revoke TEMPI's access to your Google account at any time from your Google Account settings (Security → Third-party apps with account access)."
+                    ]
+                },
+                "cookies": {
+                    "title": "Cookies",
+                    "paragraphs": [
+                        "TEMPI uses only essential cookies: authentication cookies that keep you signed in and protect sign-in requests, and a cookie that remembers your language. We do not use advertising or third-party tracking cookies."
+                    ]
+                },
+                "children": {
+                    "title": "Children",
+                    "paragraphs": [
+                        "TEMPI is a business tool and is not directed to children under 13. We do not knowingly collect information from children."
+                    ]
+                },
+                "changes": {
+                    "title": "Changes to this policy",
+                    "paragraphs": [
+                        "We may update this policy from time to time. When we do, we will change the \"last updated\" date above, and for significant changes we will let you know inside the application."
+                    ]
+                }
+            }
+        },
+        "terms": {
+            "title": "Terms of Service",
+            "intro": "These terms govern your use of TEMPI, an inventory and logistics management application. By signing in or using the service you agree to these terms. If you use TEMPI on behalf of a company, you confirm that you are authorized to accept them for that company.",
+            "sections": {
+                "acceptance": {
+                    "title": "Acceptance",
+                    "paragraphs": [
+                        "If you do not agree with these terms, do not use the service. Our Privacy Policy, which explains how we handle personal information, is part of these terms."
+                    ]
+                },
+                "service": {
+                    "title": "The service",
+                    "paragraphs": [
+                        "TEMPI lets organizations manage departments, products and stock levels, record stock movements and generate consumption reports. Features and limits may depend on the plan your organization uses."
+                    ]
+                },
+                "accounts": {
+                    "title": "Accounts",
+                    "paragraphs": [
+                        "You sign in with your Google account. You are responsible for the activity that happens under your account and for keeping access to your Google account secure. Tell us right away if you believe your account has been used without permission."
+                    ]
+                },
+                "organizations": {
+                    "title": "Organizations and roles",
+                    "paragraphs": [
+                        "The person who creates an organization becomes its administrator. Administrators decide who may join, which role and departments each member has, and may deactivate members. Each organization is responsible for the information its members enter and for how it uses TEMPI with its own staff."
+                    ]
+                },
+                "acceptableUse": {
+                    "title": "Acceptable use",
+                    "paragraphs": [
+                        "When using TEMPI you agree not to:"
+                    ],
+                    "bullets": [
+                        "Access organizations, data or features you have not been given access to, or try to get around permissions.",
+                        "Interfere with or disrupt the service, or overload it with automated requests.",
+                        "Use the service for any unlawful purpose or to store unlawful content.",
+                        "Copy, resell or reverse engineer the service, except where the law allows it."
+                    ]
+                },
+                "data": {
+                    "title": "Your data",
+                    "paragraphs": [
+                        "Your organization keeps ownership of the inventory data it enters. You give us permission to store and process that data only to provide and improve the service. Personal information is handled as described in the Privacy Policy."
+                    ]
+                },
+                "availability": {
+                    "title": "Availability and changes",
+                    "paragraphs": [
+                        "We work to keep TEMPI available and accurate, but the service is provided \"as is\" and \"as available\", without guarantees that it will be uninterrupted or error-free. We may change, add or remove features, and we will try to give notice of changes that significantly affect you. Keep your own copies of any records you are required to retain."
+                    ]
+                },
+                "termination": {
+                    "title": "Suspension and termination",
+                    "paragraphs": [
+                        "You can stop using TEMPI at any time and ask us to delete your account. We may suspend or end access for accounts or organizations that break these terms or put the service or other users at risk."
+                    ]
+                },
+                "liability": {
+                    "title": "Limitation of liability",
+                    "paragraphs": [
+                        "To the extent permitted by law, TEMPI and its operators are not liable for indirect, incidental or consequential damages, or for loss of profits, data or business, arising from the use of or inability to use the service. Inventory figures and reports depend on the data entered by users and should be verified before relying on them for important decisions."
+                    ]
+                },
+                "law": {
+                    "title": "Governing law",
+                    "paragraphs": [
+                        "These terms are governed by the laws of the Republic of Costa Rica. Any dispute will be submitted to the competent courts of Costa Rica, unless the law of your country gives you the right to bring it elsewhere."
+                    ]
+                },
+                "changes": {
+                    "title": "Changes to these terms",
+                    "paragraphs": [
+                        "We may update these terms. The \"last updated\" date above shows when they last changed. If you keep using TEMPI after a change, you accept the updated terms."
+                    ]
+                }
+            }
         }
     }
 }
