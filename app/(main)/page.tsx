@@ -5,30 +5,29 @@ import TestDashboard from "@/components/main/testDashboard";
 import { ROLES } from "@/lib/constants";
 import Pending from "@/components/main/pending";
 import { useEffect } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import New from "@/components/main/new";
 import Runner from "@/components/main/runner";
 import Lobby from "@/components/main/lobby";
 
 export default function Home() {
   const { data: session, status } = useSession()
+  const router = useRouter();
 
-
-  const checkUserStatus = () => {
-    
-  }
-
+  // redirect() from next/navigation isn't supported inside effects, use the router instead
   useEffect(() => {
-    
-    if (session?.user?.isActive === false) {
-      redirect("/unauthorized");
-    }
-    console.log(status, session?.user);
+    if (status !== "authenticated") return;
+    const role = session?.user?.role;
 
-    if (status === "authenticated" && ![ROLES.PENDING_USER, ROLES.NEW_USER].includes(session?.user?.role)) {
-      redirect("/runner")
+    if (session?.user?.isActive === false) {
+      router.replace("/unauthorized");
+    } else if (!role || role === ROLES.NEW_USER) {
+      // No organization yet: create or join one
+      router.replace("/lobby");
+    } else if (role !== ROLES.PENDING_USER) {
+      router.replace("/runner");
     }
-  }, [session, status])
+  }, [session, status, router])
 
   return status === "loading" ? (
     <div className="flex items-center justify-center min-h-screen p-6">
@@ -43,8 +42,6 @@ export default function Home() {
         /* --- DASHBOARD STATE (Logged In) --- */
         session.user?.role === ROLES.PENDING_USER ? (
           <Pending />
-        ) : session.user?.role === ROLES.NEW_USER ? (
-          redirect("/lobby")
         ) : (
           <div className="flex items-center justify-center min-h-screen p-6">
             <p className="text-gray-500">Cargando...</p>

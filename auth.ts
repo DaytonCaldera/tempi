@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
-import { getSuperAdminEmail, ROLES } from "./lib/constants"
+import { getSuperAdminEmail, isPlaceholderOrg, PLACEHOLDER_CLIENT_ID, ROLES } from "./lib/constants"
 import mongo from "@/lib/mongodb";
 import { ObjectId } from "mongodb"
 
@@ -25,7 +25,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					email: profile.email,
 					image: profile.picture,
 					role: profile.role ?? "new_user", // Default role for new users
-					clientId: profile.clientId ?? 'sup22',
+					clientId: profile.clientId ?? null, // New users get an organization when they create or join one in the lobby
 					clientCode: profile.clientCode ?? null,
 					isActive: profile.isActive ?? true, // Default to active for new users, they are gonna verify laternpm 
 					permissions: profile.permissions || {}, // You can also store permissions directly in the user document if needed
@@ -40,10 +40,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			if (user) {
 
 				const userDoc = await db.collection('users').findOne({ email: user.email });
-				let organizations = userDoc?.organizations || [];
+				// Ignore the old "sup22" placeholder entry, otherwise it wins over the user's real organization
+				let organizations = (userDoc?.organizations || []).filter((org: any) => !isPlaceholderOrg(org));
 
 				// 2. MIGRATION LOGIC: If no organizations exist, create the first one from old data
-				if (organizations.length === 0 && user.clientId) {
+				if (organizations.length === 0 && user.clientId && user.clientId.toString() !== PLACEHOLDER_CLIENT_ID) {
 					const initialOrg = {
 						clientId: user.clientId,
 						role: user.role || "new_user",
@@ -68,7 +69,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				} else {
 					// FIX: Find the organization that matches the user's current "assigned" clientId
 					// We use .toString() to ensure we are comparing strings to strings
-					const currentId = user.activeOrganization?.toString() || organizations[0]?.clientId?.toString(); // Fallback to first org if activeOrganization is not set
+					// Read activeOrganization from the DB doc, it's kept up to date by create/join/switch.
+					// A stale placeholder value won't match any org and falls through to the first active one.
+					const currentId = userDoc?.activeOrganization?.toString() || user.activeOrganization?.toString() || organizations[0]?.clientId?.toString(); // Fallback to first org if activeOrganization is not set
 					const activeOrg = organizations.find((org: any) =>
 						org.clientId?.toString() === currentId && org.status === 'active'
 					);
@@ -84,8 +87,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 						clientId: org.clientId?.toString() // Ensure all clientIds in organizations are strings
 					}));
 					token.organizations = orgs; // Store all orgs in the token for easy access in the app
-					console.log(token);
-					
 				}
 
 				token.activeOrganization = session?.activeOrganization?.toString() || user.activeOrganization?.toString() || token.clientId; // Keep activeOrganization in sync with clientId
@@ -98,23 +99,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			if (trigger === "update" && session) {
 
 				if (session.role) {
-					token.role = session.role; console.log(token, 'TOKEN UPDATE');
+					token.role = session.role;
 				}
 				if (session?.clientId) {
-
-					const clientData = await switchClient(session, token);
 					if (token.role === ROLES.SUPERADMIN) {
 						token.clientId = session.clientId === 'all' ? null : new ObjectId(session.clientId); // Superadmin can switch to 'all' or specific client
 					} else {
-						token.clientId = clientData.clientId;
-						token.role = clientData.role;
-						token.permissions = clientData.permissions;
+						const clientData = await switchClient(session.clientId, token);
+						// Keep the current context if the user doesn't belong to the requested org,
+						// instead of leaving the token with a null role
+						if (clientData) {
+							token.clientId = clientData.clientId;
+							token.activeOrganization = clientData.clientId;
+							token.role = clientData.role;
+							token.permissions = clientData.permissions;
+							token.organizations = clientData.organizations;
+						}
 					}
-					
 				}
 				if (session.clientCode) token.clientCode = session.clientCode;
 				if (session.isActive !== undefined) token.isActive = session.isActive;
 				if (session.organizations) token.organizations = session.organizations;
+			}
+
+			// Pending users wait for an admin's approval, which only changes the DB.
+			// Re-read their membership so they leave the "pending" screen without signing in again.
+			if (!user && token.role === ROLES.PENDING_USER && token.clientId) {
+				const clientData = await switchClient(token.clientId.toString(), token);
+				if (clientData && clientData.role !== token.role) {
+					token.role = clientData.role;
+					token.permissions = clientData.permissions;
+					token.organizations = clientData.organizations;
+				}
 			}
 			return token;
 		},
@@ -141,28 +157,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 
 /**
- * Switches the client for the user based on the session's clientId and updates the token with the new role and permissions.
+ * Switches the client for the user based on the requested clientId and resolves the new role and permissions.
  * This is useful for users who belong to multiple organizations and need to switch contexts without logging out.
- * @param session - The current session object containing the selected clientId and any updated session values.
+ * @param clientId - The clientId of the organization to switch to.
  * @param token - The current JWT token payload containing user information such as email.
- * @returns A promise resolving to an object with the resolved clientId, role, and permissions for the selected organization.
+ * @returns A promise resolving to the clientId, role, permissions and organizations for the selected organization,
+ * or null if the user doesn't belong to it.
  */
-async function switchClient(session: any, token: any) {
-    const resultToken = {
-        clientId: null,
-        role: null,
-        permissions: null,
-    };
-
+async function switchClient(clientId: string, token: any) {
     const userDoc = await db.collection('users').findOne({ email: token.email });
-    const orgData = userDoc?.organizations?.find((o: any) => o.clientId.toString() === session.clientId);
+    const organizations = (userDoc?.organizations || []).filter((o: any) => !isPlaceholderOrg(o));
+    const orgData = organizations.find((o: any) => o.clientId.toString() === clientId);
 
-    if (orgData) {
+    if (!orgData) return null;
+
+    const { getRolePermissions } = await import("./lib/permissions");
+    return {
         // Keep it as a string here!
-        resultToken.clientId = orgData.clientId.toString();
-        resultToken.role = orgData.role;
-        const { getRolePermissions } = await import("./lib/permissions");
-        resultToken.permissions = await getRolePermissions(orgData.role);
-    }
-    return resultToken;
+        clientId: orgData.clientId.toString(),
+        role: orgData.role,
+        permissions: await getRolePermissions(orgData.role),
+        organizations: organizations.map((org: any) => ({ ...org, clientId: org.clientId.toString() })),
+    };
 }

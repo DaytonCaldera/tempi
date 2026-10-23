@@ -7,8 +7,13 @@ import { FileText, ArrowRight } from 'lucide-react';
 export default async function Dashboard() {
 
     const session = await auth();
-    if (session?.user?.role === ROLES.NEW_USER || session?.user?.role === ROLES.PENDING_USER) {
+    if (!session) redirect("/");
+    if (!session.user?.role || session.user.role === ROLES.NEW_USER) {
         redirect("/lobby");
+    }
+    // Pending users wait on the home page, which shows the "pending" screen
+    if (session.user.role === ROLES.PENDING_USER) {
+        redirect("/");
     }
 
     return (

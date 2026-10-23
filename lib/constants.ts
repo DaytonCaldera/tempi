@@ -32,6 +32,14 @@ export const isSuperAdmin = (session: any) => {
     return session?.user?.role === ROLES.SUPERADMIN && masterEmails.includes(session.user.email);
 };
 
+/**
+ * Placeholder clientId that older sign-ups stored before the user belonged to any organization.
+ * It is not a real organization and must never be used to resolve a user's role.
+ */
+export const PLACEHOLDER_CLIENT_ID = "sup22";
+
+export const isPlaceholderOrg = (org: any) => !org?.clientId || org.clientId.toString() === PLACEHOLDER_CLIENT_ID;
+
 //return the admin email from SUPERADMIN_EMAIL env variable, if not set return the default email
 export const getSuperAdminEmail = (): string => {
     return process.env.SUPERADMIN_EMAIL || "superadmin@tempi.pro";
