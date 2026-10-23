@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { apiError, getDb, unauthorized } from '@/lib/api';
+import { MOVEMENT_REASONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
 
 /**
@@ -12,21 +14,21 @@ export async function GET(req: Request) {
     const session = await auth();
     if (!session?.user) return unauthorized();
 
+    const t = await getTranslations('api.sync');
+
     // Safety check against running it by accident
     const { searchParams } = new URL(req.url);
     const confirm = searchParams.get('confirm');
-    
+
     if (confirm !== 'true') {
-        return NextResponse.json({ 
-            message: "Ruta de sincronización lista. Añade '?confirm=true' a la URL para ejecutar las correcciones." 
-        });
+        return NextResponse.json({ message: t('ready') });
     }
 
     const db = await getDb();
     const tenantQuery = getTenantQuery(session);
 
     try {
-        // 3. Ejecutamos el pipeline para encontrar las discrepancias (identico al de auditoría)
+        // Items whose stored quantity doesn't match the sum of their movements
         const discrepancies = await db.collection('stock_movements').aggregate([
             { $match: tenantQuery },
             {
@@ -66,20 +68,19 @@ export async function GET(req: Request) {
             },
             {
                 $match: {
-                    difference: { $ne: 0 } // Solo artículos desincronizados
+                    difference: { $ne: 0 } // Only items that are out of sync
                 }
             }
         ]).toArray();
 
         if (discrepancies.length === 0) {
-            return NextResponse.json({ message: "La base de datos ya está 100% sincronizada. No se requiere acción." });
+            return NextResponse.json({ message: t('alreadySynced') });
         }
 
-        // 4. Construimos los movimientos compensatorios
+        // One compensating movement per item
         const compensatingMovements = discrepancies.map(item => {
             const isMissingIn = item.difference > 0;
-            
-            // Construimos el objeto de movimiento que inyectaremos
+
             return {
                 ...tenantQuery,
                 inventoryId: item._id,
@@ -87,25 +88,25 @@ export async function GET(req: Request) {
                 departmentName: item.departmentName,
                 productName: item.productName,
                 sku: item.sku,
-                // Si la diferencia es positiva, faltaron INs. Si es negativa, faltaron OUTs.
-                type: isMissingIn ? 'IN' : 'OUT', 
-                amount: Math.abs(item.difference), // Siempre positivo
-                reason: "Sincronización inicial del sistema",
+                // A positive difference means INs are missing, a negative one means OUTs are missing
+                type: isMissingIn ? 'IN' : 'OUT',
+                amount: Math.abs(item.difference), // Always positive
+                reason: MOVEMENT_REASONS.INITIAL_SYNC,
                 user: {
                     id: session.user.id,
-                    name: session.user.name || "Sistema"
+                    name: session.user.name ?? null
                 },
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
         });
 
-        // 5. Insertamos todos los registros faltantes de un solo golpe
+        // Insert every missing movement in one go
         const result = await db.collection('stock_movements').insertMany(compensatingMovements);
 
         return NextResponse.json({
             success: true,
-            message: `¡Sincronización exitosa! Se han corregido ${result.insertedCount} artículos.`,
+            message: t('done', { count: result.insertedCount }),
             fixedItems: compensatingMovements.map(m => ({
                 product: m.productName,
                 adjustment: `${m.type} ${m.amount}`
@@ -113,7 +114,7 @@ export async function GET(req: Request) {
         });
 
     } catch (error) {
-        console.error("Error durante la sincronización de inventario:", error);
-        return apiError("Fallo al ejecutar la sincronización masiva", 500);
+        console.error("Inventory sync error:", error);
+        return apiError("syncFailed", 500);
     }
 }

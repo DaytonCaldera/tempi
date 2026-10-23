@@ -3,20 +3,25 @@ import { usePathname } from "next/navigation";
 import sections from "./menuItems.json";
 import SidebarItem from "./SidebarItem";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { hasPermission } from "@/lib/permissions";
 import { ROLES, sectionPermissions } from "@/lib/constants";
+import { labelOf } from "@/i18n/labels";
 import OrganizationSwitcher from "@/components/dashboard/OrganizationSwitcher";
 import { LayoutGrid, ChevronLeft, Building2 } from "lucide-react";
 
-type MenuItem = { href: string; label: string; icon: string; permission?: string };
+/** `labelKey` is a key of the "nav" messages. */
+type MenuItem = { href: string; labelKey: string; icon: string; permission?: string };
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
+    const t = useTranslations("nav");
+    const tRoles = useTranslations("roles");
     const { data: session } = useSession();
     const pathname = usePathname();
 
     const organizations = (session?.user?.organizations || []).map(org => ({
         ...org,
-        clientName: org.clientName || "Unnamed Org",
+        clientName: org.clientName || t("unnamedOrganization"),
     }));
 
     const isValidSection = (section: string) => {
@@ -66,7 +71,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                         <div className="bg-white/5 p-4 rounded-4xl border border-white/10 shadow-inner">
                             <div className="flex items-center gap-2 mb-3 px-1">
                                 <Building2 size={12} className="text-brand-accent" />
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Espacio de Trabajo</p>
+                                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">{t("workspace")}</p>
                             </div>
                             <OrganizationSwitcher userOrgs={organizations} /> 
                         </div>
@@ -81,7 +86,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                                 <>
                                     <div className={`flex items-center gap-3 px-4 mb-3 transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>
                                         <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-white/30 whitespace-nowrap">
-                                            {section}
+                                            {t(`sections.${section}`)}
                                         </h3>
                                         <div className="h-px w-full bg-white/5"></div>
                                     </div>
@@ -91,7 +96,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                                             <SidebarItem
                                                 key={item.href}
                                                 href={item.href}
-                                                label={item.label}
+                                                label={t(item.labelKey)}
                                                 iconName={item.icon}
                                                 isActive={pathname === item.href}
                                                 isCollapsed={!isOpen}
@@ -112,7 +117,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                         </div>
                         <div className={`transition-opacity duration-300 ${!isOpen ? 'opacity-0' : 'opacity-100'}`}>
                             <p className="text-xs font-bold truncate w-32">{session?.user?.name}</p>
-                            <p className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">{session?.user?.role}</p>
+                            <p className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">{session?.user?.role && labelOf(tRoles, session.user.role)}</p>
                         </div>
                     </div>
                 </div>

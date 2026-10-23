@@ -28,7 +28,7 @@ export async function POST(req: Request) {
             }
         }
     );
-    if (result.matchedCount === 0) return notFound("Usuario no encontrado");
+    if (result.matchedCount === 0) return notFound("userNotFound");
 
     return NextResponse.json({ success: true });
 }

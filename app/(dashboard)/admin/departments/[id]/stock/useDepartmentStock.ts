@@ -1,5 +1,6 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { MOVEMENT_REASONS } from "@/lib/constants";
 import type { MovementType, StockItem } from "@/types/models";
 
 export type StockRow = StockItem<string>;
@@ -26,7 +27,7 @@ export function useDepartmentStock(departmentId: string, initialInventory: Stock
         await fetch(`/api/admin/inventory/${item._id}/move`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount, type, reason: "Ajuste rápido Admin" })
+            body: JSON.stringify({ amount, type, reason: MOVEMENT_REASONS.ADMIN_QUICK_ADJUSTMENT })
         });
         mutate();
     };

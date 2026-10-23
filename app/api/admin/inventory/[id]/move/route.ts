@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
-import { ROLES } from "@/lib/constants";
+import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
 import { findOwnDepartment } from "@/lib/departments";
 import type { MovementType, StockItem, User } from "@/types/models";
 
@@ -25,12 +25,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const { amount, type, reason } = await req.json() as { amount: number; type: MovementType; reason?: string };
 
         const quantity = Math.abs(Number(amount));
-        if (!itemId || !quantity || (type !== "IN" && type !== "OUT")) return badRequest("Faltan datos");
+        if (!itemId || !quantity || (type !== "IN" && type !== "OUT")) return badRequest("missingData");
 
         const db = await getDb();
         const item = await db.collection<StockItem>('department_stock').findOne({ _id: itemId, isDeleted: { $ne: true } });
         const department = item && await findOwnDepartment(session, item.departmentId);
-        if (!item || !department) return notFound("Producto no encontrado o acceso denegado");
+        if (!item || !department) return notFound("productNotFoundOrDenied");
 
         // Read the role from the DB: an admin may have changed it after the user signed in
         const userDoc = await db.collection<User>('users').findOne({ email: session.user.email ?? undefined });
@@ -42,12 +42,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             !!membership?.departments?.some(id => id.toString() === item.departmentId.toString());
 
         if (!isManagement && !isAssignedUser) {
-            return forbidden("No tienes permiso para mover inventario en esta área.");
+            return forbidden("moveNotAllowed");
         }
 
         const previousBalance = item.quantity || 0;
         const newBalance = previousBalance + (type === "IN" ? quantity : -quantity);
-        if (newBalance < 0) return badRequest("Stock insuficiente");
+        if (newBalance < 0) return badRequest("insufficientStock");
 
         await Promise.all([
             db.collection('department_stock').updateOne(
@@ -65,7 +65,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 amount: quantity,
                 previousBalance,
                 newBalance,
-                reason: reason || "Ajuste manual",
+                reason: reason || MOVEMENT_REASONS.MANUAL_ADJUSTMENT,
                 user: { id: userDoc?._id, name: session.user.name, email: session.user.email },
                 createdAt: new Date()
             }),

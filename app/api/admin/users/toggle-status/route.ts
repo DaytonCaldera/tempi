@@ -36,7 +36,7 @@ export async function PATCH(request: Request) {
                 }
             }
         );
-        if (result.matchedCount === 0) return notFound("Usuario u organización no encontrados");
+        if (result.matchedCount === 0) return notFound("userOrOrganizationNotFound");
 
         return NextResponse.json({ success: true });
     } catch (error) {

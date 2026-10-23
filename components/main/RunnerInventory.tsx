@@ -5,7 +5,8 @@ import { signOut } from "next-auth/react";
 import useSWR from "swr";
 import { useTranslations } from "next-intl";
 import { fetcher } from "@/lib/fetcher";
-import { ROLES } from "@/lib/constants";
+import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
+import { labelOf } from "@/i18n/labels";
 import type { MovementType, StockItem } from "@/types/models";
 
 type Item = StockItem<string>;
@@ -17,15 +18,17 @@ interface RunnerInventoryProps {
 }
 
 /** Groups items by department name, for the department separators. */
-const groupByDepartment = (items: Item[]) =>
+const groupByDepartment = (items: Item[], fallbackName: string) =>
     items.reduce<Record<string, Item[]>>((groups, item) => {
-        const department = item.departmentName || "General";
+        const department = item.departmentName || fallbackName;
         (groups[department] ||= []).push(item);
         return groups;
     }, {});
 
 export default function RunnerInventory({ initialItems, userRole, permissions }: RunnerInventoryProps) {
-    const t = useTranslations('');
+    const t = useTranslations('runner');
+    const tCommon = useTranslations('common');
+    const tUnits = useTranslations('units');
 
     const [search, setSearch] = useState("");
     const [globalQty, setGlobalQty] = useState(1);
@@ -44,7 +47,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
         item.productName.toLowerCase().includes(searchTerm) ||
         item.sku.toLowerCase().includes(searchTerm)
     );
-    const groupedItems = groupByDepartment(filteredItems);
+    const groupedItems = groupByDepartment(filteredItems, tCommon('general'));
     const canOpenDashboard = userRole === ROLES.ADMIN || userRole === ROLES.SUPERADMIN || permissions.view_dashboard === true;
 
     const handleUpdate = async (id: string, type: MovementType) => {
@@ -65,7 +68,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                 body: JSON.stringify({
                     amount: globalQty,
                     type,
-                    reason: type === 'OUT' ? "Consumo Runner" : "Reabastecimiento"
+                    reason: type === 'OUT' ? MOVEMENT_REASONS.RUNNER_CONSUMPTION : MOVEMENT_REASONS.RESTOCK
                 })
             });
 
@@ -91,7 +94,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                         href="/dashboard"
                         className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all"
                     >
-                        <LayoutDashboard size={16} /> {t('common.dashboard')}
+                        <LayoutDashboard size={16} /> {tCommon('dashboard')}
                     </a>
                 )}
 
@@ -99,7 +102,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-100 text-gray-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-all hover:text-red-500"
                 >
-                    <LogOut size={16} /> {t('common.logout')}  
+                    <LogOut size={16} /> {tCommon('logout')}
                 </button>
             </div>
 
@@ -107,7 +110,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
             <div className="sticky top-4 z-30 bg-white p-5 rounded-[2.5rem] shadow-2xl border border-gray-100 ring-4 ring-gray-50/50">
                 <div className="flex flex-col items-center">
                     <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                        {t('runner.quantityTitle')}
+                        {t('quantityTitle')}
                     </p>
 
                     <div className="flex items-center justify-between w-full gap-4">
@@ -140,7 +143,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                         onClick={() => setGlobalQty(1)}
                         className="mt-4 flex items-center gap-2 text-[11px] font-black text-gray-300 uppercase hover:text-blue-500 transition-colors"
                     >
-                        <RotateCcw size={12} /> {t('runner.reset')}
+                        <RotateCcw size={12} /> {t('reset')}
                     </button>
                 </div>
             </div>
@@ -150,7 +153,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-800" size={20} />
                 <input
                     type="text"
-                    placeholder={t('runner.search')}
+                    placeholder={t('search')}
                     className="w-full bg-white text-gray-800 p-6 pl-16 rounded-3xl text-lg font-bold shadow-sm border border-gray-100 outline-none focus:ring-2 ring-blue-100 transition-all"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -184,7 +187,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                                         </div>
                                         <div className="text-right">
                                             <p className={`text-3xl font-black leading-none ${item.quantity <= (item.minStock || 0) ? 'text-red-500' : 'text-[#171717]'}`}>{item.quantity}</p>
-                                            <p className="text-[10px] font-black text-gray-300 uppercase mt-2">{item.unit || 'uds'}</p>
+                                            <p className="text-[10px] font-black text-gray-300 uppercase mt-2">{item.unit ? labelOf(tUnits, item.unit) : t('defaultUnit')}</p>
                                         </div>
                                     </div>
 
@@ -203,7 +206,7 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
                 ))}
 
                 {Object.keys(groupedItems).length === 0 && (
-                    <div className="text-center py-20 text-gray-400 font-bold">No se encontraron productos.</div>
+                    <div className="text-center py-20 text-gray-400 font-bold">{t('noProducts')}</div>
                 )}
             </div>
         </div>

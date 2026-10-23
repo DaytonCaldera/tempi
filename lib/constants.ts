@@ -46,3 +46,21 @@ export const sectionPermissions: Record<string, string> = {
     inventory: PERMISSIONS.VIEW_STOCK,
     reports: PERMISSIONS.VIEW_REPORTS
 };
+
+/**
+ * Reasons written to stock_movements.reason. They are stored data (the reports filter on INITIAL_SYNC),
+ * so the values stay as they are; the UI shows them through the "movementReasons" messages.
+ */
+export const MOVEMENT_REASONS = {
+    ADMIN_QUICK_ADJUSTMENT: "Ajuste rápido Admin",
+    RUNNER_CONSUMPTION: "Consumo Runner",
+    RESTOCK: "Reabastecimiento",
+    MANUAL_ADJUSTMENT: "Ajuste manual",
+    INITIAL_SYNC: "Sincronización inicial del sistema",
+} as const;
+
+/** Units a stock item can be counted in. Stored as-is in department_stock.unit; labels are in the "units" messages. */
+export const STOCK_UNITS = ["unidades", "kg", "cajas", "litros"] as const;
+
+/** Name of the plan new organizations start on ("plans" collection). */
+export const DEFAULT_PLAN_NAME = "Plan Gratuito";

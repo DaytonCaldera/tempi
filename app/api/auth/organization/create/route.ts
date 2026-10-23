@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { apiError, badRequest, getDb, serverError, unauthorized } from "@/lib/api";
-import { PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
-
-const DEFAULT_PLAN_NAME = "Plan Gratuito";
+import { DEFAULT_PLAN_NAME, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
 
 /** Random join code in the format "ABC-123". */
 const generateClientCode = () => {
@@ -22,13 +21,14 @@ export async function POST(req: Request) {
 
     try {
         const { companyName } = await req.json();
-        if (!companyName) return badRequest("Nombre de empresa requerido");
+        if (!companyName) return badRequest("companyNameRequired");
 
         const db = await getDb();
 
         const defaultPlan = await db.collection("plans").findOne({ name: DEFAULT_PLAN_NAME });
-        if (!defaultPlan) return apiError("Plan predeterminado no encontrado", 500);
+        if (!defaultPlan) return apiError("defaultPlanNotFound", 500);
 
+        const t = await getTranslations("api");
         const clientCode = generateClientCode();
         const { insertedId: clientId } = await db.collection("clients").insertOne({
             name: companyName,
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
         const { insertedId: departmentId } = await db.collection('departments').insertOne({
             name: "General",
-            description: "Departamento inicial predeterminado",
+            description: t("defaultDepartmentDescription"),
             clientId,
             createdAt: new Date()
         });
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
             }
         );
 
-        return NextResponse.json({ message: "Organización creada", clientCode, clientId: clientId.toString() });
+        return NextResponse.json({ message: t("organizationCreated"), clientCode, clientId: clientId.toString() });
     } catch (error) {
         console.error("Create organization error:", error);
         return serverError();

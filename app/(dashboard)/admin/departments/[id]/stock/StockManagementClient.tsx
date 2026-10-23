@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Search, Plus, AlertTriangle, History, ArrowLeft } from "lucide-react";
 import { useDepartmentStock, type StockRow } from "./useDepartmentStock";
 import { StockItemModal } from "./StockItemModal";
@@ -16,6 +17,7 @@ interface StockManagementClientProps {
 
 /** Admin view of a department's inventory: stats, search, quick +/- moves, create, edit and delete. */
 export default function StockManagementClient({ initialInventory, departmentId, departmentName }: StockManagementClientProps) {
+    const t = useTranslations("stock");
     const router = useRouter();
     const { inventory, quickMove, remove } = useDepartmentStock(departmentId, initialInventory);
 
@@ -67,17 +69,17 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <Link
                         href="/admin/departments"
-                        className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-[#171717] transition-colors"
+                        className="flex items-center gap-2 text-xs font-bold uppercase text-gray-400 hover:text-[#171717] transition-colors"
                     >
-                        <ArrowLeft size={14} /> VOLVER A DEPARTAMENTOS
+                        <ArrowLeft size={14} /> {t("backToDepartments")}
                     </Link>
 
                     <div className="flex items-center gap-3">
-                        <button onClick={() => openForm(null)} className="flex items-center gap-2 px-4 py-2 bg-[#171717] text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
-                            <Plus size={16} /> AGREGAR PRODUCTO
+                        <button onClick={() => openForm(null)} className="flex items-center gap-2 px-4 py-2 bg-[#171717] text-white rounded-xl text-xs font-bold uppercase hover:bg-black transition-all shadow-lg shadow-gray-200">
+                            <Plus size={16} /> {t("addProduct")}
                         </button>
-                        <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all">
-                            <History size={16} /> VER REPORTE
+                        <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold uppercase hover:bg-gray-50 transition-all">
+                            <History size={16} /> {t("viewReport")}
                         </Link>
                     </div>
                 </div>
@@ -85,18 +87,18 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 {/* STATS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total SKU</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("totalSku")}</p>
                         <p className="text-2xl font-black text-[#171717]">{inventory.length}</p>
                     </div>
                     <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex justify-between items-center">
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bajo Stock</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("lowStock")}</p>
                             <p className="text-2xl font-black text-orange-500">{lowStockCount}</p>
                         </div>
                         {lowStockCount > 0 && <AlertTriangle className="text-orange-500 opacity-20" size={32} />}
                     </div>
                     <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Valor Estimado</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("estimatedValue")}</p>
                         <p className="text-2xl font-black text-[#0070f3]">$---</p>
                     </div>
                 </div>
@@ -106,7 +108,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Buscar por nombre o SKU..."
+                        placeholder={t("searchPlaceholder")}
                         className="w-full bg-white border-none rounded-2xl py-4 pl-12 pr-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}

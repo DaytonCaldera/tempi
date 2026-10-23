@@ -1,3 +1,4 @@
+import { useFormatter, useTranslations } from "next-intl";
 import type { ConsumptionReportDepartment } from "@/types/models";
 import type { DateRange } from "./useConsumptionReport";
 
@@ -26,6 +27,10 @@ interface PrintableReportProps {
 
 /** Plain-table version of the report, hidden on screen and shown only when printing. */
 export function PrintableReport({ title, range, data, showDepartmentNames }: PrintableReportProps) {
+    const t = useTranslations("reports");
+    const format = useFormatter();
+    const formatDate = (date: Date) => format.dateTime(date, { dateStyle: "medium", timeStyle: "short" });
+
     return (
         <>
             <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
@@ -34,35 +39,35 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                 <div className="mb-8 border-b-2 border-black pb-4">
                     <h1 className="text-3xl font-black uppercase tracking-tight">{title}</h1>
                     <p className="text-[1rem] font-bold mt-2 text-gray-700">
-                        Rango de fechas: {new Date(range.start).toLocaleString()} — {new Date(range.end).toLocaleString()}
+                        {t("printView.range", { start: formatDate(new Date(range.start)), end: formatDate(new Date(range.end)) })}
                     </p>
                     <p className="text-[1rem] mt-1 text-gray-600">
-                        Generado el: {new Date().toLocaleString()}
+                        {t("printView.generated", { date: formatDate(new Date()) })}
                     </p>
                 </div>
 
                 {data.length === 0 && (
-                    <p className="text-[1rem] font-bold text-center mt-10">No hay datos disponibles para imprimir en este rango.</p>
+                    <p className="text-[1rem] font-bold text-center mt-10">{t("printView.empty")}</p>
                 )}
 
                 {data.map(department => (
                     <div key={`print-${department._id}`} className="mb-12">
                         {showDepartmentNames && (
                             <h2 className="text-xl font-black uppercase bg-gray-100 p-3 mb-4 rounded-md">
-                                Departamento: {department.departmentName}
+                                {t("printView.department", { name: department.departmentName })}
                             </h2>
                         )}
 
                         <table className="w-full text-left border-collapse text-[1rem]">
                             <thead>
                                 <tr className="border-b-2 border-black text-sm uppercase tracking-wider">
-                                    <th className="py-3 px-2 font-black">SKU</th>
-                                    <th className="py-3 px-2 font-black">Producto</th>
-                                    <th className="py-3 px-2 font-black text-center">Inv. Inicial</th>
-                                    <th className="py-3 px-2 font-black text-center">Entradas</th>
-                                    <th className="py-3 px-2 font-black text-center">Salidas</th>
-                                    <th className="py-3 px-2 font-black text-center">Balance</th>
-                                    <th className="py-3 px-2 font-black text-center">Inv. Final</th>
+                                    <th className="py-3 px-2 font-black">{t("columns.sku")}</th>
+                                    <th className="py-3 px-2 font-black">{t("columns.product")}</th>
+                                    <th className="py-3 px-2 font-black text-center">{t("columns.initial")}</th>
+                                    <th className="py-3 px-2 font-black text-center">{t("columns.in")}</th>
+                                    <th className="py-3 px-2 font-black text-center">{t("columns.out")}</th>
+                                    <th className="py-3 px-2 font-black text-center">{t("columns.balance")}</th>
+                                    <th className="py-3 px-2 font-black text-center">{t("columns.final")}</th>
                                 </tr>
                             </thead>
                             <tbody>

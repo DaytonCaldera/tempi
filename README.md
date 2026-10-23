@@ -48,3 +48,16 @@ TEMPI utilizes a **Denormalized Audit Pattern**. When a movement occurs, we capt
   "user": { "name": "John Doe", "email": "john@tempi.com" },
   "createdAt": "2026-04-06T15:00:00Z"
 }
+```
+
+---
+
+## 🌐 Languages
+
+The UI ships in **Spanish (default)** and **English**, using [next-intl](https://next-intl.dev) without locale-prefixed routes.
+
+* **Picking the locale**: the `NEXT_LOCALE` cookie (set by the language switcher) wins, then the browser's `Accept-Language`, then Spanish. See `i18n/config.ts` and `i18n/request.ts`.
+* **Text**: every user-facing string, including API error messages, lives in `messages/es.json` and `messages/en.json`. Both files must have the same keys.
+* **Dates**: formatted with next-intl in the `America/Costa_Rica` timezone.
+* **Code**: identifiers, comments and logs are in English.
+* **Stored values**: movement reasons (`MOVEMENT_REASONS`), units (`STOCK_UNITS`) and the default plan name are kept as they are stored in MongoDB; the UI translates them for display (`i18n/labels.ts`).

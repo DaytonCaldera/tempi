@@ -1,142 +1,138 @@
-// Configuramos dotenv al inicio para cargar las variables desde .env.local
+// Load the variables from .env.local before anything reads them
 require('dotenv').config({ path: '.env.local' });
 const { MongoClient } = require('mongodb');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 const dns = require('node:dns/promises');
 
-// Forzar el uso de servidores DNS públicos para evitar el error querySrv ECONNREFUSED
+// Use public DNS servers to avoid the querySrv ECONNREFUSED error
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-// Validar que la URI exista en el entorno
-const URI_MONGO = process.env.MONGODB_URI;
-if (!URI_MONGO) {
-    console.error(chalk.red.bold('\n[ERROR CRÍTICO] No se encontró la variable MONGODB_URI en el archivo .env.local'));
-    console.log(chalk.gray('Asegúrate de que el archivo existe y la variable está bien escrita.\n'));
+const MONGO_URI = process.env.MONGODB_URI;
+if (!MONGO_URI) {
+    console.error(chalk.red.bold('\n[FATAL] MONGODB_URI was not found in .env.local'));
+    console.log(chalk.gray('Make sure the file exists and the variable name is spelled correctly.\n'));
     process.exit(1);
 }
 
-// Variables estáticas
-const NOMBRE_BD = 'tempi'; // <-- Tu base de datos aquí
-const COLECCION_CLIENTES = 'clients';   // <-- Tu colección de clientes aquí
+const DB_NAME = 'tempi';
+const CLIENTS_COLLECTION = 'clients';
 
-async function iniciarApp() {
+async function startApp() {
     console.log(chalk.cyan.bold('\n============================================='));
-    console.log(chalk.white.bold('       SISTEMA DE GESTIÓN DE INVENTARIO      '));
+    console.log(chalk.white.bold('        INVENTORY MANAGEMENT SYSTEM          '));
     console.log(chalk.cyan.bold('=============================================\n'));
 
-    const clienteMongo = new MongoClient(URI_MONGO);
+    const mongoClient = new MongoClient(MONGO_URI);
 
     try {
-        console.log(chalk.gray('[INFO] Conectando a MongoDB...'));
-        await clienteMongo.connect();
+        console.log(chalk.gray('[INFO] Connecting to MongoDB...'));
+        await mongoClient.connect();
 
-        const db = clienteMongo.db(NOMBRE_BD);
-        const coleccion = db.collection(COLECCION_CLIENTES);
+        const db = mongoClient.db(DB_NAME);
+        const clientsCollection = db.collection(CLIENTS_COLLECTION);
 
         // =========================================================
-        // PASO 1: SELECCIÓN DE CLIENTE (DESDE BASE DE DATOS)
+        // STEP 1: PICK A CLIENT (FROM THE DATABASE)
         // =========================================================
-        console.log(chalk.gray('[INFO] Cargando lista de clientes...'));
+        console.log(chalk.gray('[INFO] Loading clients...'));
 
-        const clientesBD = await coleccion.find({}).toArray();
+        const clients = await clientsCollection.find({}).toArray();
 
-        if (clientesBD.length === 0) {
-            console.log(chalk.yellow('\n[ADVERTENCIA] No se encontraron clientes en la base de datos.'));
-            console.log(chalk.gray('Por favor, agrega datos a la colección antes de continuar.\n'));
-            await clienteMongo.close();
+        if (clients.length === 0) {
+            console.log(chalk.yellow('\n[WARNING] No clients found in the database.'));
+            console.log(chalk.gray('Add data to the collection before continuing.\n'));
+            await mongoClient.close();
             return;
         }
 
-        const opcionesClientes = clientesBD.map(cliente => ({
-            name: cliente.nombre || cliente.name || 'Cliente sin nombre',
-            value: cliente._id.toString()
+        const clientChoices = clients.map(client => ({
+            name: client.nombre || client.name || 'Unnamed client',
+            value: client._id.toString()
         }));
 
-        const respuestaCliente = await inquirer.prompt([
+        const clientAnswer = await inquirer.prompt([
             {
                 type: 'list',
-                name: 'clienteId',
-                message: 'Seleccione un cliente para continuar:',
-                choices: opcionesClientes
+                name: 'clientId',
+                message: 'Pick a client to continue:',
+                choices: clientChoices
             }
         ]);
 
-        const clienteSeleccionado = clientesBD.find(c => c._id.toString() === respuestaCliente.clienteId);
-        const nombreCliente = clienteSeleccionado.nombre || clienteSeleccionado.name || 'Cliente';
+        const selectedClient = clients.find(c => c._id.toString() === clientAnswer.clientId);
+        const clientName = selectedClient.nombre || selectedClient.name || 'Client';
 
-        console.log(chalk.green.bold(`\n[ÉXITO] Trabajando en el entorno de: ${nombreCliente}`));
+        console.log(chalk.green.bold(`\n[OK] Working on: ${clientName}`));
 
         // =========================================================
-        // PASO 2: MENÚ PRINCIPAL (CON SWITCH)
+        // STEP 2: MAIN MENU
         // =========================================================
-        let salir = false;
+        let exit = false;
 
-        while (!salir) {
+        while (!exit) {
             console.log(chalk.gray('\n---------------------------------------------'));
 
-            const respuestaMenu = await inquirer.prompt([
+            const menuAnswer = await inquirer.prompt([
                 {
                     type: 'list',
-                    name: 'opcion',
-                    message: chalk.yellow(`MENÚ PRINCIPAL - ${nombreCliente.toUpperCase()} \n  Seleccione una acción:`),
+                    name: 'option',
+                    message: chalk.yellow(`MAIN MENU - ${clientName.toUpperCase()} \n  Pick an action:`),
                     choices: [
-                        { name: 'Ingreso de departamentos con inventario', value: '1' },
-                        { name: 'Otra opción del sistema (Placeholder)', value: '2' },
-                        { name: 'Cambiar de cliente', value: '3' },
-                        { name: chalk.red('Salir'), value: '0' }
+                        { name: 'Import departments with inventory', value: '1' },
+                        { name: 'Another system option (placeholder)', value: '2' },
+                        { name: 'Switch client', value: '3' },
+                        { name: chalk.red('Exit'), value: '0' }
                     ]
                 }
             ]);
 
-            switch (respuestaMenu.opcion) {
+            switch (menuAnswer.option) {
                 case '1':
-                    console.log(chalk.blueBright('\n[EJECUTANDO] -> Ingreso de departamentos con inventario...'));
+                    console.log(chalk.blueBright('\n[RUNNING] -> Import departments with inventory...'));
                     const importDepartments = require('./lib/importDepartmentStock');
-                    importDepartments.mostrarMensajeFormato();
+                    importDepartments.showFormatHelp();
                     const { filename } = await inquirer.prompt([
                         {
                             type: 'input',
                             name: 'filename',
-                            message: 'Ingrese el nombre del archivo JSON de departamentos:',
+                            message: 'Name of the departments JSON file:',
                             default: '2026-01-07-departments.json',
-                            validate: value => value.trim() ? true : 'Debes ingresar un nombre de archivo.'
+                            validate: value => value.trim() ? true : 'Enter a file name.'
                         }
                     ]);
 
-                    // Agrega el ID del cliente como tercer parámetro
-                    await importDepartments.importFile(filename, db, respuestaCliente.clienteId, false);
-                    console.log(chalk.gray('... Lógica de departamentos completada ...'));
+                    await importDepartments.importFile(filename, db, clientAnswer.clientId, false);
+                    console.log(chalk.gray('... Department import finished ...'));
                     break;
 
                 case '2':
-                    console.log(chalk.blueBright('\n[EJECUTANDO] -> Opción 2...'));
-                    // TODO: Aquí va tu segunda lógica
+                    console.log(chalk.blueBright('\n[RUNNING] -> Option 2...'));
+                    // TODO: second option
                     break;
 
                 case '3':
-                    console.log(chalk.cyan('\n[INFO] Reiniciando selección de cliente...\n'));
-                    await clienteMongo.close();
-                    return iniciarApp();
+                    console.log(chalk.cyan('\n[INFO] Restarting client selection...\n'));
+                    await mongoClient.close();
+                    return startApp();
 
                 case '0':
-                    console.log(chalk.green.bold('\nSaliendo del sistema. ¡Hasta luego!\n'));
-                    salir = true;
+                    console.log(chalk.green.bold('\nExiting. Goodbye!\n'));
+                    exit = true;
                     break;
 
                 default:
-                    console.log(chalk.red('\n[ERROR] Opción no reconocida.'));
+                    console.log(chalk.red('\n[ERROR] Unknown option.'));
                     break;
             }
         }
 
     } catch (error) {
-        console.error(chalk.red.bold('\n[ERROR INESPERADO]'), error);
+        console.error(chalk.red.bold('\n[UNEXPECTED ERROR]'), error);
     } finally {
-        await clienteMongo.close();
-        console.log(chalk.gray('[INFO] Conexión a MongoDB cerrada de manera segura.'));
+        await mongoClient.close();
+        console.log(chalk.gray('[INFO] MongoDB connection closed.'));
     }
 }
 
-// Ejecutar la aplicación
-iniciarApp();
+startApp();

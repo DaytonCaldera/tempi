@@ -3,9 +3,13 @@ import { useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Building2, Check, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { labelOf } from "@/i18n/labels";
 import type { SessionMembership } from "@/types/models";
 
 export default function OrganizationSwitcher({ className, userOrgs }: { className?: string; userOrgs: SessionMembership[] }) {
+    const t = useTranslations("nav");
+    const tRoles = useTranslations("roles");
     const { data: session, update } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [isSwitching, setIsSwitching] = useState(false);
@@ -60,7 +64,7 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
             className="fixed bg-white rounded-2xl shadow-2xl border border-brand/5 overflow-hidden z-200 animate-in fade-in slide-in-from-top-2"
         >
             <div className="p-3 border-b border-brand/5 bg-surface/50">
-                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Mis Organizaciones</p>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">{t("myOrganizations")}</p>
             </div>
             <div className="max-h-60 overflow-y-auto">
                 {userOrgs.map((org, index) => (
@@ -74,7 +78,7 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
                         <div className={`w-2 h-2 rounded-full ${org.status === 'active' ? 'bg-success' : 'bg-status-danger'}`}></div>
                         <div className="flex-1">
                             <p className="text-sm font-bold text-brand">{org.clientName}</p>
-                            <p className="text-[10px] text-text-muted uppercase font-bold">{org.role}</p>
+                            <p className="text-[10px] text-text-muted uppercase font-bold">{labelOf(tRoles, org.role)}</p>
                         </div>
                         {org.clientId === session?.user?.clientId && (
                             <Check size={16} className="text-brand-accent" />
@@ -83,7 +87,7 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
                 ))}
             </div>
             <a href="/lobby" className="block p-3 text-center text-xs font-bold text-brand hover:bg-brand/5 transition-all border-t border-brand/5">
-                + Unirse o Crear Nueva
+                {t("joinOrCreate")}
             </a>
         </div>
     ) : null;
@@ -99,9 +103,9 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
                     <Building2 size={16} />
                 </div>
                 <div className="text-left hidden md:block">
-                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none mb-1">Organizacion</p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none mb-1">{t("organization")}</p>
                     <p className="text-sm font-bold text-white truncate max-w-30">
-                        {activeOrg?.clientName || "Seleccionar..."}
+                        {activeOrg?.clientName || t("selectOrganization")}
                     </p>
                 </div>
                 <ChevronDown size={16} className={`text-white/40 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -114,7 +118,7 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
                 <div className="fixed inset-0 bg-brand/10 backdrop-blur-sm z-[60] flex items-center justify-center">
                     <div className="bg-white p-6 rounded-3xl shadow-2xl flex items-center gap-4 border border-brand/10">
                         <RefreshCw className="animate-spin text-brand" size={24} />
-                        <p className="font-bold text-brand uppercase tracking-widest text-xs">Cambiando Contexto...</p>
+                        <p className="font-bold text-brand uppercase tracking-widest text-xs">{t("switching")}</p>
                     </div>
                 </div>
             )}

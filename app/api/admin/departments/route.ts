@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     try {
         const { name, description } = await req.json();
-        if (!name) return badRequest("El nombre es obligatorio");
+        if (!name) return badRequest("nameRequired");
 
         const db = await getDb();
         const newDepartment = { name, description, clientId, createdAt: new Date() };
@@ -59,7 +59,7 @@ export async function PATCH(req: Request) {
             { _id: departmentId, clientId }, // Scoped to the organization
             { $set: { name, description } }
         );
-        if (result.matchedCount === 0) return notFound("Departamento no encontrado o sin permiso");
+        if (result.matchedCount === 0) return notFound("departmentNotFoundOrDenied");
 
         return NextResponse.json({ success: true });
     } catch (error) {

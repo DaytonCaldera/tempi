@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { badRequest, getDb, notFound, toObjectId, unauthorized } from '@/lib/api';
+import { MOVEMENT_REASONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
 
 /**
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
     const start = searchParams.get('start');
     const end = searchParams.get('end');
 
-    if (!inventoryId || !start || !end) return badRequest("Faltan parámetros");
+    if (!inventoryId || !start || !end) return badRequest("missingParameters");
 
     const db = await getDb();
 
@@ -27,14 +28,14 @@ export async function GET(req: Request) {
         _id: item.departmentId,
         ...getTenantQuery(session)
     });
-    if (!department) return notFound("Producto no encontrado");
+    if (!department) return notFound("productNotFound");
 
     const logs = await db.collection('stock_movements')
         .find({
             inventoryId,
             createdAt: { $gte: new Date(start), $lte: new Date(end) },
             // Movements created by the sync tool are not real consumption
-            reason: { $ne: "Sincronización inicial del sistema" }
+            reason: { $ne: MOVEMENT_REASONS.INITIAL_SYNC }
         })
         .sort({ createdAt: -1 })
         .toArray();

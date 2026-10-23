@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { getDb, toObjectId } from '@/lib/api';
 import { findOwnDepartment } from '@/lib/departments';
@@ -13,6 +14,7 @@ export default async function DepartmentStockPage({ params }: { params: Promise<
     const department = departmentId && await findOwnDepartment(session, departmentId);
     if (!department) notFound();
 
+    const t = await getTranslations('stock');
     const db = await getDb();
     const inventory = await db.collection<StockItem>('department_stock')
         .find({ departmentId: department._id, isDeleted: { $ne: true } })
@@ -22,10 +24,10 @@ export default async function DepartmentStockPage({ params }: { params: Promise<
         <div className="p-6 lg:p-10">
             <div className="mb-6">
                 <h1 className="text-2xl font-black text-[#171717]">
-                    Inventario: {department.name}
+                    {t('pageTitle', { name: department.name })}
                 </h1>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                    Gestión de existencias y movimientos
+                    {t('pageSubtitle')}
                 </p>
             </div>
 

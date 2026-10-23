@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
+import { getTranslations } from "next-intl/server";
 import mongo from "@/lib/mongodb";
+import type en from "@/messages/en.json";
 
 /**
  * Shared helpers for API route handlers.
@@ -19,12 +21,17 @@ export function toObjectId(id: unknown): ObjectId | null {
     return typeof id === "string" && ObjectId.isValid(id) ? new ObjectId(id) : null;
 }
 
-export function apiError(message: string, status: number) {
-    return NextResponse.json({ error: message }, { status });
+/** Key of a message in the "errors" namespace of messages/*.json. */
+export type ErrorKey = keyof typeof en.errors;
+
+/** Error response with the message translated to the request's locale. */
+export async function apiError(key: ErrorKey, status: number) {
+    const t = await getTranslations("errors");
+    return NextResponse.json({ error: t(key) }, { status });
 }
 
-export const unauthorized = () => apiError("No autorizado", 401);
-export const forbidden = (message = "Acceso denegado") => apiError(message, 403);
-export const notFound = (message = "No encontrado") => apiError(message, 404);
-export const badRequest = (message = "Datos inválidos") => apiError(message, 400);
-export const serverError = () => apiError("Error interno del servidor", 500);
+export const unauthorized = () => apiError("unauthorized", 401);
+export const forbidden = (key: ErrorKey = "forbidden") => apiError(key, 403);
+export const notFound = (key: ErrorKey = "notFound") => apiError(key, 404);
+export const badRequest = (key: ErrorKey = "invalidData") => apiError(key, 400);
+export const serverError = () => apiError("serverError", 500);

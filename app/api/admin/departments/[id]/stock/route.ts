@@ -17,7 +17,7 @@ export async function POST(req: Request, { params }: Params) {
     try {
         const departmentId = toObjectId((await params).id);
         const department = departmentId && await findOwnDepartment(session, departmentId);
-        if (!department) return notFound("Departamento no encontrado");
+        if (!department) return notFound("departmentNotFound");
 
         const body = await req.json();
         const db = await getDb();
@@ -48,7 +48,7 @@ export async function GET(req: Request, { params }: Params) {
 
     const departmentId = toObjectId((await params).id);
     const department = departmentId && await findOwnDepartment(session, departmentId);
-    if (!department) return notFound("Departamento no encontrado");
+    if (!department) return notFound("departmentNotFound");
 
     const db = await getDb();
     const inventory = await db.collection('department_stock')

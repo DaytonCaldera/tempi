@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { Document } from 'mongodb';
+import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { badRequest, getDb, toObjectId, unauthorized } from '@/lib/api';
 import { getTenantQuery } from '@/lib/tenant-guard';
@@ -31,13 +32,14 @@ export async function GET(req: Request) {
     const end = searchParams.get('end');
     const deptId = searchParams.get('deptId');
 
-    if (!start || !end) return badRequest("Fechas requeridas");
+    if (!start || !end) return badRequest("datesRequired");
     const startDate = new Date(start);
     const endDate = new Date(end);
 
     const departmentId = deptId ? toObjectId(deptId) : null;
-    if (deptId && !departmentId) return badRequest("Departamento inválido");
+    if (deptId && !departmentId) return badRequest("invalidDepartment");
 
+    const t = await getTranslations('reports');
     const db = await getDb();
     const departments = await db.collection('departments')
         .find({ ...getTenantQuery(session), ...(departmentId && { _id: departmentId }) })
@@ -79,7 +81,7 @@ export async function GET(req: Request) {
 
                 return {
                     inventoryId: item._id.toString(),
-                    productName: item.productName || "Sin Nombre",
+                    productName: item.productName || t('unnamedProduct'),
                     sku: item.sku || "N/A",
                     initialQuantity,
                     totalIn: range.in,

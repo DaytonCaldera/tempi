@@ -2,25 +2,25 @@
     "general": [
         {
             "href": "/",
-            "label": "Inicio",
+            "labelKey": "home",
             "icon": "Home"
         },
         {
             "href": "/dashboard",
-            "label": "Dashboard",
+            "labelKey": "dashboard",
             "icon": "LayoutDashboard"
         }
     ],
     "admin": [
         {
             "href": "/admin/departments",
-            "label": "Departamentos",
+            "labelKey": "departments",
             "icon": "Layers",
             "permission": "manage_departments"
         },
         {
             "href": "/admin/users",
-            "label": "Personal",
+            "labelKey": "staff",
             "icon": "Users",
             "permission": "manage_users"
         }

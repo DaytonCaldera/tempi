@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const db = await getDb();
 
     const organization = await db.collection('clients').findOne({ clientCode: code });
-    if (!organization) return notFound("Código no válido");
+    if (!organization) return notFound("invalidCode");
 
     const users = db.collection<User>('users');
 

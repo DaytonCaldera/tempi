@@ -6,20 +6,20 @@ export function SignIn({
   provider,
   ...props
 }: { provider?: string } & React.ComponentPropsWithRef<typeof Button>) {
-  const t = useTranslations('');
+  const t = useTranslations('common');
   return (
     <form
       action={async () => {
         await signIn(provider)
       }}
     >
-      <Button {...props}>{t('common.login')}</Button>
+      <Button {...props}>{t('login')}</Button>
     </form>
   )
 }
 
 export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
-  const t = useTranslations('');
+  const t = useTranslations('common');
   return (
     <form
       action={async () => {
@@ -28,7 +28,7 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       className="w-50 mt-6"
     >
       <Button className="w-full p-0" {...props}>
-        {t('common.logout')}
+        {t('logout')}
       </Button>
     </form>
   )

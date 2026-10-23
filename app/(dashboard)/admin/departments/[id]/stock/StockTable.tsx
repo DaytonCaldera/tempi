@@ -1,10 +1,10 @@
 "use client";
 import { Plus, Minus, Edit, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import type { MovementType } from "@/types/models";
+import { labelOf } from "@/i18n/labels";
 import type { StockRow } from "./useDepartmentStock";
-
-const HEADERS = [{ title: "Producto / SKU" }, { title: "Categoría" }, { title: "Cantidad Actual" }, { title: "Acciones Rápidas" }];
 
 interface StockTableProps {
     items: StockRow[];
@@ -14,8 +14,13 @@ interface StockTableProps {
 }
 
 export function StockTable({ items, onQuickMove, onEdit, onDelete }: StockTableProps) {
+    const t = useTranslations("stock.table");
+    const tCommon = useTranslations("common");
+    const tUnits = useTranslations("units");
+    const headers = [{ title: t("product") }, { title: t("category") }, { title: t("quantity") }, { title: t("quickActions") }];
+
     return (
-        <DataTable headers={HEADERS}>
+        <DataTable headers={headers}>
             {items.map(item => {
                 const isLow = item.quantity <= item.minStock;
                 return (
@@ -29,7 +34,7 @@ export function StockTable({ items, onQuickMove, onEdit, onDelete }: StockTableP
 
                         <DataTableCell>
                             <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold uppercase">
-                                {item.category || 'General'}
+                                {item.category || tCommon("general")}
                             </span>
                         </DataTableCell>
 
@@ -38,7 +43,7 @@ export function StockTable({ items, onQuickMove, onEdit, onDelete }: StockTableP
                                 <span className={`text-lg font-black ${isLow ? 'text-orange-500' : 'text-[#171717]'}`}>
                                     {item.quantity}
                                 </span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{item.unit}</span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{labelOf(tUnits, item.unit)}</span>
                                 {isLow && <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />}
                             </div>
                         </DataTableCell>

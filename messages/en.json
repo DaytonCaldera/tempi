@@ -1,17 +1,267 @@
 {
+    "metadata": {
+        "title": "Tempi | Inventory Management",
+        "description": "Smart logistics and supply system"
+    },
     "common": {
-        "logout": "Logout",
-        "login": "Login",
-        "signup": "Sign Up",
+        "login": "Sign in",
+        "logout": "Sign out",
         "dashboard": "Dashboard",
-        "settings": "Settings"
+        "loading": "Loading...",
+        "saving": "Saving...",
+        "saveChanges": "Save changes",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleting": "Deleting...",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "pending": "Pending",
+        "general": "General",
+        "system": "System",
+        "user": "User",
+        "backToHome": "Back to home"
+    },
+    "errors": {
+        "unauthorized": "Unauthorized",
+        "forbidden": "Access denied",
+        "notFound": "Not found",
+        "invalidData": "Invalid data",
+        "serverError": "Internal server error",
+        "connection": "Connection error",
+        "saveFailed": "Could not save",
+        "requiredFields": "Please fill in all fields",
+        "nameAndSkuRequired": "Name and SKU are required",
+        "nameRequired": "Name is required",
+        "companyNameRequired": "Company name is required",
+        "missingData": "Missing data",
+        "missingParameters": "Missing parameters",
+        "datesRequired": "Dates are required",
+        "invalidDepartment": "Invalid department",
+        "invalidCode": "Invalid code",
+        "missingOrganizationId": "Missing organization ID",
+        "productNotFound": "Product not found",
+        "productNotFoundOrDenied": "Product not found or access denied",
+        "departmentNotFound": "Department not found",
+        "departmentNotFoundOrDenied": "Department not found or access denied",
+        "userNotFound": "User not found",
+        "userOrOrganizationNotFound": "User or organization not found",
+        "duplicateSku": "A product with that SKU already exists in this department",
+        "moveNotAllowed": "You don't have permission to move stock in this area.",
+        "insufficientStock": "Insufficient stock",
+        "defaultPlanNotFound": "Default plan not found",
+        "createCompanyFailed": "Could not create the company",
+        "syncFailed": "The bulk sync failed"
+    },
+    "roles": {
+        "superadmin": "Superadmin",
+        "admin": "Administrator",
+        "user": "Runner / Operator",
+        "pending_user": "Pending",
+        "new_user": "New user"
+    },
+    "units": {
+        "unidades": "Units",
+        "kg": "Kilograms",
+        "cajas": "Boxes",
+        "litros": "Liters"
+    },
+    "movementReasons": {
+        "ADMIN_QUICK_ADJUSTMENT": "Admin quick adjustment",
+        "RUNNER_CONSUMPTION": "Runner consumption",
+        "RESTOCK": "Restock",
+        "MANUAL_ADJUSTMENT": "Manual adjustment",
+        "INITIAL_SYNC": "Initial system sync",
+        "none": "No reason given"
+    },
+    "nav": {
+        "sections": {
+            "general": "General",
+            "admin": "Admin"
+        },
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "departments": "Departments",
+        "staff": "Staff",
+        "toggleSidebar": "Toggle sidebar",
+        "avatar": "Avatar",
+        "defaultRole": "Staff",
+        "workspace": "Workspace",
+        "organization": "Organization",
+        "myOrganizations": "My organizations",
+        "selectOrganization": "Select...",
+        "unnamedOrganization": "Unnamed organization",
+        "joinOrCreate": "+ Join or create new",
+        "switching": "Switching context..."
+    },
+    "landing": {
+        "badge": "System v1.2 ready",
+        "tagline": "The high-performance workspace for your next evolution. Secure, fast, and built for the digital vanguard."
+    },
+    "pending": {
+        "title": "Access pending",
+        "body": "Your account is under review. Please wait for an administrator to approve your access.",
+        "hint": "You can wait here or sign in again later."
+    },
+    "unauthorized": {
+        "loading": "Loading context...",
+        "title": "You are not authorized to access this page",
+        "deactivated": "Your account has been deactivated. Please contact the administrator for more information."
+    },
+    "lobby": {
+        "invalidCode": "Invalid code",
+        "join": {
+            "title": "Join a team",
+            "description": "Enter the code your administrator gave you.",
+            "button": "Join"
+        },
+        "create": {
+            "title": "Start from scratch",
+            "description": "Register your company to manage stock, staff and departments.",
+            "button": "Create my company",
+            "modalTitle": "New organization",
+            "modalDescription": "Set your company's trade name. You can edit it later.",
+            "nameLabel": "Company name",
+            "namePlaceholder": "e.g. Pacific Events",
+            "confirm": "Confirm and create"
+        }
     },
     "runner": {
-        "title": "Inventory Monitoring",
-        "assignedAreas": "Assigned Area(s)",
-        "quantityTitle": "Quantity to Move",
+        "title": "Inventory monitoring",
+        "assignedAreas": "{count, plural, one {# assigned area} other {# assigned areas}}",
+        "quantityTitle": "Quantity to move",
         "search": "Search product by name or code",
+        "reset": "Reset to 1",
+        "noProducts": "No products found.",
+        "defaultUnit": "units",
+        "noAreas": {
+            "title": "Restricted access",
+            "description": "Your user has no assigned areas. Contact an administrator to enable your inventory."
+        }
+    },
+    "dashboard": {
+        "reportsTitle": "Consumption reports",
+        "reportsDescription": "Review your departments' consumption"
+    },
+    "departments": {
+        "title": "Departments",
+        "add": "+ Add department",
         "department": "Department",
-        "reset": "Reset to 1"
+        "info": "Info",
+        "members": "Members",
+        "reviewStock": "Review stock",
+        "editTitle": "Edit department",
+        "newTitle": "New department",
+        "client": "Client",
+        "selectClient": "Select client",
+        "nameLabel": "Department name",
+        "namePlaceholder": "e.g. Logistics",
+        "create": "Create department",
+        "personnelTitle": "Staff: {name}",
+        "noPersonnel": "No staff assigned to this department."
+    },
+    "stock": {
+        "pageTitle": "Inventory: {name}",
+        "pageSubtitle": "Stock and movement management",
+        "backToDepartments": "Back to departments",
+        "addProduct": "Add product",
+        "viewReport": "View report",
+        "totalSku": "Total SKU",
+        "lowStock": "Low stock",
+        "estimatedValue": "Estimated value",
+        "searchPlaceholder": "Search by name or SKU...",
+        "table": {
+            "product": "Product / SKU",
+            "category": "Category",
+            "quantity": "Current quantity",
+            "quickActions": "Quick actions"
+        },
+        "form": {
+            "editTitle": "Edit product",
+            "newTitle": "Register new product",
+            "nameLabel": "Item name",
+            "namePlaceholder": "e.g. A4 paper ream",
+            "sku": "SKU",
+            "generatedSku": "Auto-generated SKU",
+            "regenerateSku": "Generate another code",
+            "unit": "Unit",
+            "currentQuantity": "Current quantity",
+            "initialStock": "Initial stock",
+            "minStock": "Minimum (alert)",
+            "register": "Add to inventory"
+        },
+        "delete": {
+            "title": "Delete product",
+            "confirm": "Are you sure you want to delete <b>{name}</b> ({sku})? It will be hidden from the inventory, but its history will be kept."
+        }
+    },
+    "users": {
+        "inviteCode": "Invite code",
+        "inviteHint": "Share this code with your team so they can join this organization.",
+        "totalStaff": "Total staff",
+        "pendingApproval": "{count, plural, one {# pending approval} other {# pending approval}}",
+        "table": {
+            "user": "User",
+            "roleAndAreas": "Role & areas",
+            "status": "Status"
+        },
+        "defaultArea": "Area",
+        "approve": "Approve",
+        "configureTitle": "Configure user",
+        "processing": "Processing...",
+        "activateMember": "Activate member",
+        "accessRole": "Access role",
+        "areaAssignment": "Area assignment"
+    },
+    "reports": {
+        "title": "Consumption report",
+        "generalTitle": "General consumption report",
+        "departmentTitle": "Department report: {name}",
+        "backToDepartment": "Back to department",
+        "backToDashboard": "Back to dashboard",
+        "filterDepartment": "Filter: active department",
+        "globalSummary": "Global movement summary",
+        "print": "Print report",
+        "download": "Download report",
+        "loading": "Syncing data...",
+        "fullInventoryTitle": "Full inventory",
+        "fullInventoryDescription": "This is the full current inventory. It lists every item registered in the department with its final available stock.",
+        "rangeTitle": "Consumption in range",
+        "rangeDescription": "This is the consumption during the dates you picked: the ins, outs and overall balance for that exact period.",
+        "noItems": "No items found in this department",
+        "unnamedProduct": "Unnamed",
+        "locationInventory": "Inventory by location",
+        "columns": {
+            "sku": "SKU",
+            "product": "Product",
+            "initialRange": "Initial inv. (range)",
+            "initial": "Initial inv.",
+            "in": "Ins",
+            "out": "Outs",
+            "balance": "Balance",
+            "currentFinal": "Current inv. (final)",
+            "final": "Final inv."
+        },
+        "movements": {
+            "title": "Recent movement history",
+            "empty": "No movements in the selected dates.",
+            "units": "units"
+        },
+        "printView": {
+            "range": "Date range: {start} — {end}",
+            "generated": "Generated on: {date}",
+            "empty": "No data available to print in this range.",
+            "department": "Department: {name}"
+        }
+    },
+    "api": {
+        "defaultDepartmentDescription": "Default initial department",
+        "organizationCreated": "Organization created",
+        "sync": {
+            "ready": "Sync route ready. Add '?confirm=true' to the URL to apply the corrections.",
+            "alreadySynced": "The database is already 100% in sync. No action needed.",
+            "done": "{count, plural, one {Sync complete! # item was corrected.} other {Sync complete! # items were corrected.}}"
+        }
     }
 }

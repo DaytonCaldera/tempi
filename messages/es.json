@@ -1,17 +1,267 @@
 {
+    "metadata": {
+        "title": "Tempi | Gestión de Inventario",
+        "description": "Sistema inteligente de logística y suministros"
+    },
     "common": {
-        "logout": "Salir",
         "login": "Iniciar sesión",
-        "signup": "Registrarse",
+        "logout": "Cerrar sesión",
         "dashboard": "Panel de control",
-        "settings": "Configuración"
+        "loading": "Cargando...",
+        "saving": "Guardando...",
+        "saveChanges": "Guardar cambios",
+        "cancel": "Cancelar",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "deleting": "Eliminando...",
+        "actions": "Acciones",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "pending": "Pendiente",
+        "general": "General",
+        "system": "Sistema",
+        "user": "Usuario",
+        "backToHome": "Regresar al inicio"
+    },
+    "errors": {
+        "unauthorized": "No autorizado",
+        "forbidden": "Acceso denegado",
+        "notFound": "No encontrado",
+        "invalidData": "Datos inválidos",
+        "serverError": "Error interno del servidor",
+        "connection": "Error de conexión",
+        "saveFailed": "Error al guardar",
+        "requiredFields": "Por favor completa todos los campos",
+        "nameAndSkuRequired": "Nombre y SKU son obligatorios",
+        "nameRequired": "El nombre es obligatorio",
+        "companyNameRequired": "Nombre de empresa requerido",
+        "missingData": "Faltan datos",
+        "missingParameters": "Faltan parámetros",
+        "datesRequired": "Fechas requeridas",
+        "invalidDepartment": "Departamento inválido",
+        "invalidCode": "Código no válido",
+        "missingOrganizationId": "Falta el ID de la organización",
+        "productNotFound": "Producto no encontrado",
+        "productNotFoundOrDenied": "Producto no encontrado o acceso denegado",
+        "departmentNotFound": "Departamento no encontrado",
+        "departmentNotFoundOrDenied": "Departamento no encontrado o sin permiso",
+        "userNotFound": "Usuario no encontrado",
+        "userOrOrganizationNotFound": "Usuario u organización no encontrados",
+        "duplicateSku": "Ya existe un producto con ese SKU en este departamento",
+        "moveNotAllowed": "No tienes permiso para mover inventario en esta área.",
+        "insufficientStock": "Stock insuficiente",
+        "defaultPlanNotFound": "Plan predeterminado no encontrado",
+        "createCompanyFailed": "Error al crear la empresa",
+        "syncFailed": "Fallo al ejecutar la sincronización masiva"
+    },
+    "roles": {
+        "superadmin": "Superadmin",
+        "admin": "Administrador",
+        "user": "Runner / Operativo",
+        "pending_user": "Pendiente",
+        "new_user": "Usuario nuevo"
+    },
+    "units": {
+        "unidades": "Unidades",
+        "kg": "Kilogramos",
+        "cajas": "Cajas",
+        "litros": "Litros"
+    },
+    "movementReasons": {
+        "ADMIN_QUICK_ADJUSTMENT": "Ajuste rápido Admin",
+        "RUNNER_CONSUMPTION": "Consumo Runner",
+        "RESTOCK": "Reabastecimiento",
+        "MANUAL_ADJUSTMENT": "Ajuste manual",
+        "INITIAL_SYNC": "Sincronización inicial del sistema",
+        "none": "Sin justificación"
+    },
+    "nav": {
+        "sections": {
+            "general": "General",
+            "admin": "Administración"
+        },
+        "home": "Inicio",
+        "dashboard": "Panel de control",
+        "departments": "Departamentos",
+        "staff": "Personal",
+        "toggleSidebar": "Mostrar u ocultar menú",
+        "avatar": "Avatar",
+        "defaultRole": "Personal",
+        "workspace": "Espacio de trabajo",
+        "organization": "Organización",
+        "myOrganizations": "Mis organizaciones",
+        "selectOrganization": "Seleccionar...",
+        "unnamedOrganization": "Organización sin nombre",
+        "joinOrCreate": "+ Unirse o crear nueva",
+        "switching": "Cambiando contexto..."
+    },
+    "landing": {
+        "badge": "Sistema v1.2 listo",
+        "tagline": "El espacio de trabajo de alto rendimiento para tu próxima evolución. Seguro, rápido y hecho para la vanguardia digital."
+    },
+    "pending": {
+        "title": "Acceso pendiente",
+        "body": "Tu cuenta está en revisión. Por favor, espera a que un administrador apruebe tu acceso.",
+        "hint": "Puedes esperar o volver a iniciar sesión más tarde."
+    },
+    "unauthorized": {
+        "loading": "Cargando contexto...",
+        "title": "No estás autorizado para acceder a esta página",
+        "deactivated": "Tu cuenta ha sido desactivada. Por favor, contacta al administrador para más información."
+    },
+    "lobby": {
+        "invalidCode": "Código inválido",
+        "join": {
+            "title": "Unirse a un equipo",
+            "description": "Ingresa el código proporcionado por tu administrador.",
+            "button": "Unirse"
+        },
+        "create": {
+            "title": "Empezar de cero",
+            "description": "Registra tu empresa para gestionar stock, personal y departamentos.",
+            "button": "Crear mi empresa",
+            "modalTitle": "Nueva organización",
+            "modalDescription": "Define el nombre comercial de tu empresa. Podrás editarlo después.",
+            "nameLabel": "Nombre de la empresa",
+            "namePlaceholder": "Ej: Eventos del Pacífico",
+            "confirm": "Confirmar y crear"
+        }
     },
     "runner": {
         "title": "Monitoreo de inventario",
-        "assignedAreas": "Área(s) asignada(s)",
+        "assignedAreas": "{count, plural, one {# área asignada} other {# áreas asignadas}}",
         "quantityTitle": "Cantidad a mover",
-        "search": "Buscar producto...",
+        "search": "Buscar producto por nombre o código",
+        "reset": "Reiniciar a 1",
+        "noProducts": "No se encontraron productos.",
+        "defaultUnit": "uds",
+        "noAreas": {
+            "title": "Acceso restringido",
+            "description": "Tu usuario no tiene áreas asignadas. Contacta a un administrador para habilitar tu inventario."
+        }
+    },
+    "dashboard": {
+        "reportsTitle": "Reportes de consumo",
+        "reportsDescription": "Revisa el consumo de tus departamentos"
+    },
+    "departments": {
+        "title": "Departamentos",
+        "add": "+ Añadir departamento",
         "department": "Departamento",
-        "reset": "Reiniciar a 1"
+        "info": "Info",
+        "members": "Miembros",
+        "reviewStock": "Revisar stock",
+        "editTitle": "Editar departamento",
+        "newTitle": "Nuevo departamento",
+        "client": "Cliente",
+        "selectClient": "Seleccionar cliente",
+        "nameLabel": "Nombre del departamento",
+        "namePlaceholder": "Ej. Logística",
+        "create": "Crear departamento",
+        "personnelTitle": "Personal: {name}",
+        "noPersonnel": "No hay personal asignado a este departamento."
+    },
+    "stock": {
+        "pageTitle": "Inventario: {name}",
+        "pageSubtitle": "Gestión de existencias y movimientos",
+        "backToDepartments": "Volver a departamentos",
+        "addProduct": "Agregar producto",
+        "viewReport": "Ver reporte",
+        "totalSku": "Total SKU",
+        "lowStock": "Bajo stock",
+        "estimatedValue": "Valor estimado",
+        "searchPlaceholder": "Buscar por nombre o SKU...",
+        "table": {
+            "product": "Producto / SKU",
+            "category": "Categoría",
+            "quantity": "Cantidad actual",
+            "quickActions": "Acciones rápidas"
+        },
+        "form": {
+            "editTitle": "Editar producto",
+            "newTitle": "Registrar nuevo producto",
+            "nameLabel": "Nombre del artículo",
+            "namePlaceholder": "Ej. Resma de papel A4",
+            "sku": "SKU",
+            "generatedSku": "SKU autogenerado",
+            "regenerateSku": "Generar otro código",
+            "unit": "Unidad",
+            "currentQuantity": "Cantidad actual",
+            "initialStock": "Stock inicial",
+            "minStock": "Mínimo (alerta)",
+            "register": "Registrar en inventario"
+        },
+        "delete": {
+            "title": "Eliminar producto",
+            "confirm": "¿Estás seguro que deseas eliminar <b>{name}</b> ({sku})? Esta acción lo ocultará del inventario, pero se conservará su historial."
+        }
+    },
+    "users": {
+        "inviteCode": "Código de invitación",
+        "inviteHint": "Comparte este código con tu equipo para que se unan a esta organización.",
+        "totalStaff": "Total personal",
+        "pendingApproval": "{count, plural, one {# pendiente de aprobación} other {# pendientes de aprobación}}",
+        "table": {
+            "user": "Usuario",
+            "roleAndAreas": "Rol y áreas",
+            "status": "Estado"
+        },
+        "defaultArea": "Área",
+        "approve": "Aprobar",
+        "configureTitle": "Configurar usuario",
+        "processing": "Procesando...",
+        "activateMember": "Activar miembro",
+        "accessRole": "Rol de acceso",
+        "areaAssignment": "Asignación de áreas"
+    },
+    "reports": {
+        "title": "Reporte de consumo",
+        "generalTitle": "Reporte general de consumo",
+        "departmentTitle": "Reporte del departamento: {name}",
+        "backToDepartment": "Volver al departamento",
+        "backToDashboard": "Volver al panel",
+        "filterDepartment": "Filtro: departamento activo",
+        "globalSummary": "Resumen global de movimientos",
+        "print": "Imprimir reporte",
+        "download": "Descargar reporte",
+        "loading": "Sincronizando datos...",
+        "fullInventoryTitle": "Inventario completo",
+        "fullInventoryDescription": "Este es el inventario completo actualmente. Se muestran todos los artículos registrados en el departamento con su stock final disponible.",
+        "rangeTitle": "Consumo en fechas",
+        "rangeDescription": "En las fechas que elegiste, este es el consumo que hubo. Detalla las entradas, salidas y el balance general durante ese periodo exacto.",
+        "noItems": "No se encontraron artículos en este departamento",
+        "unnamedProduct": "Sin nombre",
+        "locationInventory": "Inventario por ubicación",
+        "columns": {
+            "sku": "SKU",
+            "product": "Producto",
+            "initialRange": "Inv. inicial (rango)",
+            "initial": "Inv. inicial",
+            "in": "Entradas",
+            "out": "Salidas",
+            "balance": "Balance",
+            "currentFinal": "Inv. actual (final)",
+            "final": "Inv. final"
+        },
+        "movements": {
+            "title": "Historial de movimientos recientes",
+            "empty": "No hay movimientos en las fechas seleccionadas.",
+            "units": "unidades"
+        },
+        "printView": {
+            "range": "Rango de fechas: {start} — {end}",
+            "generated": "Generado el: {date}",
+            "empty": "No hay datos disponibles para imprimir en este rango.",
+            "department": "Departamento: {name}"
+        }
+    },
+    "api": {
+        "defaultDepartmentDescription": "Departamento inicial predeterminado",
+        "organizationCreated": "Organización creada",
+        "sync": {
+            "ready": "Ruta de sincronización lista. Añade '?confirm=true' a la URL para ejecutar las correcciones.",
+            "alreadySynced": "La base de datos ya está 100% sincronizada. No se requiere acción.",
+            "done": "{count, plural, one {¡Sincronización exitosa! Se corrigió # artículo.} other {¡Sincronización exitosa! Se corrigieron # artículos.}}"
+        }
     }
 }

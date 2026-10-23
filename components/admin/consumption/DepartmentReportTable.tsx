@@ -1,18 +1,10 @@
 import { Fragment } from "react";
 import { ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import type { ConsumptionReportDepartment } from "@/types/models";
 import { MovementDetails } from "./MovementDetails";
 import type { MovementLog } from "./useConsumptionReport";
-
-const HEADERS = [
-    { title: "Producto" },
-    { title: "Inv. Inicial (Rango)" },
-    { title: "Entradas" },
-    { title: "Salidas" },
-    { title: "Balance" },
-    { title: "Inv. Actual (Final)" }
-];
 
 interface DepartmentReportTableProps {
     department: ConsumptionReportDepartment;
@@ -25,6 +17,16 @@ interface DepartmentReportTableProps {
 
 /** On-screen report table of one department; clicking a row shows its movements. */
 export function DepartmentReportTable({ department, showDepartmentName, expandedId, details, onToggleDetails }: DepartmentReportTableProps) {
+    const t = useTranslations("reports");
+    const headers = [
+        { title: t("columns.product") },
+        { title: t("columns.initialRange") },
+        { title: t("columns.in") },
+        { title: t("columns.out") },
+        { title: t("columns.balance") },
+        { title: t("columns.currentFinal") }
+    ];
+
     return (
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {showDepartmentName && (
@@ -34,13 +36,13 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
                     </div>
                     <div>
                         <h2 className="text-2xl font-black text-black leading-none uppercase tracking-tighter">{department.departmentName}</h2>
-                        <p className="text-[10px] font-black text-brand/40 uppercase tracking-widest mt-1">Inventario por ubicación</p>
+                        <p className="text-[10px] font-black text-brand/40 uppercase tracking-widest mt-1">{t("locationInventory")}</p>
                     </div>
                 </div>
             )}
 
             <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                <DataTable headers={HEADERS}>
+                <DataTable headers={headers}>
                     {department.items.map(item => {
                         const isExpanded = expandedId === item.inventoryId;
 

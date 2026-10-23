@@ -5,8 +5,6 @@ import { findOwnDepartment } from "@/lib/departments";
 
 type Params = { params: Promise<{ id: string; stockId: string }> };
 
-const NOT_FOUND = "Producto no encontrado o acceso denegado";
-
 /**
  * PUT /api/admin/departments/[id]/stock/[stockId]
  * Updates a stock item's descriptive fields (name, SKU, unit, minStock).
@@ -23,8 +21,8 @@ export async function PUT(req: Request, { params }: Params) {
         const itemId = toObjectId(stockId);
         const { name, sku, unit, minStock } = await req.json();
 
-        if (!name || !sku) return badRequest("Nombre y SKU son obligatorios");
-        if (!departmentId || !itemId) return notFound(NOT_FOUND);
+        if (!name || !sku) return badRequest("nameAndSkuRequired");
+        if (!departmentId || !itemId) return notFound("productNotFoundOrDenied");
 
         const db = await getDb();
         const stock = db.collection('department_stock');
@@ -33,10 +31,10 @@ export async function PUT(req: Request, { params }: Params) {
             stock.findOne({ _id: itemId, departmentId }),
             findOwnDepartment(session, departmentId),
         ]);
-        if (!item || !department) return notFound(NOT_FOUND);
+        if (!item || !department) return notFound("productNotFoundOrDenied");
 
         const duplicate = await stock.findOne({ _id: { $ne: itemId }, departmentId, sku });
-        if (duplicate) return apiError("Ya existe un producto con ese SKU en este departamento", 409);
+        if (duplicate) return apiError("duplicateSku", 409);
 
         await stock.updateOne(
             { _id: itemId },
@@ -64,7 +62,7 @@ export async function DELETE(req: Request, { params }: Params) {
         const { id, stockId } = await params;
         const departmentId = toObjectId(id);
         const itemId = toObjectId(stockId);
-        if (!departmentId || !itemId) return notFound(NOT_FOUND);
+        if (!departmentId || !itemId) return notFound("productNotFoundOrDenied");
 
         const db = await getDb();
         const stock = db.collection('department_stock');
@@ -73,7 +71,7 @@ export async function DELETE(req: Request, { params }: Params) {
             stock.findOne({ _id: itemId, departmentId }),
             findOwnDepartment(session, departmentId),
         ]);
-        if (!item || !department) return notFound(NOT_FOUND);
+        if (!item || !department) return notFound("productNotFoundOrDenied");
 
         await stock.updateOne(
             { _id: itemId },
@@ -82,7 +80,7 @@ export async function DELETE(req: Request, { params }: Params) {
                     isDeleted: true,
                     active: false,
                     deletedAt: new Date(),
-                    deletedBy: { name: session.user.name || "Usuario Desconocido", email: session.user.email },
+                    deletedBy: { name: session.user.name ?? null, email: session.user.email },
                     updatedAt: new Date()
                 }
             }

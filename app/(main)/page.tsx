@@ -2,15 +2,19 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"
+import { useTranslations } from "next-intl";
 import { ROLES } from "@/lib/constants";
 import Landing from "@/components/main/Landing";
 import PendingApproval from "@/components/main/PendingApproval";
 
-const Loading = () => (
-  <div className="flex items-center justify-center min-h-screen p-6">
-    <p className="text-gray-500">Cargando...</p>
-  </div>
-);
+function Loading() {
+  const t = useTranslations("common");
+  return (
+    <div className="flex items-center justify-center min-h-screen p-6">
+      <p className="text-gray-500">{t("loading")}</p>
+    </div>
+  );
+}
 
 /**
  * Entry point. Logged-out visitors see the landing page, pending users wait for approval here,

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     try {
         const clientId = toObjectId((await req.json()).clientId);
-        if (!clientId) return badRequest("Falta el ID de la organización");
+        if (!clientId) return badRequest("missingOrganizationId");
 
         const db = await getDb();
         await db.collection("users").updateOne(
