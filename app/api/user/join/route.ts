@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from "@/auth";
 import { getDb, notFound, unauthorized } from '@/lib/api';
 import { PLACEHOLDER_CLIENT_ID, ROLES } from '@/lib/constants';
+import { OPEN_ORGANIZATION } from '@/lib/organizations';
 import type { User } from '@/types/models';
 
 /**
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
     const { code } = await req.json();
     const db = await getDb();
 
-    const organization = await db.collection('clients').findOne({ clientCode: code });
+    const organization = await db.collection('clients').findOne({ clientCode: code, ...OPEN_ORGANIZATION });
     if (!organization) return notFound("invalidCode");
 
     const users = db.collection<User>('users');

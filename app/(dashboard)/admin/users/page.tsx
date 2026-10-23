@@ -4,7 +4,8 @@ import { getDb } from '@/lib/api';
 import { ROLES } from '@/lib/constants';
 import { hasPermission } from '@/lib/permissions';
 import { getClientTenantQuery, getTenantQuery, getUserTenantQuery } from '@/lib/tenant-guard';
-import type { User } from '@/types/models';
+import { canCloseOrganization, OPEN_ORGANIZATION } from '@/lib/organizations';
+import type { Organization, User } from '@/types/models';
 import UserManagementClient, { type UserRow } from "./UserManagementClient";
 
 export default async function UserManagementPage() {
@@ -16,7 +17,7 @@ export default async function UserManagementPage() {
     const [usersRaw, departmentsRaw, organization] = await Promise.all([
         db.collection<User>('users').find(getUserTenantQuery(session)).toArray(),
         db.collection('departments').find(getTenantQuery(session)).toArray(),
-        db.collection('clients').findOne(getClientTenantQuery(session), { projection: { clientCode: 1, name: 1 } }),
+        db.collection<Organization>('clients').findOne({ ...getClientTenantQuery(session), ...OPEN_ORGANIZATION }, { projection: { clientCode: 1, name: 1, ownerEmail: 1 } }),
     ]);
 
     // Flatten each user's membership in the current organization
@@ -44,6 +45,7 @@ export default async function UserManagementPage() {
                 users={users}
                 departments={departments}
                 client={organization ? { _id: organization._id.toString(), code: organization.clientCode, name: organization.name } : null}
+                canCloseOrganization={!!organization && !!session.user.clientId && canCloseOrganization(session, organization)}
             />
         </div>
     );

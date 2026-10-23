@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { ROLES } from "@/lib/constants";
 import { labelOf } from "@/i18n/labels";
+import CloseOrganizationCard from "./CloseOrganizationCard";
 
 /** A user flattened with their membership in the current organization. */
 export type UserRow = {
@@ -27,9 +28,10 @@ interface UserManagementClientProps {
     users: UserRow[];
     departments: { _id: string; name: string }[];
     client: { _id: string; code: string; name: string } | null;
+    canCloseOrganization: boolean;
 }
 
-export default function UserManagementClient({ users, departments, client }: UserManagementClientProps) {
+export default function UserManagementClient({ users, departments, client, canCloseOrganization }: UserManagementClientProps) {
     const t = useTranslations("users");
     const tCommon = useTranslations("common");
     const tRoles = useTranslations("roles");
@@ -181,7 +183,10 @@ export default function UserManagementClient({ users, departments, client }: Use
                 </DataTable>
             </div>
 
-            {/* 3. THE MODAL */}
+            {/* 3. DANGER ZONE */}
+            {canCloseOrganization && client && <CloseOrganizationCard organizationName={client.name} />}
+
+            {/* 4. THE MODAL */}
             <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title={t("configureTitle")}
                 footer={
                     <button

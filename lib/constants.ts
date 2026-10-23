@@ -35,9 +35,9 @@ export const PLACEHOLDER_CLIENT_ID = "sup22";
 export const isPlaceholderOrg = (org: { clientId?: { toString(): string } | null } | null | undefined) =>
     !org?.clientId || org.clientId.toString() === PLACEHOLDER_CLIENT_ID;
 
-//return the admin email from SUPERADMIN_EMAIL env variable, if not set return the default email
-export const getSuperAdminEmail = (): string => {
-    return process.env.SUPERADMIN_EMAIL || "superadmin@tempi.pro";
+/** The superadmin's email from SUPERADMIN_EMAIL, lowercased. Without it nobody is superadmin (fails closed). */
+export const getSuperAdminEmail = (): string | null => {
+    return process.env.SUPERADMIN_EMAIL?.trim().toLowerCase() || null;
 }
 
 /** Details shown on the privacy policy and terms pages (app/(main)/privacy, app/(main)/terms). */

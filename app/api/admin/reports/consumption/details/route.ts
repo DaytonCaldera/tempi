@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { badRequest, getDb, notFound, toObjectId, unauthorized } from '@/lib/api';
-import { MOVEMENT_REASONS } from '@/lib/constants';
+import { requirePermission } from '@/lib/authorize';
+import { badRequest, getDb, notFound, toObjectId } from '@/lib/api';
+import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
 
 /**
@@ -10,8 +10,8 @@ import { getTenantQuery } from '@/lib/tenant-guard';
  * Only items from departments of the user's organization can be read.
  */
 export async function GET(req: Request) {
-    const session = await auth();
-    if (!session?.user) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.VIEW_REPORTS);
+    if (error) return error;
 
     const { searchParams } = new URL(req.url);
     const inventoryId = toObjectId(searchParams.get('inventoryId'));

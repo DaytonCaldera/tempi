@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { getDb, notFound, serverError, toObjectId, unauthorized } from '@/lib/api';
-import { MOVEMENT_REASONS } from '@/lib/constants';
+import { requirePermission } from '@/lib/authorize';
+import { getDb, notFound, serverError, toObjectId } from '@/lib/api';
+import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 
 type Params = { params: Promise<{ id: string }> };
@@ -12,8 +12,8 @@ type Params = { params: Promise<{ id: string }> };
  * Body: { name, sku, unit, quantity, minStock }
  */
 export async function POST(req: Request, { params }: Params) {
-    const session = await auth();
-    if (!session?.user) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
+    if (error) return error;
 
     try {
         const departmentId = toObjectId((await params).id);
@@ -65,8 +65,8 @@ export async function POST(req: Request, { params }: Params) {
 
 /** GET /api/admin/departments/[id]/stock - The department's inventory, without soft-deleted items. */
 export async function GET(req: Request, { params }: Params) {
-    const session = await auth();
-    if (!session?.user?.clientId) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
+    if (error) return error;
 
     const departmentId = toObjectId((await params).id);
     const department = departmentId && await findOwnDepartment(session, departmentId);

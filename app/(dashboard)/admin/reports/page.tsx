@@ -1,9 +1,17 @@
 import ConsumptionReport from '@/components/admin/consumption/ConsumptionReport';
 import Link from "next/link";
+import { redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { auth } from '@/auth';
+import { PERMISSIONS } from '@/lib/constants';
+import { hasPermission } from '@/lib/permissions';
 
 export default async function GeneralReportPage() {
+    const session = await auth();
+    if (!session) redirect("/");
+    if (!hasPermission(session, PERMISSIONS.VIEW_REPORTS)) redirect("/unauthorized");
+
     const t = await getTranslations('reports');
     return (
         <div className="p-6 lg:p-10">

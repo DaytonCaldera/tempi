@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from "@/auth";
-import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from '@/lib/api';
-import { ROLES } from "@/lib/constants";
+import { requirePermission } from "@/lib/authorize";
+import { badRequest, forbidden, getDb, notFound, serverError, toObjectId } from '@/lib/api';
+import { PERMISSIONS, ROLES } from "@/lib/constants";
 
 /**
  * PATCH /api/admin/users/toggle-status
@@ -9,9 +9,9 @@ import { ROLES } from "@/lib/constants";
  * Body: { userId, isActive, departments: string[], role, targetClientId (superadmin only) }
  */
 export async function PATCH(request: Request) {
-    const session = await auth();
-    const isSuperadmin = session?.user?.role === ROLES.SUPERADMIN;
-    if (!session || (!isSuperadmin && session.user.role !== ROLES.ADMIN)) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.MANAGE_USERS);
+    if (error) return error;
+    const isSuperadmin = session.user.role === ROLES.SUPERADMIN;
 
     try {
         const { userId, isActive, departments, role, targetClientId } = await request.json();

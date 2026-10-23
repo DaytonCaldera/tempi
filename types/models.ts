@@ -40,6 +40,10 @@ export interface Organization {
     planId: ObjectId;
     ownerEmail: string;
     createdAt: Date;
+    /** Missing on organizations created before it existed, which are open. See closeOrganization. */
+    status?: "active" | "closed";
+    closedAt?: Date;
+    closedBy?: string; // Email of who closed it
 }
 
 export interface Plan {

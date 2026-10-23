@@ -4,12 +4,15 @@ import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { toObjectId } from '@/lib/api';
+import { PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
+import { hasPermission } from '@/lib/permissions';
 import ConsumptionReport from '@/components/admin/consumption/ConsumptionReport';
 
 export default async function DepartmentReportPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect("/");
+    if (!hasPermission(session, PERMISSIONS.VIEW_REPORTS)) redirect("/unauthorized");
 
     const departmentId = toObjectId((await params).id);
     const department = departmentId && await findOwnDepartment(session, departmentId);

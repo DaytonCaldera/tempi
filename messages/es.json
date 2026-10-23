@@ -52,7 +52,8 @@
         "insufficientStock": "Stock insuficiente",
         "defaultPlanNotFound": "Plan predeterminado no encontrado",
         "createCompanyFailed": "Error al crear la empresa",
-        "syncFailed": "Fallo al ejecutar la sincronización masiva"
+        "syncFailed": "Fallo al ejecutar la sincronización masiva",
+        "organizationNameMismatch": "El nombre no coincide con el de la organización"
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -215,7 +216,16 @@
         "processing": "Procesando...",
         "activateMember": "Activar miembro",
         "accessRole": "Rol de acceso",
-        "areaAssignment": "Asignación de áreas"
+        "areaAssignment": "Asignación de áreas",
+        "closeOrganization": {
+            "title": "Cerrar organización",
+            "description": "Quita a todos los miembros de la organización y desactiva su código de invitación. Úsalo si ya no usas Tempi o creaste esta empresa por error.",
+            "button": "Cerrar organización",
+            "warning": "Todos los miembros perderán el acceso a {name} de inmediato. Esto no se puede deshacer desde la aplicación.",
+            "confirmLabel": "Escribe {name} para confirmar",
+            "confirm": "Cerrar definitivamente",
+            "closing": "Cerrando..."
+        }
     },
     "reports": {
         "title": "Reporte de consumo",

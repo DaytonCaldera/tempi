@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { Document } from 'mongodb';
 import { getTranslations } from 'next-intl/server';
-import { auth } from '@/auth';
-import { badRequest, getDb, toObjectId, unauthorized } from '@/lib/api';
-import { MOVEMENT_REASONS } from '@/lib/constants';
+import { requirePermission } from '@/lib/authorize';
+import { badRequest, getDb, toObjectId } from '@/lib/api';
+import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
 import type { ConsumptionReportDepartment } from '@/types/models';
 
@@ -25,8 +25,8 @@ const sumMovements = (createdAt: Document) => [
  * what came in and went out during the range, and the stock at the end of the range.
  */
 export async function GET(req: Request) {
-    const session = await auth();
-    if (!session?.user) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.VIEW_REPORTS);
+    if (error) return error;
 
     const { searchParams } = new URL(req.url);
     const start = searchParams.get('start');

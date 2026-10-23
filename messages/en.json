@@ -52,7 +52,8 @@
         "insufficientStock": "Insufficient stock",
         "defaultPlanNotFound": "Default plan not found",
         "createCompanyFailed": "Could not create the company",
-        "syncFailed": "The bulk sync failed"
+        "syncFailed": "The bulk sync failed",
+        "organizationNameMismatch": "The name doesn't match the organization's name"
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -215,7 +216,16 @@
         "processing": "Processing...",
         "activateMember": "Activate member",
         "accessRole": "Access role",
-        "areaAssignment": "Area assignment"
+        "areaAssignment": "Area assignment",
+        "closeOrganization": {
+            "title": "Close organization",
+            "description": "Removes every member from the organization and disables its invite code. Use it if you no longer use Tempi or created this company by mistake.",
+            "button": "Close organization",
+            "warning": "Every member will lose access to {name} right away. This can't be undone from the app.",
+            "confirmLabel": "Type {name} to confirm",
+            "confirm": "Close permanently",
+            "closing": "Closing..."
+        }
     },
     "reports": {
         "title": "Consumption report",

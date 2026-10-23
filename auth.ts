@@ -3,12 +3,13 @@ import type { JWT } from "next-auth/jwt"
 import Google from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
-import { getDb } from "@/lib/api"
+import { getDb, toObjectId } from "@/lib/api"
 import { getRolePermissions } from "@/lib/roles"
 import { getSuperAdminEmail, isPlaceholderOrg, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants"
 import type { Membership, SessionMembership, User } from "@/types/models"
 
 const SUPERADMIN_EMAIL = getSuperAdminEmail();
+if (!SUPERADMIN_EMAIL) console.warn("SUPERADMIN_EMAIL is not set: no user will have superadmin access.");
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
 	adapter: MongoDBAdapter(clientPromise),
@@ -34,70 +35,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		})
 	],
 	callbacks: {
+		/**
+		 * Runs on sign-in and every time the session is read (pages, API routes, the proxy).
+		 * Role, organization, permissions and status are always resolved from the DB, never taken from the client,
+		 * so role changes and deactivations apply on the next request instead of when the JWT expires.
+		 */
 		async jwt({ token, user, trigger, session }) {
-			// 1. Sign-in: resolve the active organization, role and permissions from the DB
+			let requestedClientId = token.clientId ?? null;
+
 			if (user) {
 				const userDoc = await findUser(user.email);
-				let memberships = realMemberships(userDoc);
 
 				// Users from before the multi-organization model only have a top-level clientId:
 				// turn it into their first membership (only happens once)
-				if (memberships.length === 0 && user.clientId && user.clientId.toString() !== PLACEHOLDER_CLIENT_ID) {
-					memberships = [{ clientId: user.clientId, role: user.role || ROLES.NEW_USER, status: "active", joinedAt: new Date() } as unknown as Membership];
+				if (realMemberships(userDoc).length === 0 && user.clientId && user.clientId.toString() !== PLACEHOLDER_CLIENT_ID) {
+					const memberships = [{ clientId: user.clientId, role: user.role || ROLES.NEW_USER, status: "active", joinedAt: new Date() }];
 					const db = await getDb();
 					await db.collection('users').updateOne(
 						{ email: user.email },
 						{ $set: { organizations: memberships, activeOrganization: user.clientId } }
 					);
 				}
-
-				if (user.email === SUPERADMIN_EMAIL) {
-					// Superadmin sees every organization; clientId is only the one picked in the switcher
-					token.role = ROLES.SUPERADMIN;
-					token.clientId = user.activeOrganization?.toString() || null;
-				} else {
-					// activeOrganization is kept up to date by create/join/switch. A stale value (like the old
-					// placeholder) won't match any membership and falls back to the first active one.
-					const activeId = userDoc?.activeOrganization?.toString() || memberships[0]?.clientId?.toString();
-					const membership =
-						memberships.find(m => m.clientId.toString() === activeId && m.status === 'active') ||
-						memberships.find(m => m.status === 'active');
-
-					token.role = membership?.role || ROLES.NEW_USER;
-					token.clientId = membership?.clientId.toString() || null; // Always a string, ObjectIds break the JWT
-					token.organizations = toSessionMemberships(memberships);
-				}
-
-				token.activeOrganization = token.clientId;
-				token.permissions = await getRolePermissions(token.role);
+				requestedClientId = null; // Start in the organization saved in activeOrganization
 			}
 
-			// 2. useSession().update({...}) from the client, e.g. after switching organization
-			if (trigger === "update" && session) {
-				if (session.role) token.role = session.role;
-
-				if (session.clientId) {
-					if (token.role === ROLES.SUPERADMIN) {
-						token.clientId = session.clientId === 'all' ? null : session.clientId;
-					} else {
-						// Keep the current context if the user doesn't belong to the requested organization
-						const context = await loadOrganizationContext(token, session.clientId);
-						if (context) Object.assign(token, context);
-					}
-				}
-				if (session.clientCode) token.clientCode = session.clientCode;
-				if (session.isActive !== undefined) token.isActive = session.isActive;
-				if (session.organizations) token.organizations = session.organizations;
+			// useSession().update({ clientId }) from the client, e.g. after switching organization.
+			// Only the organization is read from the client: whether the user may use it is checked below.
+			if (trigger === "update" && typeof session?.clientId === "string") {
+				requestedClientId = session.clientId;
 			}
 
-			// 3. Pending users wait for an admin's approval, which only changes the DB.
-			// Re-read their membership so they leave the "pending" screen without signing in again.
-			if (!user && token.role === ROLES.PENDING_USER && token.clientId) {
-				const context = await loadOrganizationContext(token, token.clientId);
-				if (context && context.role !== token.role) Object.assign(token, context);
-			}
-
-			return token;
+			return Object.assign(token, await resolveContext(token, requestedClientId));
 		},
 		async session({ session, token }) {
 			if (session.user) {
@@ -134,21 +102,56 @@ function toSessionMemberships(memberships: Membership[]): SessionMembership[] {
 	}));
 }
 
+/** Permissions of the role, reusing the token's when the role didn't change (saves a query per request). */
+async function permissionsFor(token: JWT, role: string) {
+	return token.role === role && token.permissions ? token.permissions : getRolePermissions(role);
+}
+
 /**
- * Resolves role, permissions and memberships for one of the user's organizations.
- * Used to switch organization without signing out, and to refresh pending users.
- * @returns the token fields to update, or null if the user doesn't belong to that organization.
+ * Resolves the token fields from the user's document.
+ * @param requestedClientId organization the user wants to work in. Used only when the user has an active
+ * membership there (any organization for the superadmin; null means "all"). Otherwise falls back to the
+ * saved activeOrganization, then to the first active membership.
  */
-async function loadOrganizationContext(token: JWT, clientId: string) {
-	const memberships = realMemberships(await findUser(token.email));
-	const membership = memberships.find(m => m.clientId.toString() === clientId);
-	if (!membership) return null;
+async function resolveContext(token: JWT, requestedClientId: string | null) {
+	const userDoc = await findUser(token.email);
+	const noAccess = { role: ROLES.NEW_USER, clientId: null, activeOrganization: null, permissions: {}, organizations: [] };
+
+	// Deleted or globally disabled account
+	if (!userDoc || userDoc.isActive === false) return { ...noAccess, isActive: false };
+
+	if (SUPERADMIN_EMAIL && userDoc.email?.toLowerCase() === SUPERADMIN_EMAIL) {
+		// Superadmin sees every organization; clientId is only the one picked in the switcher
+		const requested = requestedClientId ?? (token.role === ROLES.SUPERADMIN ? null : userDoc.activeOrganization?.toString());
+		const clientId = requested && requested !== 'all' ? toObjectId(requested)?.toString() ?? null : null;
+		return {
+			role: ROLES.SUPERADMIN,
+			clientId,
+			activeOrganization: clientId,
+			permissions: await permissionsFor(token, ROLES.SUPERADMIN),
+			isActive: true,
+		};
+	}
+
+	const memberships = realMemberships(userDoc);
+	const active = memberships.filter(m => m.status === 'active');
+	const savedId = userDoc.activeOrganization?.toString();
+	const membership =
+		active.find(m => m.clientId.toString() === requestedClientId) ||
+		active.find(m => m.clientId.toString() === savedId) ||
+		active[0];
+
+	if (!membership) {
+		// No organization yet goes to the lobby; deactivated in every organization goes to /unauthorized
+		return { ...noAccess, organizations: toSessionMemberships(memberships), isActive: memberships.length === 0 };
+	}
 
 	return {
-		clientId: membership.clientId.toString(),
-		activeOrganization: membership.clientId.toString(),
 		role: membership.role,
-		permissions: await getRolePermissions(membership.role),
+		clientId: membership.clientId.toString(), // Always a string, ObjectIds break the JWT
+		activeOrganization: membership.clientId.toString(),
+		permissions: await permissionsFor(token, membership.role),
 		organizations: toSessionMemberships(memberships),
+		isActive: true,
 	};
 }

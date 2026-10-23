@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/authorize";
+import { PERMISSIONS } from "@/lib/constants";
 import { badRequest, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
 import { getTenantQuery } from "@/lib/tenant-guard";
 
 /** GET /api/admin/departments - Departments of the user's organization, sorted by name. */
 export async function GET() {
-    const session = await auth();
-    if (!session?.user?.clientId) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
+    if (error) return error;
 
     try {
         const db = await getDb();
@@ -24,8 +25,9 @@ export async function GET() {
 
 /** POST /api/admin/departments - Creates a department in the user's organization. Body: { name, description } */
 export async function POST(req: Request) {
-    const session = await auth();
-    const clientId = toObjectId(session?.user?.clientId);
+    const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
+    if (error) return error;
+    const clientId = toObjectId(session.user.clientId);
     if (!clientId) return unauthorized();
 
     try {
@@ -45,8 +47,9 @@ export async function POST(req: Request) {
 
 /** PATCH /api/admin/departments - Renames a department of the user's organization. Body: { id, name, description } */
 export async function PATCH(req: Request) {
-    const session = await auth();
-    const clientId = toObjectId(session?.user?.clientId);
+    const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
+    if (error) return error;
+    const clientId = toObjectId(session.user.clientId);
     if (!clientId) return unauthorized();
 
     try {

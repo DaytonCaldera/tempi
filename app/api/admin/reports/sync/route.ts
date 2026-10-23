@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getTranslations } from 'next-intl/server';
-import { auth } from '@/auth';
-import { apiError, getDb, unauthorized } from '@/lib/api';
-import { MOVEMENT_REASONS } from '@/lib/constants';
+import { requirePermission } from '@/lib/authorize';
+import { apiError, getDb } from '@/lib/api';
+import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
 
 /**
@@ -11,8 +11,8 @@ import { getTenantQuery } from '@/lib/tenant-guard';
  * compensating movements so reports add up. Without ?confirm=true it only explains how to run it.
  */
 export async function GET(req: Request) {
-    const session = await auth();
-    if (!session?.user) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
+    if (error) return error;
 
     const t = await getTranslations('api.sync');
 

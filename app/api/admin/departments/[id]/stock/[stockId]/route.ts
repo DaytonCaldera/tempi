@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { apiError, badRequest, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
+import { requirePermission } from "@/lib/authorize";
+import { PERMISSIONS } from "@/lib/constants";
+import { apiError, badRequest, getDb, notFound, serverError, toObjectId } from "@/lib/api";
 import { findOwnDepartment } from "@/lib/departments";
 
 type Params = { params: Promise<{ id: string; stockId: string }> };
@@ -12,8 +13,8 @@ type Params = { params: Promise<{ id: string; stockId: string }> };
  * so they are recorded in stock_movements.
  */
 export async function PUT(req: Request, { params }: Params) {
-    const session = await auth();
-    if (!session?.user) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
+    if (error) return error;
 
     try {
         const { id, stockId } = await params;
@@ -55,8 +56,8 @@ export async function PUT(req: Request, { params }: Params) {
  * stock_movements history stays valid for reports.
  */
 export async function DELETE(req: Request, { params }: Params) {
-    const session = await auth();
-    if (!session?.user) return unauthorized();
+    const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
+    if (error) return error;
 
     try {
         const { id, stockId } = await params;
