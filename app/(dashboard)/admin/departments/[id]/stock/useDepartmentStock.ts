@@ -1,18 +1,18 @@
 import useSWR from "swr";
-import { fetcher } from "@/lib/fetcher";
+import { fetcher, STOCK_REFRESH_INTERVAL } from "@/lib/fetcher";
 import { MOVEMENT_REASONS } from "@/lib/constants";
 import type { MovementType, StockItem } from "@/types/models";
 
 export type StockRow = StockItem<string>;
 
 /**
- * A department's inventory, polled every 5 seconds, with optimistic quick moves and deletes.
+ * A department's inventory, polled to show changes made by others, with optimistic quick moves and deletes.
  */
 export function useDepartmentStock(departmentId: string, initialInventory: StockRow[]) {
     const { data: inventory = [], mutate } = useSWR<StockRow[]>(
         `/api/admin/departments/${departmentId}/stock`,
         fetcher,
-        { fallbackData: initialInventory, refreshInterval: 5000 }
+        { fallbackData: initialInventory, refreshInterval: STOCK_REFRESH_INTERVAL }
     );
 
     /** Adds or removes one unit. */

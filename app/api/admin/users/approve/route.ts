@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/authorize";
 import { badRequest, getDb, notFound, toObjectId, unauthorized } from '@/lib/api';
 import { PERMISSIONS, ROLES } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
+import { forgetCachedUsers } from '@/lib/users';
 
 /**
  * POST /api/admin/users/approve - Approves a pending user in the admin's organization
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
         }
     );
     if (result.matchedCount === 0) return notFound("userNotFound");
+    forgetCachedUsers();
 
     return NextResponse.json({ success: true });
 }

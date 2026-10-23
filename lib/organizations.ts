@@ -1,6 +1,7 @@
 import type { Session } from "next-auth";
 import { getDb, toObjectId } from "@/lib/api";
 import { ROLES } from "@/lib/constants";
+import { forgetCachedUsers } from "@/lib/users";
 import type { Organization, User } from "@/types/models";
 
 /** Filter for organizations that haven't been closed (older documents have no status). */
@@ -51,5 +52,6 @@ export async function closeOrganization(clientId: string, closedBy: string): Pro
         { "organizations.clientId": anyIdForm } as object,
         { $pull: { organizations: { clientId: anyIdForm } } } as object
     );
+    forgetCachedUsers();
     return true;
 }

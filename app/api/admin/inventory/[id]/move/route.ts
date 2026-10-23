@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
 import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
-import { findOwnDepartment } from "@/lib/departments";
-import type { MovementType, StockItem, User } from "@/types/models";
+import { assignedDepartmentIds, findOwnDepartment } from "@/lib/departments";
+import type { MovementType, StockItem } from "@/types/models";
 
 const MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.SUPERADMIN];
 
@@ -32,14 +32,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const department = item && await findOwnDepartment(session, item.departmentId);
         if (!item || !department) return notFound("productNotFoundOrDenied");
 
-        // Read the role from the DB: an admin may have changed it after the user signed in
-        const userDoc = await db.collection<User>('users').findOne({ email: session.user.email ?? undefined });
-        const membership = userDoc?.organizations?.find(m => m.clientId.toString() === session.user.clientId);
-        const role = session.user.role === ROLES.SUPERADMIN ? ROLES.SUPERADMIN : membership?.role;
-
-        const isManagement = !!role && MANAGEMENT_ROLES.includes(role);
+        // The session's role and departments are resolved from the user's document (see the jwt callback in auth.ts)
+        const role = session.user.role;
+        const isManagement = MANAGEMENT_ROLES.includes(role);
         const isAssignedUser = role === ROLES.USER &&
-            !!membership?.departments?.some(id => id.toString() === item.departmentId.toString());
+            assignedDepartmentIds(session).some(id => id.equals(item.departmentId));
 
         if (!isManagement && !isAssignedUser) {
             return forbidden("moveNotAllowed");
@@ -71,7 +68,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 previousBalance,
                 newBalance,
                 reason: reason || MOVEMENT_REASONS.MANUAL_ADJUSTMENT,
-                user: { id: userDoc?._id, name: session.user.name, email: session.user.email },
+                user: { id: toObjectId(session.user.id), name: session.user.name, email: session.user.email },
                 createdAt: new Date()
             });
         } catch (error) {

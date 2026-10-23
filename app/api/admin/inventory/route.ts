@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getDb, serverError, unauthorized } from '@/lib/api';
-import type { User } from '@/types/models';
+import { assignedDepartmentIds } from '@/lib/departments';
 
 /** GET /api/admin/inventory - Stock of the departments the user is assigned to in their active organization. */
 export async function GET() {
@@ -9,13 +9,10 @@ export async function GET() {
     if (!session?.user) return unauthorized();
 
     try {
-        const db = await getDb();
-        const userDoc = await db.collection<User>("users").findOne({ email: session.user.email ?? undefined });
-
-        const membership = userDoc?.organizations?.find(m => m.clientId.toString() === session.user.clientId);
-        const departmentIds = membership?.departments || [];
+        const departmentIds = assignedDepartmentIds(session);
         if (departmentIds.length === 0) return NextResponse.json([]);
 
+        const db = await getDb();
         const inventory = await db.collection('department_stock')
             .find({ departmentId: { $in: departmentIds }, isDeleted: { $ne: true } })
             .sort({ productName: 1 })

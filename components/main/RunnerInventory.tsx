@@ -4,7 +4,7 @@ import { Search, Minus, Plus, Loader2, RotateCcw, LayoutDashboard, LogOut, MapPi
 import { signOut } from "next-auth/react";
 import useSWR from "swr";
 import { useTranslations } from "next-intl";
-import { fetcher } from "@/lib/fetcher";
+import { fetcher, STOCK_REFRESH_INTERVAL } from "@/lib/fetcher";
 import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
 import { labelOf } from "@/i18n/labels";
 import type { MovementType, StockItem } from "@/types/models";
@@ -37,9 +37,8 @@ export default function RunnerInventory({ initialItems, userRole, permissions }:
     // Polls so every runner sees stock changes made by others
     const { data: items = [], mutate } = useSWR<Item[]>('/api/admin/inventory', fetcher, {
         fallbackData: initialItems,
-        refreshInterval: 2500,
+        refreshInterval: STOCK_REFRESH_INTERVAL,
         revalidateOnFocus: true,
-        dedupingInterval: 2000
     });
 
     const searchTerm = search.toLowerCase();

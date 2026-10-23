@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { apiError, badRequest, getDb, serverError, unauthorized } from "@/lib/api";
 import { DEFAULT_PLAN_NAME, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
+import { forgetCachedUsers } from "@/lib/users";
 
 /** Random join code in the format "ABC-123". */
 const generateClientCode = () => {
@@ -72,6 +73,7 @@ export async function POST(req: Request) {
                 }
             }
         );
+        forgetCachedUsers();
 
         return NextResponse.json({ message: t("organizationCreated"), clientCode, clientId: clientId.toString() });
     } catch (error) {

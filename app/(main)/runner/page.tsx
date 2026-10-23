@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { getDb } from "@/lib/api";
+import { assignedDepartmentIds } from "@/lib/departments";
 import RunnerInventory from "@/components/main/RunnerInventory";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import type { StockItem, User } from "@/types/models";
+import type { StockItem } from "@/types/models";
 
 async function NoAssignedAreas() {
     const t = await getTranslations('runner.noAreas');
@@ -29,10 +30,7 @@ export default async function RunnerPage() {
     const t = await getTranslations('runner');
     const db = await getDb();
 
-    const userDoc = await db.collection<User>("users").findOne({ email: session.user.email ?? undefined });
-    const membership = userDoc?.organizations?.find(m => m.clientId.toString() === session.user.clientId);
-    const departmentIds = membership?.departments || [];
-
+    const departmentIds = assignedDepartmentIds(session);
     if (departmentIds.length === 0) return <NoAssignedAreas />;
 
     const inventory = await db.collection<StockItem>("department_stock")

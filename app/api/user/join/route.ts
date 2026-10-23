@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getDb, notFound, unauthorized } from '@/lib/api';
 import { PLACEHOLDER_CLIENT_ID, ROLES } from '@/lib/constants';
 import { OPEN_ORGANIZATION } from '@/lib/organizations';
+import { forgetCachedUsers } from '@/lib/users';
 import type { User } from '@/types/models';
 
 /**
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
         { $set: { updatedAt: new Date(), userId: userDoc?._id, clientId: organization._id } },
         { upsert: true }
     );
+    forgetCachedUsers();
 
     return NextResponse.json({ success: true, clientId: organization._id });
 }

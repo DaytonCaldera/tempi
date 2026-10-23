@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from "@/lib/authorize";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId } from '@/lib/api';
 import { PERMISSIONS, ROLES } from "@/lib/constants";
+import { forgetCachedUsers } from "@/lib/users";
 
 /**
  * PATCH /api/admin/users/toggle-status
@@ -37,6 +38,7 @@ export async function PATCH(request: Request) {
             }
         );
         if (result.matchedCount === 0) return notFound("userOrOrganizationNotFound");
+        forgetCachedUsers();
 
         return NextResponse.json({ success: true });
     } catch (error) {

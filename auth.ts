@@ -5,6 +5,7 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
 import { getDb, toObjectId } from "@/lib/api"
 import { getRolePermissions } from "@/lib/roles"
+import { findUserByEmail, forgetCachedUsers } from "@/lib/users"
 import { getSuperAdminEmail, isPlaceholderOrg, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants"
 import type { Membership, SessionMembership, User } from "@/types/models"
 
@@ -38,13 +39,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		/**
 		 * Runs on sign-in and every time the session is read (pages, API routes, the proxy).
 		 * Role, organization, permissions and status are always resolved from the DB, never taken from the client,
-		 * so role changes and deactivations apply on the next request instead of when the JWT expires.
+		 * so role changes and deactivations apply within seconds (see findUserByEmail) instead of when the JWT expires.
 		 */
 		async jwt({ token, user, trigger, session }) {
 			let requestedClientId = token.clientId ?? null;
 
 			if (user) {
-				const userDoc = await findUser(user.email);
+				const userDoc = await findUserByEmail(user.email, { fresh: true });
 
 				// Users from before the multi-organization model only have a top-level clientId:
 				// turn it into their first membership (only happens once)
@@ -55,6 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 						{ email: user.email },
 						{ $set: { organizations: memberships, activeOrganization: user.clientId } }
 					);
+					forgetCachedUsers();
 				}
 				requestedClientId = null; // Start in the organization saved in activeOrganization
 			}
@@ -65,10 +67,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				requestedClientId = session.clientId;
 			}
 
-			return Object.assign(token, await resolveContext(token, requestedClientId));
+			// Sign-in and session updates (e.g. after joining or switching organization) must not see a cached user
+			const fresh = !!user || trigger === "update";
+			return Object.assign(token, await resolveContext(token, requestedClientId, fresh));
 		},
 		async session({ session, token }) {
 			if (session.user) {
+				if (token.sub) session.user.id = token.sub; // The user's _id (set by the adapter on sign-in)
 				session.user.role = token.role as string;
 				session.user.clientId = token.clientId ?? undefined;
 				session.user.clientCode = token.clientCode;
@@ -83,11 +88,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 	},
 	session: { strategy: 'jwt' },
 });
-
-async function findUser(email: string | null | undefined) {
-	const db = await getDb();
-	return db.collection<User>('users').findOne({ email: email ?? undefined });
-}
 
 /** The user's memberships, without the old "sup22" placeholder (it would win over the real organization). */
 function realMemberships(userDoc: User | null): Membership[] {
@@ -112,15 +112,25 @@ async function permissionsFor(token: JWT, role: string) {
  * @param requestedClientId organization the user wants to work in. Used only when the user has an active
  * membership there (any organization for the superadmin; null means "all"). Otherwise falls back to the
  * saved activeOrganization, then to the first active membership.
+ * @param fresh read the user from the DB instead of the short-lived cache.
  */
-async function resolveContext(token: JWT, requestedClientId: string | null) {
-	const userDoc = await findUser(token.email);
+async function resolveContext(token: JWT, requestedClientId: string | null, fresh: boolean) {
+	let userDoc = await findUserByEmail(token.email, { fresh });
+	const isSuperAdmin = !!SUPERADMIN_EMAIL && userDoc?.email?.toLowerCase() === SUPERADMIN_EMAIL;
+
+	// The cache is per server process: a cached copy may be from before the user joined or created the
+	// requested organization (e.g. the reload right after the lobby), so re-read it instead of falling back
+	const hasRequested = realMemberships(userDoc).some(m => m.status === 'active' && m.clientId.toString() === requestedClientId);
+	if (!fresh && requestedClientId && !isSuperAdmin && !hasRequested) {
+		userDoc = await findUserByEmail(token.email, { fresh: true });
+	}
+
 	const noAccess = { role: ROLES.NEW_USER, clientId: null, activeOrganization: null, permissions: {}, organizations: [] };
 
 	// Deleted or globally disabled account
 	if (!userDoc || userDoc.isActive === false) return { ...noAccess, isActive: false };
 
-	if (SUPERADMIN_EMAIL && userDoc.email?.toLowerCase() === SUPERADMIN_EMAIL) {
+	if (isSuperAdmin) {
 		// Superadmin sees every organization; clientId is only the one picked in the switcher
 		const requested = requestedClientId ?? (token.role === ROLES.SUPERADMIN ? null : userDoc.activeOrganization?.toString());
 		const clientId = requested && requested !== 'all' ? toObjectId(requested)?.toString() ?? null : null;
