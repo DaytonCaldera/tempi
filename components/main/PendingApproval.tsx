@@ -17,11 +17,11 @@ export default function PendingApproval() {
     }, [update]);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent">
+        <div className="flex flex-col items-center justify-center gap-4 min-h-[70vh] text-center">
+            <h2 className="text-3xl font-semibold tracking-tight text-ink md:text-4xl">
                 {t("title")}
             </h2>
-            <p className="text-gray-400">
+            <p className="max-w-md leading-relaxed text-ink-muted">
                 {t("body")}
                 <br />
                 {t("hint")}

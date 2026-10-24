@@ -3,8 +3,10 @@ import type { JWT } from "next-auth/jwt"
 import Google from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
-import { getDb, toObjectId } from "@/lib/api"
+import { getDb } from "@/lib/api"
 import { getRolePermissions } from "@/lib/roles"
+import { recordDailyActivity } from "@/lib/activity"
+import { AUDIT_ACTIONS, logAudit } from "@/lib/audit"
 import { findUserByEmail, forgetCachedUsers } from "@/lib/users"
 import { getSuperAdminEmail, isPlaceholderOrg, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants"
 import type { Membership, SessionMembership, User } from "@/types/models"
@@ -13,11 +15,18 @@ const SUPERADMIN_EMAIL = getSuperAdminEmail();
 if (!SUPERADMIN_EMAIL) console.warn("SUPERADMIN_EMAIL is not set: no user will have superadmin access.");
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-	adapter: MongoDBAdapter(clientPromise),
+	// Same database as getDb(), so sign-in writes users and accounts where the app reads them
+	adapter: MongoDBAdapter(clientPromise, { databaseName: process.env.MONGODB_DB }),
 	providers: [
 		Google({
 			clientId: process.env.GOOGLE_ID_CLIENT as string,
 			clientSecret: process.env.GOOGLE_API_SECRET as string,
+			// Users can exist before their first Google sign-in (e.g. created in the DB, or by sign-ins written to
+			// another database before MONGODB_DB): link them by email instead of failing with OAuthAccountNotLinked.
+			// Safe with Google only because it verifies the email it returns.
+			allowDangerousEmailAccountLinking: true,
+			// Always show the account chooser, otherwise Google silently reuses the last account
+			authorization: { params: { prompt: "select_account" } },
 			profile(profile) {
 				// Maps the Google profile to the user document created on first sign-in
 				return {
@@ -69,7 +78,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 			// Sign-in and session updates (e.g. after joining or switching organization) must not see a cached user
 			const fresh = !!user || trigger === "update";
-			return Object.assign(token, await resolveContext(token, requestedClientId, fresh));
+			// Taken before the read, so this process's own cached copy of it still counts as fresh enough
+			const startedAt = Date.now();
+			Object.assign(token, await resolveContext(token, requestedClientId, fresh));
+			if (fresh) token.resolvedAt = startedAt;
+			await recordLastSeen(token);
+			return token;
 		},
 		async session({ session, token }) {
 			if (session.user) {
@@ -86,8 +100,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		},
 		authorized: async ({ auth }) => !!auth,
 	},
+	events: {
+		// The adapter doesn't store when a user was created: the superadmin panel counts sign-ups by it
+		async createUser({ user }) {
+			const db = await getDb();
+			await db.collection('users').updateOne({ email: user.email }, { $set: { createdAt: new Date() } });
+			await logAudit(AUDIT_ACTIONS.SIGN_UP, { actor: { id: user.id, email: user.email, name: user.name } });
+		},
+		async signIn({ user }) {
+			const db = await getDb();
+			await db.collection('users').updateOne({ email: user.email }, { $set: { lastLoginAt: new Date() } });
+			await logAudit(AUDIT_ACTIONS.SIGN_IN, { actor: { id: user.id, email: user.email, name: user.name } });
+		},
+	},
 	session: { strategy: 'jwt' },
 });
+
+/** How often a signed-in user's lastSeenAt is written. The session is read on every request, so not on each one. */
+const LAST_SEEN_INTERVAL_MS = 5 * 60_000;
+
+/**
+ * Saves when the user was last seen (users.lastSeenAt) and that they were active today (lib/activity.ts),
+ * at most once per LAST_SEEN_INTERVAL_MS per session. The superadmin panel counts active users with them.
+ * A failed write only loses one data point.
+ */
+async function recordLastSeen(token: JWT) {
+	const now = Date.now();
+	if (!token.email || token.isActive === false || now - (token.lastSeenAt ?? 0) < LAST_SEEN_INTERVAL_MS) return;
+	token.lastSeenAt = now;
+	try {
+		const db = await getDb();
+		await Promise.all([
+			db.collection('users').updateOne({ email: token.email }, { $set: { lastSeenAt: new Date(now) } }),
+			recordDailyActivity(token.email, token.sub, new Date(now)),
+		]);
+	} catch (error) {
+		console.error("lastSeenAt write failed:", error);
+	}
+}
 
 /** The user's memberships, without the old "sup22" placeholder (it would win over the real organization). */
 function realMemberships(userDoc: User | null): Membership[] {
@@ -97,6 +147,7 @@ function realMemberships(userDoc: User | null): Membership[] {
 function toSessionMemberships(memberships: Membership[]): SessionMembership[] {
 	return memberships.map(m => ({
 		...m,
+		role: m.role === ROLES.SUPERADMIN ? ROLES.USER : m.role, // Same rule as resolveContext
 		clientId: m.clientId.toString(),
 		departments: m.departments?.map(id => id.toString()),
 	}));
@@ -110,12 +161,14 @@ async function permissionsFor(token: JWT, role: string) {
 /**
  * Resolves the token fields from the user's document.
  * @param requestedClientId organization the user wants to work in. Used only when the user has an active
- * membership there (any organization for the superadmin; null means "all"). Otherwise falls back to the
- * saved activeOrganization, then to the first active membership.
+ * membership there. Otherwise falls back to the saved activeOrganization, then to the first active membership.
+ * The superadmin never gets an organization.
  * @param fresh read the user from the DB instead of the short-lived cache.
  */
 async function resolveContext(token: JWT, requestedClientId: string | null, fresh: boolean) {
-	let userDoc = await findUserByEmail(token.email, { fresh });
+	// A copy cached by this process before the token's last fresh read (e.g. right before the user closed
+	// or left an organization in another process) would bring back what that read already left out
+	let userDoc = await findUserByEmail(token.email, { fresh, notBefore: token.resolvedAt });
 	const isSuperAdmin = !!SUPERADMIN_EMAIL && userDoc?.email?.toLowerCase() === SUPERADMIN_EMAIL;
 
 	// The cache is per server process: a cached copy may be from before the user joined or created the
@@ -131,16 +184,8 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 	if (!userDoc || userDoc.isActive === false) return { ...noAccess, isActive: false };
 
 	if (isSuperAdmin) {
-		// Superadmin sees every organization; clientId is only the one picked in the switcher
-		const requested = requestedClientId ?? (token.role === ROLES.SUPERADMIN ? null : userDoc.activeOrganization?.toString());
-		const clientId = requested && requested !== 'all' ? toObjectId(requested)?.toString() ?? null : null;
-		return {
-			role: ROLES.SUPERADMIN,
-			clientId,
-			activeOrganization: clientId,
-			permissions: await permissionsFor(token, ROLES.SUPERADMIN),
-			isActive: true,
-		};
+		// The superadmin doesn't work inside organizations: it only uses the /superadmin panel (see proxy.ts)
+		return { ...noAccess, role: ROLES.SUPERADMIN, isActive: true };
 	}
 
 	const memberships = realMemberships(userDoc);
@@ -156,11 +201,15 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 		return { ...noAccess, organizations: toSessionMemberships(memberships), isActive: memberships.length === 0 };
 	}
 
+	// Superadmin comes only from SUPERADMIN_EMAIL: a membership saying "superadmin" (a script, a manual DB edit)
+	// must not unlock it, so it gets the least privileged member role instead
+	const role = membership.role === ROLES.SUPERADMIN ? ROLES.USER : membership.role;
+
 	return {
-		role: membership.role,
+		role,
 		clientId: membership.clientId.toString(), // Always a string, ObjectIds break the JWT
 		activeOrganization: membership.clientId.toString(),
-		permissions: await permissionsFor(token, membership.role),
+		permissions: await permissionsFor(token, role),
 		organizations: toSessionMemberships(memberships),
 		isActive: true,
 	};

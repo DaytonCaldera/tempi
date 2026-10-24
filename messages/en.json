@@ -1,7 +1,7 @@
 {
     "metadata": {
-        "title": "Tempi | Inventory Management",
-        "description": "Smart logistics and supply system"
+        "title": "Tempi | Everything adds up",
+        "description": "Close every event knowing where every unit went. No midnight recounts, no losses you find too late. Your business under control, your mind at ease."
     },
     "common": {
         "login": "Sign in",
@@ -21,7 +21,8 @@
         "general": "General",
         "system": "System",
         "user": "User",
-        "backToHome": "Back to home"
+        "backToHome": "Back to home",
+        "back": "Back"
     },
     "errors": {
         "unauthorized": "Unauthorized",
@@ -53,7 +54,20 @@
         "defaultPlanNotFound": "Default plan not found",
         "createCompanyFailed": "Could not create the company",
         "syncFailed": "The bulk sync failed",
-        "organizationNameMismatch": "The name doesn't match the organization's name"
+        "organizationNameMismatch": "The name doesn't match the organization's name",
+        "lastOrganizationNotAcknowledged": "Confirm that you want to be left without an organization",
+        "ownerCannotLeave": "You are the owner: close the organization instead of leaving it",
+        "ownsOrganizations": "Close the organizations you own first",
+        "cannotEditSelf": "You can't change your own role or access",
+        "ownerLocked": "The organization's owner must stay an active admin",
+        "invalidRole": "Invalid role",
+        "organizationRequired": "Pick an organization first",
+        "tooManyAttempts": "Too many attempts. Try again in a few minutes",
+        "planLimit": {
+            "users": "Your plan ({plan}) allows up to {limit} active members. Upgrade the plan to add more.",
+            "departments": "Your plan ({plan}) allows up to {limit} departments. Upgrade the plan to add more.",
+            "items": "Your plan ({plan}) allows up to {limit} products. Upgrade the plan to add more."
+        }
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -97,11 +111,87 @@
         "selectOrganization": "Select...",
         "unnamedOrganization": "Unnamed organization",
         "joinOrCreate": "+ Join or create new",
-        "switching": "Switching context..."
+        "switching": "Switching context...",
+        "account": "My account"
+    },
+    "theme": {
+        "label": "Theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
     },
     "landing": {
-        "badge": "System v1.2 ready",
-        "tagline": "The high-performance workspace for your next evolution. Secure, fast, and built for the digital vanguard.",
+        "cta": "Get started with Google",
+        "hero": {
+            "eyebrow": "For teams that live by their stock",
+            "title": "End every event knowing everything adds up.",
+            "subtitle": "No more midnight recounts, missing boxes or numbers you have to guess. Get the calm of knowing where every unit went, and keep your mind free to grow the business."
+        },
+        "moment": {
+            "when": "Sunday, 9:12 a.m. The morning after.",
+            "report": "Closing · Saturday's event",
+            "rows": {
+                "out": {
+                    "label": "Sent out",
+                    "value": "1,240"
+                },
+                "used": {
+                    "label": "Used",
+                    "value": "1,198"
+                },
+                "returned": {
+                    "label": "Returned",
+                    "value": "42"
+                },
+                "missing": {
+                    "label": "Unaccounted for",
+                    "value": "0"
+                }
+            },
+            "verdict": "Everything adds up.",
+            "caption": "No recounts. No guessing. Just coffee and a number you trust."
+        },
+        "overcome": {
+            "title": "What you leave behind",
+            "subtitle": "The things that steal your sleep today become things you never think about.",
+            "items": {
+                "recount": {
+                    "before": "Recounting boxes at midnight",
+                    "after": "Closing the day with numbers that already add up"
+                },
+                "messages": {
+                    "before": "\"Do we have any left?\" messages all night",
+                    "after": "A team that sees what's there and just moves"
+                },
+                "losses": {
+                    "before": "Losses you find at the end of the month",
+                    "after": "Leaks you catch the same day they start"
+                },
+                "buying": {
+                    "before": "Buying by gut feeling",
+                    "after": "Buying exactly what you actually use"
+                }
+            }
+        },
+        "gains": {
+            "title": "What you gain",
+            "peace": {
+                "title": "Peace of mind",
+                "description": "Every unit has a who, a when and a why. You stop carrying the inventory in your head."
+            },
+            "team": {
+                "title": "A team that owns it",
+                "description": "Everyone knows what's theirs to move. Accountability without chasing anyone."
+            },
+            "growth": {
+                "title": "Room to grow",
+                "description": "More events, more areas, more people, with the same control you have today. Decide on facts, not memory."
+            }
+        },
+        "closing": {
+            "title": "Your business under control. Your mind at ease.",
+            "subtitle": "A tool for the mind and for the business."
+        },
         "legalNotice": "By signing in you agree to the <terms>Terms of Service</terms> and the <privacy>Privacy Policy</privacy>."
     },
     "pending": {
@@ -247,7 +337,11 @@
             "warning": "Every member will lose access to {name} right away. This can't be undone from the app.",
             "confirmLabel": "Type {name} to confirm",
             "confirm": "Close permanently",
-            "closing": "Closing..."
+            "closing": "Closing...",
+            "continue": "Continue",
+            "lastTitle": "This is your only organization",
+            "lastDescription": "Closing {name} leaves you without an organization. Your account stays active: we'll take you to your account page, where you can create or join another organization, or delete your account.",
+            "confirmLast": "Close and leave me without an organization"
         }
     },
     "reports": {
@@ -295,7 +389,7 @@
         "defaultDepartmentDescription": "Default initial department",
         "organizationCreated": "Organization created",
         "sync": {
-            "ready": "Sync route ready. Add '?confirm=true' to the URL to apply the corrections.",
+            "ready": "Sync route ready. Send a POST to this URL with '?confirm=true' to apply the corrections.",
             "alreadySynced": "The database is already 100% in sync. No action needed.",
             "done": "{count, plural, one {Sync complete! # item was corrected.} other {Sync complete! # items were corrected.}}"
         }
@@ -467,5 +561,469 @@
                 }
             }
         }
+    },
+    "account": {
+        "title": "My account",
+        "closedBanner": {
+            "title": "Organization closed",
+            "description": "Your account is still active. Create a new organization or join one with its code.",
+            "cta": "Create or join"
+        },
+        "profile": {
+            "title": "Profile",
+            "google": "Your name, photo and email come from your Google account."
+        },
+        "preferences": {
+            "title": "Preferences",
+            "language": "Language",
+            "theme": "Theme"
+        },
+        "organizations": {
+            "title": "My organizations",
+            "empty": "You don't belong to any organization.",
+            "current": "Active",
+            "owner": "Owner",
+            "switch": "Switch",
+            "leave": "Leave",
+            "joinOrCreate": "Join or create new",
+            "leaveTitle": "Leave organization",
+            "leaveWarning": "You'll lose access to {name}. To come back you'll need its code and an admin's approval.",
+            "leaveConfirm": "Leave {name}",
+            "leaving": "Leaving..."
+        },
+        "delete": {
+            "title": "Delete account",
+            "description": "Deletes your account and memberships. The organizations' movement history is kept.",
+            "button": "Delete account",
+            "blocked": "You own: {names}. Close them before deleting your account.",
+            "warning": "This can't be undone. You can sign up again with Google, but you'll start with no organizations.",
+            "confirmLabel": "Type {email} to confirm",
+            "confirm": "Delete permanently",
+            "deleting": "Deleting..."
+        }
+    },
+    "superadmin": {
+        "title": "Superadmin",
+        "panel": "Control panel",
+        "search": "Search",
+        "never": "Never",
+        "nav": {
+            "overview": "Overview",
+            "organizations": "Organizations",
+            "users": "Users",
+            "audit": "Audit log",
+            "account": "My account",
+            "signOut": "Sign out",
+            "menu": "Superadmin menu",
+            "health": "Health",
+            "support": "Support"
+        },
+        "periods": {
+            "1d": "24 h",
+            "7d": "7 days",
+            "30d": "30 days",
+            "90d": "90 days"
+        },
+        "periodLabel": "Period",
+        "pagination": {
+            "previous": "Previous",
+            "next": "Next",
+            "page": "Page {page} of {pages}"
+        },
+        "overview": {
+            "title": "Overview",
+            "subtitle": "How the whole app is being used",
+            "vsPrevious": "vs previous period",
+            "noChange": "no change",
+            "notComparable": "No previous period to compare",
+            "usage": "Usage",
+            "growth": "Growth",
+            "metrics": {
+                "seenUsers": "Active users",
+                "seenUsersHint": "Opened the app. Counted since this panel was installed",
+                "workingUsers": "Users who recorded stock",
+                "activeOrganizations": "Active organizations",
+                "movements": "Stock movements",
+                "newUsers": "New users",
+                "newOrganizations": "New organizations",
+                "closedOrganizations": "Closed organizations",
+                "signIns": "Sign-ins",
+                "signInsHint": "Counted since this panel was installed"
+            },
+            "totals": {
+                "title": "Right now",
+                "totalUsers": "Users",
+                "openOrganizations": "Open organizations",
+                "usersWithoutOrganization": "Users without an organization",
+                "pendingMembers": "Waiting for approval",
+                "oldestPending": "Oldest waiting since {date}"
+            },
+            "charts": {
+                "movements": "Stock movements",
+                "signUps": "New users",
+                "table": "Show as table",
+                "bucket": "Date",
+                "count": "Count",
+                "total": "{count} in the period",
+                "byHour": "By hour",
+                "byDay": "By day"
+            },
+            "activeUsers": "Active users",
+            "dau": "Today",
+            "wau": "Last 7 days",
+            "mau": "Last 30 days",
+            "stickiness": "Stickiness",
+            "stickinessHint": "Average daily users ÷ monthly users. Higher means people come back more often",
+            "trackingSince": "Counted since {date}",
+            "notTrackedYet": "Counted from today on",
+            "dauChart": "Active users per day, last 30 days",
+            "funnel": "Onboarding funnel",
+            "funnelHint": "Users who signed up in the period, and how far they got",
+            "funnelSteps": {
+                "registered": "Signed up",
+                "joined": "Created or joined an organization",
+                "approved": "Approved (or owner)",
+                "working": "Recorded their first movement"
+            },
+            "funnelOf": "{percent} of sign-ups",
+            "attention": "Needs attention",
+            "attentionNone": "Nothing needs attention right now.",
+            "seeHealth": "See health"
+        },
+        "organizations": {
+            "title": "Organizations",
+            "subtitle": "Every organization created in Tempi",
+            "searchPlaceholder": "Name, owner or join code",
+            "count": "{count, plural, one {# organization} other {# organizations}}",
+            "empty": "No organizations match.",
+            "filters": {
+                "all": "All",
+                "active": "Active",
+                "inactive": "Inactive",
+                "closed": "Closed"
+            },
+            "columns": {
+                "organization": "Organization",
+                "owner": "Owner",
+                "created": "Created",
+                "members": "Members",
+                "pending": "Pending",
+                "departments": "Departments",
+                "products": "Products",
+                "lastActivity": "Last activity",
+                "status": "Status"
+            },
+            "status": {
+                "active": "Active",
+                "inactive": "Inactive",
+                "closed": "Closed",
+                "open": "Open"
+            },
+            "inactiveHint": "No stock movements in {days} days",
+            "detail": {
+                "back": "All organizations",
+                "owner": "Owner",
+                "plan": "Plan",
+                "created": "Created",
+                "code": "Join code",
+                "status": "Status",
+                "closedOn": "Closed on {date} by {email}",
+                "lastActivity": "Last activity",
+                "members": "Members",
+                "departments": "Departments",
+                "activity": "Stock movements, last 30 days",
+                "audit": "Recent history",
+                "noMembers": "No members.",
+                "noDepartments": "No departments.",
+                "products": "{count, plural, one {# product} other {# products}}",
+                "ownerBadge": "Owner",
+                "joined": "Joined",
+                "lastSeen": "Last seen",
+                "role": "Role",
+                "noPlan": "No plan"
+            }
+        },
+        "users": {
+            "title": "Users",
+            "subtitle": "Everyone who signed in to Tempi",
+            "searchPlaceholder": "Name or email",
+            "count": "{count, plural, one {# user} other {# users}}",
+            "empty": "No users match.",
+            "filters": {
+                "all": "All",
+                "noOrganization": "Without organization",
+                "pending": "Waiting for approval",
+                "disabled": "Disabled"
+            },
+            "columns": {
+                "user": "User",
+                "organizations": "Organizations",
+                "registered": "Registered",
+                "lastSeen": "Last seen",
+                "status": "Status"
+            },
+            "status": {
+                "active": "Active",
+                "disabled": "Disabled"
+            },
+            "noOrganization": "No organization",
+            "detail": {
+                "back": "All users",
+                "registered": "Registered",
+                "lastLogin": "Last sign-in",
+                "lastSeen": "Last seen",
+                "memberships": "Organizations",
+                "movements": "Stock movements, last 30 days",
+                "audit": "History",
+                "departments": "{count, plural, one {# department} other {# departments}}",
+                "current": "Current",
+                "noMemberships": "Not a member of any organization.",
+                "joined": "Joined",
+                "role": "Role",
+                "status": "Status"
+            }
+        },
+        "audit": {
+            "title": "Audit log",
+            "subtitle": "Who did what, and when",
+            "searchPlaceholder": "Email, name or target",
+            "allActions": "All actions",
+            "empty": "Nothing recorded yet.",
+            "columns": {
+                "when": "When",
+                "action": "Action",
+                "actor": "By",
+                "organization": "Organization",
+                "target": "To"
+            },
+            "actions": {
+                "signUp": "Signed up",
+                "signIn": "Signed in",
+                "deleteAccount": "Deleted their account",
+                "create": "Created an organization",
+                "join": "Joined an organization",
+                "leave": "Left an organization",
+                "close": "Closed an organization",
+                "approve": "Approved a member",
+                "update": "Changed a membership",
+                "regenerateCode": "Created a new join code",
+                "transferOwnership": "Transferred ownership",
+                "repairStock": "Repaired stock history",
+                "restore": "Restored an organization",
+                "export": "Exported data",
+                "viewAs": "Viewed an organization (read-only)",
+                "changePlan": "Changed the plan"
+            },
+            "change": "{field}: {before} → {after}",
+            "fields": {
+                "role": "Role",
+                "status": "Status",
+                "departments": "Departments"
+            },
+            "reason": "Reason: {reason}",
+            "owner": "Owner: {before} → {after}",
+            "details": "Details",
+            "plan": "Plan: {before} → {after}"
+        },
+        "health": {
+            "title": "Health",
+            "subtitle": "Where people may need a hand",
+            "none": "Nothing here.",
+            "inactiveOrganizations": "Organizations without activity",
+            "inactiveOrganizationsHint": "Open, and no stock movements in {days} days",
+            "longPending": "Waiting for approval too long",
+            "longPendingHint": "Pending for more than {days} days",
+            "lobbyUsers": "Users stuck without an organization",
+            "lobbyUsersHint": "Signed up more than {days} days ago and aren't in any organization",
+            "loneOrganizations": "Organizations with one member",
+            "loneOrganizationsHint": "Older than {days} days and nobody else joined",
+            "emptyOrganizations": "Organizations without products",
+            "emptyOrganizationsHint": "Older than {days} days and no products yet",
+            "stockMismatches": "Stock that doesn't match its movements",
+            "stockMismatchesHint": "Their history doesn't explain the quantity, so reports are wrong. Repair them from the organization's tools",
+            "waitingSince": "Waiting since {date}",
+            "registeredOn": "Signed up {date}",
+            "lastActivity": "Last activity: {date}",
+            "neverActive": "Never active",
+            "seeAll": "See all",
+            "repairNeeded": "{missing, plural, =0 {} one {# missing movement} other {# missing movements}}{sync, plural, =0 {} other { · # old sync movements}}"
+        },
+        "support": {
+            "title": "Support",
+            "subtitle": "Find a user or organization, and the tools to help them",
+            "searchPlaceholder": "Email, name, organization or join code",
+            "noResults": "Nothing matches “{q}”.",
+            "users": "Users",
+            "organizations": "Organizations",
+            "closed": "Closed",
+            "toolsTitle": "Available tools",
+            "tools": {
+                "diagnosis": "Access diagnosis",
+                "diagnosisHint": "On a user's page: where they land when they open the app, with which role and departments, and what looks wrong.",
+                "regenerate": "New join code",
+                "regenerateHint": "On an organization's page: replaces a leaked code. The old one stops working.",
+                "transfer": "Transfer ownership",
+                "transferHint": "On an organization's page: makes another member the owner, e.g. when the owner leaves the company.",
+                "diagnosisCta": "Pick a user",
+                "regenerateCta": "Pick an organization",
+                "transferCta": "Pick an organization",
+                "repair": "Repair stock history",
+                "repairHint": "On an organization's page: adds the movements missing from items whose history doesn't explain their quantity.",
+                "repairCta": "See affected items",
+                "restore": "Restore organization",
+                "restoreHint": "On a closed organization's page: reopens it with a new code and gives the members back their access.",
+                "restoreCta": "See closed organizations"
+            },
+            "openTools": "Tools",
+            "openDiagnosis": "Diagnosis"
+        },
+        "diagnosis": {
+            "title": "Access diagnosis",
+            "subtitle": "What happens when this user opens the app, worked out like the sign-in does",
+            "states": {
+                "accountDisabled": "Account disabled: they see the “no access” page.",
+                "lobby": "No organization: they land in the lobby to create or join one.",
+                "allInactive": "Deactivated in every organization: they see the “no access” page.",
+                "pendingApproval": "Waiting for approval in {organization}: they see the waiting screen.",
+                "member": "Works in {organization} as {role}."
+            },
+            "permissions": "Permissions",
+            "noPermissions": "None",
+            "departments": "Departments",
+            "departmentStatus": {
+                "ok": "OK",
+                "otherOrganization": "Belongs to another organization",
+                "missing": "Doesn't exist"
+            },
+            "notes": {
+                "savedOrganizationNotUsed": "Their saved organization isn't active for them, so another one is used.",
+                "departmentOtherOrganization": "A department belongs to another organization: its stock is hidden from them.",
+                "departmentMissing": "A department was deleted: it is ignored.",
+                "noDepartments": "As a runner without departments they see an empty inventory.",
+                "organizationClosed": "Their organization is closed.",
+                "placeholderMembership": "They still have the old placeholder membership (harmless, ignored).",
+                "superadminRoleIgnored": "A membership says “superadmin”: it is treated as a regular user."
+            },
+            "allGood": "Nothing looks wrong."
+        },
+        "tools": {
+            "title": "Support tools",
+            "reason": "Reason (saved in the audit log)",
+            "reasonPlaceholder": "e.g. The owner says the code was posted on social media",
+            "reasonTooShort": "Write a reason of at least {min} characters.",
+            "regenerate": {
+                "title": "New join code",
+                "description": "Creates a new code and disables the current one. Members aren't affected; share the new code with whoever still needs to join.",
+                "button": "Create new code",
+                "done": "New code: {code}"
+            },
+            "transfer": {
+                "title": "Transfer ownership",
+                "description": "The new owner becomes an active admin. The current owner stays as an admin.",
+                "member": "New owner",
+                "pick": "Pick a member…",
+                "confirm": "Type {name} to confirm",
+                "button": "Transfer ownership",
+                "done": "{name} is now the owner.",
+                "noCandidates": "There is no other active member to transfer it to."
+            },
+            "errors": {
+                "notFound": "The organization or member no longer exists.",
+                "closed": "The organization is closed.",
+                "confirmMismatch": "The name doesn't match.",
+                "invalid": "Check the form and try again.",
+                "pickMember": "Pick the new owner.",
+                "notClosed": "The organization isn't closed.",
+                "pickPlan": "Pick a plan."
+            },
+            "processing": "Working…",
+            "repair": {
+                "title": "Repair stock history",
+                "description": "Finds items whose movements don't explain their quantity (the consumption report is wrong for them) and adds the missing movements. Old sync movements are archived, not deleted.",
+                "preview": "Check",
+                "apply": "Repair",
+                "nothingToDo": "Every item's history is correct.",
+                "summary": "{items, plural, one {# item} other {# items}} to repair: {missing} movements to add, {sync} sync movements to archive.",
+                "itemDetail": "{missing} to add · {sync} to archive",
+                "done": "Repaired {items} items: {inserted} movements added, {archived} archived."
+            },
+            "restore": {
+                "title": "Restore organization",
+                "button": "Restore organization",
+                "confirm": "Type {name} to confirm",
+                "description": "Reopens it with a new join code and gives back their access to the {count, plural, one {# member} other {# members}} it had when it was closed (except deleted accounts).",
+                "descriptionOwnerOnly": "It was closed before memberships were saved: it reopens with a new join code and only its owner, as an admin. The others join again with the code.",
+                "done": "Restored: {count, plural, one {# member} other {# members}} back. New join code: {code}"
+            },
+            "plan": {
+                "title": "Change plan",
+                "description": "Its limits apply from the next action. A smaller plan removes nothing: the organization just can't grow until it is back under the limits.",
+                "plan": "Plan",
+                "pick": "Pick a plan…",
+                "limits": "{users} members · {departments} departments · {items} products",
+                "button": "Change plan",
+                "done": "The organization is now on {name}."
+            }
+        },
+        "exportCsv": "Export CSV",
+        "viewAs": {
+            "button": "View as (read-only)",
+            "title": "{name} · read-only view",
+            "tabsLabel": "Section",
+            "banner": "You see this organization's data as its admin does, without being able to change anything. Opening this view is recorded in the audit log.",
+            "tabs": {
+                "inventory": "Inventory",
+                "report": "Consumption report",
+                "movements": "Movements"
+            },
+            "noDepartments": "This organization has no departments.",
+            "emptyDepartment": "No products.",
+            "products": "{count, plural, one {# product} other {# products}}",
+            "inventory": {
+                "product": "Product",
+                "quantity": "Quantity",
+                "minStock": "Minimum",
+                "status": "Status",
+                "updated": "Updated",
+                "low": "Low stock",
+                "ok": "OK"
+            },
+            "report": {
+                "from": "From",
+                "to": "To",
+                "department": "Department",
+                "allDepartments": "All departments",
+                "apply": "Show",
+                "empty": "No products in this range."
+            },
+            "movements": {
+                "title": "Latest {count} movements",
+                "empty": "No movements yet.",
+                "when": "When",
+                "product": "Product",
+                "movement": "Movement",
+                "balance": "Balance",
+                "reason": "Reason",
+                "user": "By",
+                "in": "in",
+                "out": "out",
+                "system": "System"
+            }
+        }
+    },
+    "plan": {
+        "title": "Your plan",
+        "noPlan": "No plan",
+        "unlimited": "Unlimited",
+        "resources": {
+            "users": "Active members",
+            "departments": "Departments",
+            "items": "Products"
+        },
+        "usage": "{used} of {limit}",
+        "usageUnlimited": "{used}",
+        "full": "Limit reached",
+        "over": "Over the limit: nothing is removed, but you can't add more",
+        "contact": "To change your plan, contact {email}."
     }
 }

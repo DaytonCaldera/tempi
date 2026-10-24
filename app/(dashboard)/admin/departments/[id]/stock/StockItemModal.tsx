@@ -75,12 +75,12 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
             <div className="space-y-5">
                 {/* PRODUCT NAME */}
                 <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block ml-1">{t("nameLabel")}</label>
+                    <label className="text-[10px] font-bold text-ink-subtle uppercase mb-1.5 block ml-1">{t("nameLabel")}</label>
                     <div className="relative">
-                        <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                        <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-subtle" size={16} />
                         <input
                             type="text"
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 pl-12 pr-4 text-sm outline-none focus:border-[#0070f3] transition-all"
+                            className="w-full bg-subtle border border-line rounded-xl py-3 pl-12 pr-4 text-sm outline-none focus:border-accent transition-all"
                             placeholder={t("namePlaceholder")}
                             value={formData.name}
                             onChange={(e) => update({ name: e.target.value })}
@@ -91,22 +91,22 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                 <div className="grid grid-cols-2 gap-4">
                     {/* SKU */}
                     <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block ml-1">
+                        <label className="text-[10px] font-bold text-ink-subtle uppercase mb-1.5 block ml-1">
                             {isEditing ? t("sku") : t("generatedSku")}
                         </label>
                         <div className="relative flex items-center">
-                            <Hash className="absolute left-4 text-gray-300" size={16} />
+                            <Hash className="absolute left-4 text-ink-subtle" size={16} />
                             <input
                                 type="text"
                                 readOnly // Keeps the generated format
-                                className="w-full bg-gray-100 border border-gray-100 rounded-xl py-3 pl-12 pr-12 text-sm font-mono font-bold text-[#0070f3] outline-none"
+                                className="w-full bg-subtle border border-line rounded-xl py-3 pl-12 pr-12 text-sm font-mono font-bold text-accent outline-none"
                                 value={formData.sku}
                             />
                             {!isEditing && (
                                 <button
                                     type="button"
                                     onClick={() => update({ sku: generateSKU(departmentName) })}
-                                    className="absolute right-3 p-1.5 text-gray-400 hover:text-[#0070f3] transition-colors"
+                                    className="absolute right-3 p-1.5 text-ink-subtle hover:text-accent transition-colors"
                                     title={t("regenerateSku")}
                                 >
                                     <RefreshCw size={14} />
@@ -117,11 +117,11 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
 
                     {/* UNIT */}
                     <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block ml-1">{t("unit")}</label>
+                        <label className="text-[10px] font-bold text-ink-subtle uppercase mb-1.5 block ml-1">{t("unit")}</label>
                         <div className="relative">
-                            <Ruler className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                            <Ruler className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-subtle" size={16} />
                             <select
-                                className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 pl-12 pr-4 text-sm outline-none focus:border-[#0070f3] appearance-none"
+                                className="w-full bg-subtle border border-line rounded-xl py-3 pl-12 pr-4 text-sm outline-none focus:border-accent appearance-none"
                                 value={formData.unit}
                                 onChange={(e) => update({ unit: e.target.value })}
                             >
@@ -133,29 +133,29 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                     </div>
                 </div>
 
-                <hr className="border-gray-100 my-2" />
+                <hr className="border-line my-2" />
 
                 <div className="grid grid-cols-2 gap-4">
                     {/* QUANTITY: editable only on creation */}
-                    <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                        <label className="text-[10px] font-black text-[#0070f3] uppercase mb-1 block">
+                    <div className="bg-accent/10 p-4 rounded-2xl border border-accent/20">
+                        <label className="text-[10px] font-semibold text-accent uppercase mb-1 block">
                             {isEditing ? t("currentQuantity") : t("initialStock")}
                         </label>
                         <input
                             type="number"
                             readOnly={isEditing}
-                            className={`w-full bg-transparent text-2xl font-black text-[#171717] outline-none ${isEditing ? "opacity-60 text-gray-400 cursor-not-allowed" : ""}`}
+                            className={`w-full bg-transparent text-2xl font-semibold text-ink outline-none ${isEditing ? "opacity-60 text-ink-subtle cursor-not-allowed" : ""}`}
                             value={formData.quantity}
                             onChange={(e) => !isEditing && update({ quantity: Number(e.target.value) })}
                         />
                     </div>
 
                     {/* MIN STOCK */}
-                    <div className="bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
-                        <label className="text-[10px] font-black text-orange-600 uppercase mb-1 block">{t("minStock")}</label>
+                    <div className="bg-warning/10 p-4 rounded-2xl border border-warning/20">
+                        <label className="text-[10px] font-semibold text-warning uppercase mb-1 block">{t("minStock")}</label>
                         <input
                             type="number"
-                            className="w-full bg-transparent text-2xl font-black text-[#171717] outline-none"
+                            className="w-full bg-transparent text-2xl font-semibold text-ink outline-none"
                             value={formData.minStock}
                             onChange={(e) => update({ minStock: Number(e.target.value) })}
                         />
@@ -165,7 +165,7 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="w-full bg-[#171717] text-white py-4 rounded-2xl font-black hover:bg-black transition-all flex items-center justify-center gap-2 mt-4 shadow-xl shadow-gray-200"
+                    className="w-full bg-inverse text-on-inverse py-4 rounded-2xl font-semibold hover:bg-accent hover:text-on-accent transition-all flex items-center justify-center gap-2 mt-4"
                 >
                     {isSaving ? tCommon("saving") : isEditing ? tCommon("saveChanges") : t("register")}
                 </button>

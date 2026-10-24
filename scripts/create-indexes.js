@@ -21,7 +21,7 @@ if (!MONGO_URI) {
     process.exit(1);
 }
 
-/** [collection, keys, what uses it] */
+/** [collection, keys, what uses it, options?] */
 const INDEXES = [
     // Session check on every request (auth.ts), and the users list of an organization
     ['users', { email: 1 }, 'session lookup by email'],
@@ -34,6 +34,19 @@ const INDEXES = [
     // Consumption report and movement drill-down
     ['stock_movements', { inventoryId: 1, createdAt: 1 }, 'movements of an item by date'],
     ['stock_movements', { clientId: 1, createdAt: -1 }, 'movements of an organization'],
+    // Superadmin panel (lib/superadmin.ts): activity by period, and the audit log
+    ['stock_movements', { createdAt: -1 }, 'movements of a period (superadmin overview)'],
+    ['users', { lastSeenAt: -1 }, 'active users (superadmin overview)'],
+    ['clients', { createdAt: -1 }, 'organizations registry, newest first'],
+    ['audit_log', { createdAt: -1 }, 'audit log, newest first'],
+    ['audit_log', { action: 1, createdAt: -1 }, 'audit log filtered by action'],
+    ['audit_log', { clientId: 1, createdAt: -1 }, 'history of an organization'],
+    ['audit_log', { 'actor.email': 1, createdAt: -1 }, 'history of a user'],
+    ['audit_log', { 'target.id': 1, createdAt: -1 }, 'actions done to a user'],
+    // One document per user per day (lib/activity.ts): unique, so the daily upsert can't duplicate it
+    ['user_activity', { email: 1, day: 1 }, 'daily activity of a user', { unique: true }],
+    ['user_activity', { day: 1 }, 'active users per day'],
+    ['stock_movements', { 'user.email': 1, createdAt: 1 }, 'first movement of a user (onboarding funnel)'],
 ];
 
 async function main() {
@@ -42,8 +55,8 @@ async function main() {
     const db = mongoClient.db(DB_NAME);
 
     try {
-        for (const [collection, keys, purpose] of INDEXES) {
-            const name = await db.collection(collection).createIndex(keys);
+        for (const [collection, keys, purpose, options] of INDEXES) {
+            const name = await db.collection(collection).createIndex(keys, options);
             console.log(chalk.green('✓'), `${collection}.${name}`, chalk.gray(`(${purpose})`));
         }
         console.log(chalk.green.bold(`\n${INDEXES.length} indexes in place.`));

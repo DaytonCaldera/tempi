@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getDb } from '@/lib/api';
-import { ROLES } from '@/lib/constants';
-import { OPEN_ORGANIZATION } from '@/lib/organizations';
+import { getDb, toObjectId } from '@/lib/api';
+import { LEGAL } from '@/lib/constants';
 import { hasPermission } from '@/lib/permissions';
+import { getPlanUsage } from '@/lib/plans';
 import { getTenantQuery } from '@/lib/tenant-guard';
+import PlanUsageCard from '@/components/admin/PlanUsageCard';
 import DepartmentsManagementClient from './DepartmentsManagementClient';
 
 export default async function DepartmentsManagementPage() {
@@ -13,15 +14,15 @@ export default async function DepartmentsManagementPage() {
     if (!hasPermission(session, "manage_departments")) redirect("/unauthorized");
 
     const db = await getDb();
-    const departments = await db.collection('departments').find(getTenantQuery(session)).toArray();
-
-    // Superadmins pick the organization of a new department from a dropdown
-    const clients = session.user.role === ROLES.SUPERADMIN
-        ? (await db.collection('clients').find(OPEN_ORGANIZATION).toArray()).map(c => ({ _id: c._id.toString(), name: c.name }))
-        : [];
+    const clientId = toObjectId(session.user.clientId);
+    const [departments, usage] = await Promise.all([
+        db.collection('departments').find(getTenantQuery(session)).toArray(),
+        clientId ? getPlanUsage(clientId) : null,
+    ]);
 
     return (
         <div className="p-0 lg:p-10">
+            {usage && <div className="mb-8"><PlanUsageCard usage={usage} contactEmail={LEGAL.contactEmail} /></div>}
             <DepartmentsManagementClient
                 departments={departments.map(dept => ({
                     _id: dept._id.toString(),
@@ -29,8 +30,6 @@ export default async function DepartmentsManagementPage() {
                     description: dept.description,
                     clientId: dept.clientId?.toString(),
                 }))}
-                clients={clients}
-                userRole={session.user.role}
                 userClientId={session.user.clientId}
             />
         </div>

@@ -18,7 +18,7 @@ export default async function GeneralReportPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2 print:hidden">
                 <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 text-xs font-bold uppercase text-gray-400 hover:text-[#171717] transition-colors"
+                    className="flex items-center gap-2 text-xs font-bold uppercase text-ink-subtle hover:text-ink transition-colors"
                 >
                     <ArrowLeft size={14} /> {t('backToDashboard')}
                 </Link>

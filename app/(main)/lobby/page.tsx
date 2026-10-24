@@ -3,6 +3,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { PlusCircle, Hash, Building2, ArrowRight, LogOut, X, Loader2 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function LobbyPage() {
     const t = useTranslations("lobby");
@@ -26,6 +27,7 @@ export default function LobbyPage() {
             await update({ clientId: json.clientId });
             window.location.href = "/";
         }
+        else if (res.status === 429) alert(tErrors("tooManyAttempts"));
         else alert(t("invalidCode"));
         setLoading(false);
     };
@@ -51,58 +53,47 @@ export default function LobbyPage() {
         }
     };
 
+    // Codes are "ABCD-2345" (older organizations: "ABC-123"). The dash is optional: the server ignores it
     const handleMaskCode = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // 1. Keep only alphanumeric characters (letters and numbers)
-        const chars = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-
-        // 2. Match two groups of up to 3 alphanumeric characters
-        // Using [A-Z0-9] in the match since we converted to UpperCase above
-        const x = chars.match(/([A-Z0-9]{0,3})([A-Z0-9]{0,3})/);
-
-        if (x) {
-            // 3. Format as XXX-XXX
-            e.target.value = !x[2] ? x[1] : `${x[1]}-${x[2]}`;
-        } else {
-            e.target.value = '';
-        }
-
-        setJoinCode(e.target.value);
+        setJoinCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase().slice(0, 9));
     };
+    const joinCodeLength = joinCode.replace(/-/g, '').length;
 
     return status == "loading" ? (<div className="flex items-center justify-center min-h-screen p-6">
-      <p className="text-gray-500">{tCommon("loading")}</p>
+      <p className="text-ink-muted">{tCommon("loading")}</p>
     </div>) : (
-        <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 relative">
+        <div className="min-h-screen bg-canvas flex flex-col items-center justify-center p-6 relative">
 
-            <div className="absolute top-8 right-8">
-                <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center gap-2 px-5 py-2.5 bg-surface-card border border-brand/10 text-text-muted rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm hover:text-danger hover:border-danger/20 transition-all active:scale-95">
+            <div className="absolute top-8 right-8 flex items-center gap-3">
+                <ThemeToggle />
+                <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center gap-2 px-5 py-2.5 bg-card border border-line text-ink-muted rounded-full font-semibold text-xs uppercase tracking-[0.2em] hover:text-danger hover:border-danger/30 transition-all active:scale-95">
                     <LogOut size={16} /> {tCommon("logout")}
                 </button>
             </div>
 
             <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* JOIN CARD */}
-                <div className="bg-surface-card p-8 rounded-3xl shadow-xl border border-brand/5 flex flex-col h-full">
-                    <div className="w-12 h-12 bg-success/20 text-brand-accent rounded-2xl flex items-center justify-center mb-6">
+                <div className="bg-card p-8 rounded-3xl border border-line flex flex-col h-full">
+                    <div className="w-12 h-12 bg-accent/10 text-accent rounded-2xl flex items-center justify-center mb-6">
                         <Hash size={24} />
                     </div>
-                    <h2 className="text-2xl font-black text-brand mb-2">{t("join.title")}</h2>
-                    <p className="text-text-muted mb-8 text-sm">{t("join.description")}</p>
-                    <input id="joinCode" name="joinCode" value={joinCode} onChange={handleMaskCode} placeholder="000-000" className="w-full p-4 text-brand bg-surface border-2 border-transparent rounded-xl mb-4 outline-none focus:border-brand-accent transition-all font-mono text-lg tracking-widest" />
-                    <button onClick={handleJoin} disabled={!joinCode || joinCode.length < 7} className="mt-auto w-full bg-brand-accent text-brand font-bold py-4 rounded-xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 group">
+                    <h2 className="text-2xl font-semibold tracking-tight text-ink mb-2">{t("join.title")}</h2>
+                    <p className="text-ink-muted mb-8 text-sm">{t("join.description")}</p>
+                    <input id="joinCode" name="joinCode" value={joinCode} onChange={handleMaskCode} placeholder="ABCD-2345" className="w-full p-4 text-ink bg-subtle border-2 border-transparent rounded-2xl mb-4 outline-none placeholder:text-ink-subtle focus:border-accent transition-all font-mono text-lg tracking-widest" />
+                    <button onClick={handleJoin} disabled={joinCodeLength !== 6 && joinCodeLength !== 8} className="mt-auto w-full bg-accent text-on-accent font-semibold py-4 rounded-full hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 group">
                         {t("join.button")} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
 
                 {/* CREATE CARD */}
-                <div className="bg-brand p-8 rounded-3xl shadow-xl text-white relative overflow-hidden flex flex-col h-full">
+                <div className="bg-inverse p-8 rounded-3xl text-on-inverse relative overflow-hidden flex flex-col h-full">
                     <div className="relative z-10 h-full flex flex-col">
-                        <div className="w-12 h-12 bg-white/10 text-brand-accent rounded-2xl flex items-center justify-center mb-6">
+                        <div className="w-12 h-12 bg-on-inverse/10 text-accent rounded-2xl flex items-center justify-center mb-6">
                             <PlusCircle size={24} />
                         </div>
-                        <h2 className="text-2xl font-black mb-2">{t("create.title")}</h2>
-                        <p className="text-white/70 mb-8 text-sm">{t("create.description")}</p>
-                        <button onClick={() => setIsModalOpen(true)} className="mt-auto w-full bg-white text-brand font-bold py-4 rounded-xl hover:bg-surface transition-all flex items-center justify-center gap-2 shadow-lg">
+                        <h2 className="text-2xl font-semibold tracking-tight mb-2">{t("create.title")}</h2>
+                        <p className="text-on-inverse/70 mb-8 text-sm">{t("create.description")}</p>
+                        <button onClick={() => setIsModalOpen(true)} className="mt-auto w-full bg-on-inverse text-inverse font-semibold py-4 rounded-full hover:bg-accent hover:text-on-accent transition-all flex items-center justify-center gap-2">
                             <Building2 size={18} /> {t("create.button")}
                         </button>
                     </div>
@@ -112,44 +103,44 @@ export default function LobbyPage() {
             {/* MODAL: CREATE COMPANY */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
-                    <div className="absolute inset-0 bg-brand/40 backdrop-blur-md" onClick={() => !loading && setIsModalOpen(false)}></div>
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => !loading && setIsModalOpen(false)}></div>
 
                     <form
                         onSubmit={handleCreate}
-                        className="relative w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl border border-brand/5"
+                        className="relative w-full max-w-md bg-card rounded-3xl p-10 shadow-2xl border border-line"
                     >
                         <button
                             type="button"
                             onClick={() => setIsModalOpen(false)}
-                            className="absolute top-6 right-6 text-text-muted hover:text-brand transition-colors"
+                            className="absolute top-6 right-6 text-ink-subtle hover:text-ink transition-colors"
                         >
                             <X size={24} />
                         </button>
 
-                        <div className="w-16 h-16 bg-brand/5 text-brand rounded-2xl flex items-center justify-center mb-6">
+                        <div className="w-16 h-16 bg-accent/10 text-accent rounded-2xl flex items-center justify-center mb-6">
                             <Building2 size={32} />
                         </div>
 
-                        <h3 className="text-2xl font-black text-brand mb-2">{t("create.modalTitle")}</h3>
-                        <p className="text-text-muted text-sm mb-8">{t("create.modalDescription")}</p>
+                        <h3 className="text-2xl font-semibold tracking-tight text-ink mb-2">{t("create.modalTitle")}</h3>
+                        <p className="text-ink-muted text-sm mb-8">{t("create.modalDescription")}</p>
 
                         <div className="space-y-6">
                             <div>
-                                <label className="text-[10px] font-black text-brand uppercase tracking-widest ml-1">{t("create.nameLabel")}</label>
+                                <label className="text-[10px] font-semibold text-ink-subtle uppercase tracking-[0.2em] ml-1">{t("create.nameLabel")}</label>
                                 <input
                                     autoFocus
                                     required
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
                                     placeholder={t("create.namePlaceholder")}
-                                    className="w-full mt-2 p-4 bg-surface text-brand font-bold rounded-2xl border-2 border-transparent focus:border-brand-accent outline-none transition-all"
+                                    className="w-full mt-2 p-4 bg-subtle text-ink font-semibold rounded-2xl border-2 border-transparent placeholder:text-ink-subtle focus:border-accent outline-none transition-all"
                                 />
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={!companyName || loading}
-                                className="w-full bg-brand text-white font-bold py-4 rounded-2xl shadow-xl shadow-brand/20 hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                                className="w-full bg-inverse text-on-inverse font-semibold py-4 rounded-full hover:bg-accent hover:text-on-accent disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                             >
                                 {loading ? <Loader2 className="animate-spin" /> : t("create.confirm")}
                             </button>

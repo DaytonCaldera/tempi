@@ -16,7 +16,7 @@ export default function DashboardClientWrapper({ children }: { children: React.R
     const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
     return (
-        <div className="flex h-screen bg-surface overflow-hidden">
+        <div className="flex h-screen bg-canvas overflow-hidden">
             {/* SIDEBAR */}
             <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
 

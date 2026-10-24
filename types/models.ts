@@ -44,6 +44,10 @@ export interface Organization {
     status?: "active" | "closed";
     closedAt?: Date;
     closedBy?: string; // Email of who closed it
+    /** Memberships it had when it was closed, for restoring it (see closeOrganization). Missing on older closures */
+    closedMemberships?: { userId: ObjectId; membership: Membership }[];
+    reopenedAt?: Date;
+    reopenedBy?: string;
 }
 
 export interface Plan {

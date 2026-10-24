@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getDb } from '@/lib/api';
-import { ROLES } from '@/lib/constants';
+import { getDb, toObjectId } from '@/lib/api';
+import { LEGAL, ROLES } from '@/lib/constants';
+import { getPlanUsage } from '@/lib/plans';
+import PlanUsageCard from '@/components/admin/PlanUsageCard';
 import { hasPermission } from '@/lib/permissions';
 import { getClientTenantQuery, getTenantQuery, getUserTenantQuery } from '@/lib/tenant-guard';
-import { canCloseOrganization, OPEN_ORGANIZATION } from '@/lib/organizations';
+import { canCloseOrganization, OPEN_ORGANIZATION, otherActiveMemberships } from '@/lib/organizations';
 import type { Organization, User } from '@/types/models';
 import UserManagementClient, { type UserRow } from "./UserManagementClient";
 
@@ -38,14 +40,18 @@ export default async function UserManagementPage() {
     });
 
     const departments = departmentsRaw.map(dept => ({ _id: dept._id.toString(), name: dept.name as string }));
+    const clientId = toObjectId(session.user.clientId);
+    const usage = clientId ? await getPlanUsage(clientId) : null;
 
     return (
         <div className="p-6 lg:p-10">
+            {usage && <div className="mb-8"><PlanUsageCard usage={usage} contactEmail={LEGAL.contactEmail} /></div>}
             <UserManagementClient
                 users={users}
                 departments={departments}
                 client={organization ? { _id: organization._id.toString(), code: organization.clientCode, name: organization.name } : null}
                 canCloseOrganization={!!organization && !!session.user.clientId && canCloseOrganization(session, organization)}
+                isLastOrganization={otherActiveMemberships(session.user.organizations, session.user.clientId ?? "").length === 0}
             />
         </div>
     );

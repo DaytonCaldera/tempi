@@ -17,7 +17,8 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
     const buttonRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const activeOrg = userOrgs.find(o => o.clientId.toString() === session?.user?.clientId);
+    const currentClientId = session?.user?.clientId;
+    const activeOrg = userOrgs.find(o => o.clientId.toString() === currentClientId);
 
     // Recalculate position whenever dropdown opens
     useEffect(() => {
@@ -45,7 +46,7 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
 
     // Saves the choice for the next sign-in, then switches the current session and reloads
     const handleSwitch = async (clientId: string) => {
-        if (clientId === session?.user?.clientId) return;
+        if (clientId === currentClientId) return;
         await fetch('/api/user/update-organization', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -61,32 +62,32 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
         <div
             ref={dropdownRef}
             style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
-            className="fixed bg-white rounded-2xl shadow-2xl border border-brand/5 overflow-hidden z-200 animate-in fade-in slide-in-from-top-2"
+            className="fixed bg-card rounded-2xl shadow-2xl border border-line overflow-hidden z-200 animate-in fade-in slide-in-from-top-2"
         >
-            <div className="p-3 border-b border-brand/5 bg-surface/50">
-                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">{t("myOrganizations")}</p>
+            <div className="p-3 border-b border-line bg-subtle">
+                <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-[0.2em]">{t("myOrganizations")}</p>
             </div>
             <div className="max-h-60 overflow-y-auto">
                 {userOrgs.map((org, index) => (
                     <button
                         key={index}
                         onClick={() => handleSwitch(org.clientId.toString())}
-                        className={`w-full flex items-center gap-3 p-3 text-left transition-all hover:bg-surface ${
-                            org.clientId === session?.user?.clientId ? 'bg-brand/5' : ''
+                        className={`w-full flex items-center gap-3 p-3 text-left transition-all hover:bg-subtle ${
+                            org.clientId === currentClientId ? 'bg-accent/10' : ''
                         }`}
                     >
-                        <div className={`w-2 h-2 rounded-full ${org.status === 'active' ? 'bg-success' : 'bg-status-danger'}`}></div>
+                        <div className={`w-2 h-2 rounded-full ${org.status === 'active' ? 'bg-success' : 'bg-danger'}`}></div>
                         <div className="flex-1">
-                            <p className="text-sm font-bold text-brand">{org.clientName}</p>
-                            <p className="text-[10px] text-text-muted uppercase font-bold">{labelOf(tRoles, org.role)}</p>
+                            <p className="text-sm font-semibold text-ink">{org.clientName}</p>
+                            <p className="text-[10px] text-ink-subtle uppercase font-semibold tracking-wider">{labelOf(tRoles, org.role)}</p>
                         </div>
-                        {org.clientId === session?.user?.clientId && (
-                            <Check size={16} className="text-brand-accent" />
+                        {org.clientId === currentClientId && (
+                            <Check size={16} className="text-accent" />
                         )}
                     </button>
                 ))}
             </div>
-            <a href="/lobby" className="block p-3 text-center text-xs font-bold text-brand hover:bg-brand/5 transition-all border-t border-brand/5">
+            <a href="/lobby" className="block p-3 text-center text-xs font-semibold text-ink hover:bg-subtle transition-all border-t border-line">
                 {t("joinOrCreate")}
             </a>
         </div>
@@ -97,28 +98,28 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
             <button
                 ref={buttonRef}
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-3 px-4 py-2 bg-brand/5 border border-brand/10 rounded-xl hover:bg-brand/10 transition-all"
+                className="flex items-center gap-3 w-full px-3 py-2 bg-card border border-line rounded-xl hover:border-line-strong transition-all"
             >
-                <div className="w-8 h-8 bg-brand text-white rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 shrink-0 bg-inverse text-on-inverse rounded-lg flex items-center justify-center">
                     <Building2 size={16} />
                 </div>
-                <div className="text-left hidden md:block">
-                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none mb-1">{t("organization")}</p>
-                    <p className="text-sm font-bold text-white truncate max-w-30">
+                <div className="text-left hidden md:block flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-[0.2em] leading-none mb-1">{t("organization")}</p>
+                    <p className="text-sm font-semibold text-ink truncate">
                         {activeOrg?.clientName || t("selectOrganization")}
                     </p>
                 </div>
-                <ChevronDown size={16} className={`text-white/40 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={16} className={`text-ink-subtle transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Portal renders dropdown outside sidebar's overflow context */}
             {typeof window !== "undefined" && createPortal(dropdown, document.body)}
 
             {isSwitching && (
-                <div className="fixed inset-0 bg-brand/10 backdrop-blur-sm z-[60] flex items-center justify-center">
-                    <div className="bg-white p-6 rounded-3xl shadow-2xl flex items-center gap-4 border border-brand/10">
-                        <RefreshCw className="animate-spin text-brand" size={24} />
-                        <p className="font-bold text-brand uppercase tracking-widest text-xs">{t("switching")}</p>
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] flex items-center justify-center">
+                    <div className="bg-card p-6 rounded-3xl shadow-2xl flex items-center gap-4 border border-line">
+                        <RefreshCw className="animate-spin text-accent" size={24} />
+                        <p className="font-semibold text-ink uppercase tracking-[0.2em] text-xs">{t("switching")}</p>
                     </div>
                 </div>
             )}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/authorize";
 import { PERMISSIONS } from "@/lib/constants";
 import { badRequest, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
+import { planLimitError } from "@/lib/plans";
 import { getTenantQuery } from "@/lib/tenant-guard";
 
 /** GET /api/admin/departments - Departments of the user's organization, sorted by name. */
@@ -23,18 +24,21 @@ export async function GET() {
     }
 }
 
-/** POST /api/admin/departments - Creates a department in the user's organization. Body: { name, description } */
+/** POST /api/admin/departments - Creates a department in the user's organization, if its plan allows another. Body: { name, description } */
 export async function POST(req: Request) {
     const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
     if (error) return error;
-    const clientId = toObjectId(session.user.clientId);
-    if (!clientId) return unauthorized();
 
     try {
         const { name, description } = await req.json();
         if (!name) return badRequest("nameRequired");
 
         const db = await getDb();
+        const clientId = toObjectId(session.user.clientId);
+        if (!clientId) return unauthorized();
+        const limitError = await planLimitError(clientId, "departments");
+        if (limitError) return limitError;
+
         const newDepartment = { name, description, clientId, createdAt: new Date() };
         const result = await db.collection("departments").insertOne(newDepartment);
 
@@ -45,12 +49,10 @@ export async function POST(req: Request) {
     }
 }
 
-/** PATCH /api/admin/departments - Renames a department of the user's organization. Body: { id, name, description } */
+/** PATCH /api/admin/departments - Renames a department of the user's organization. Body: { id, name, description? } */
 export async function PATCH(req: Request) {
     const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
     if (error) return error;
-    const clientId = toObjectId(session.user.clientId);
-    if (!clientId) return unauthorized();
 
     try {
         const { id, name, description } = await req.json();
@@ -59,8 +61,9 @@ export async function PATCH(req: Request) {
 
         const db = await getDb();
         const result = await db.collection("departments").updateOne(
-            { _id: departmentId, clientId }, // Scoped to the organization
-            { $set: { name, description } }
+            { _id: departmentId, ...getTenantQuery(session) }, // Scoped to the organization
+            // The form only sends the name: a missing description must not erase the stored one
+            { $set: { name, ...(description !== undefined && { description }) } }
         );
         if (result.matchedCount === 0) return notFound("departmentNotFoundOrDenied");
 

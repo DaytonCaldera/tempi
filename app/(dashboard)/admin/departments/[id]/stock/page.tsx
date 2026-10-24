@@ -26,10 +26,10 @@ export default async function DepartmentStockPage({ params }: { params: Promise<
     return (
         <div className="p-6 lg:p-10">
             <div className="mb-6">
-                <h1 className="text-2xl font-black text-[#171717]">
+                <h1 className="text-2xl font-semibold text-ink">
                     {t('pageTitle', { name: department.name })}
                 </h1>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
+                <p className="text-xs font-bold text-ink-subtle uppercase tracking-widest mt-1">
                     {t('pageSubtitle')}
                 </p>
             </div>

@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import AuthProvider from "@/components/SessionProvider";
 import { NextIntlClientProvider } from "next-intl";
+import { THEME_SCRIPT } from "@/lib/theme-script";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -29,9 +30,13 @@ export default async function MainLayout({
     const locale = await getLocale();
 
     return (
-        <html lang={locale}>
+        <html lang={locale} suppressHydrationWarning>
+            <head>
+                {/* Sets the theme before the first paint. A plain <script>: next/script would run it after hydration */}
+                <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+            </head>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <main className="min-h-screen bg-[#0a0a0c] text-white selection:bg-purple-500/30">
+                <main className="min-h-screen bg-canvas text-ink selection:bg-accent/30">
                     <AuthProvider>
                         {/* Inherits locale, messages and timeZone from i18n/request.ts */}
                         <NextIntlClientProvider>

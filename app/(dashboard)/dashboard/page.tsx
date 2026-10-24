@@ -18,26 +18,20 @@ export default async function Dashboard() {
     }
 
     const t = await getTranslations('dashboard');
+    const tCommon = await getTranslations('common');
 
     return (
         <div className="p-0 lg:p-10">
+            <h1 className="mb-10 text-3xl font-semibold tracking-tight md:text-4xl">{tCommon('dashboard')}</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Link
                     href="/admin/reports"
-                    className="group flex items-center justify-between gap-4 p-8 bg-brand text-white rounded-[2.5rem] shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all"
+                    className="group flex flex-col rounded-3xl border border-line bg-card p-7 transition hover:border-line-strong hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-                            <FileText size={26} className="text-brand-accent" />
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-sm font-black uppercase tracking-widest">{t('reportsTitle')}</p>
-                            <p className="text-xs font-bold text-white/50">{t('reportsDescription')}</p>
-                        </div>
-                    </div>
-                    <div className="w-10 h-10 bg-brand-accent text-brand rounded-xl flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
-                        <ArrowRight size={18} strokeWidth={3} />
-                    </div>
+                    <FileText className="mb-6 h-6 w-6 text-accent" />
+                    <h2 className="mb-2 text-xl font-semibold tracking-tight">{t('reportsTitle')}</h2>
+                    <p className="leading-relaxed text-ink-muted">{t('reportsDescription')}</p>
+                    <ArrowRight className="mt-6 h-4 w-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
                 </Link>
             </div>
         </div>

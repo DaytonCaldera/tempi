@@ -7,22 +7,22 @@ interface DataTableProps {
 
 export function DataTable({ headers, children }: DataTableProps) {
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="w-full bg-card rounded-3xl border border-line overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-100">
+            <tr className="bg-subtle/60 border-b border-line">
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  className={`px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-gray-400${header.hideOnMobile ? " hidden md:block" : ""}`}
+                  className={`px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-subtle${header.hideOnMobile ? " hidden md:block" : ""}`}
                 >
                   {header.title}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-line">
             {children}
           </tbody>
         </table>
@@ -35,7 +35,7 @@ export function DataTableRow({  children,  onClick, className = ""}: {  children
   return (
     <tr
       onClick={onClick}
-      className={`hover:bg-gray-200/50 transition-colors duration-150 ${onClick ? "cursor-pointer" : ""} ${className}`}
+      className={`hover:bg-subtle/60 transition-colors duration-150 ${onClick ? "cursor-pointer" : ""} ${className}`}
     >
       {children}
     </tr>
@@ -44,7 +44,7 @@ export function DataTableRow({  children,  onClick, className = ""}: {  children
 
 export function DataTableCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <td className={`px-6 py-4 text-sm text-[#171717] ${className}`}>
+    <td className={`px-6 py-4 text-sm text-ink ${className}`}>
       {children}
     </td>
   );

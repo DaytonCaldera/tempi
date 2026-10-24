@@ -5,7 +5,7 @@ import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
 import { assignedDepartmentIds, findOwnDepartment } from "@/lib/departments";
 import type { MovementType, StockItem } from "@/types/models";
 
-const MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.SUPERADMIN];
+const MANAGEMENT_ROLES = [ROLES.ADMIN];
 
 /**
  * PATCH /api/admin/inventory/[id]/move

@@ -11,7 +11,7 @@ function Loading() {
   const t = useTranslations("common");
   return (
     <div className="flex items-center justify-center min-h-screen p-6">
-      <p className="text-gray-500">{t("loading")}</p>
+      <p className="text-ink-subtle">{t("loading")}</p>
     </div>
   );
 }
@@ -31,6 +31,8 @@ export default function Home() {
 
     if (session?.user?.isActive === false) {
       router.replace("/unauthorized");
+    } else if (role === ROLES.SUPERADMIN) {
+      router.replace("/superadmin");
     } else if (!role || role === ROLES.NEW_USER) {
       // No organization yet: create or join one
       router.replace("/lobby");

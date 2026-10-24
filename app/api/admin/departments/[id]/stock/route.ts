@@ -3,12 +3,13 @@ import { requirePermission } from '@/lib/authorize';
 import { getDb, notFound, serverError, toObjectId } from '@/lib/api';
 import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
+import { planLimitError } from '@/lib/plans';
 
 type Params = { params: Promise<{ id: string }> };
 
 /**
  * POST /api/admin/departments/[id]/stock
- * Adds a product to a department's inventory.
+ * Adds a product to a department's inventory, if the organization's plan allows another.
  * Body: { name, sku, unit, quantity, minStock }
  */
 export async function POST(req: Request, { params }: Params) {
@@ -19,6 +20,8 @@ export async function POST(req: Request, { params }: Params) {
         const departmentId = toObjectId((await params).id);
         const department = departmentId && await findOwnDepartment(session, departmentId);
         if (!department) return notFound("departmentNotFound");
+        const limitError = await planLimitError(department.clientId, "items");
+        if (limitError) return limitError;
 
         const body = await req.json();
         const db = await getDb();
