@@ -25,6 +25,8 @@ export const AUDIT_ACTIONS = {
     // The superadmin created or edited a plan (app/(superadmin)/superadmin/plans/actions.ts)
     CREATE_PLAN: "superadmin.createPlan",
     UPDATE_PLAN: "superadmin.updatePlan",
+    // An admin imported products from a file (app/api/admin/departments/[id]/stock/import)
+    IMPORT_STOCK: "stock.import",
     // A Lemon Squeezy webhook changed an organization's subscription (app/api/billing/webhook)
     SUBSCRIPTION: "billing.subscription",
 } as const;

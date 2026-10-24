@@ -123,8 +123,10 @@ export interface StockItem<Id = ObjectId> {
     _id: Id;
     departmentId: Id;
     departmentName: string;
+    /** Missing on products created before it was stored: scripts/backfill-stock-fields.js fills it in */
     clientId?: Id;
     productName: string;
+    /** Unique among the department's products that aren't deleted */
     sku: string;
     unit: string;
     category?: string;

@@ -3,9 +3,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Search, Plus, AlertTriangle, History, ArrowLeft } from "lucide-react";
+import { Search, Plus, AlertTriangle, History, ArrowLeft, Upload } from "lucide-react";
 import { useDepartmentStock, type StockRow } from "./useDepartmentStock";
 import { StockItemModal } from "./StockItemModal";
+import { StockImportModal } from "./StockImportModal";
 import { DeleteStockItemModal } from "./DeleteStockItemModal";
 import { StockTable } from "./StockTable";
 
@@ -19,11 +20,13 @@ interface StockManagementClientProps {
 export default function StockManagementClient({ initialInventory, departmentId, departmentName }: StockManagementClientProps) {
     const t = useTranslations("stock");
     const router = useRouter();
-    const { inventory, quickMove, remove } = useDepartmentStock(departmentId, initialInventory);
+    const { inventory, quickMove, remove, refresh } = useDepartmentStock(departmentId, initialInventory);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [formKey, setFormKey] = useState(0);
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [importKey, setImportKey] = useState(0);
     const [editingItem, setEditingItem] = useState<StockRow | null>(null);
     const [deletingItem, setDeletingItem] = useState<StockRow | null>(null);
 
@@ -55,6 +58,17 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 }}
             />
 
+            <StockImportModal
+                key={`import-${importKey}`} // Unlike the form's, so the two siblings' keys never match
+                isOpen={isImportOpen}
+                departmentId={departmentId}
+                onClose={() => setIsImportOpen(false)}
+                onImported={() => {
+                    refresh();
+                    router.refresh();
+                }}
+            />
+
             <DeleteStockItemModal
                 item={deletingItem}
                 onCancel={() => setDeletingItem(null)}
@@ -77,6 +91,12 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     <div className="flex items-center gap-3">
                         <button onClick={() => openForm(null)} className="flex items-center gap-2 px-4 py-2 bg-inverse text-on-inverse rounded-xl text-xs font-bold uppercase hover:bg-accent hover:text-on-accent transition-all">
                             <Plus size={16} /> {t("addProduct")}
+                        </button>
+                        <button
+                            onClick={() => { setImportKey(key => key + 1); setIsImportOpen(true); }}
+                            className="flex items-center gap-2 px-4 py-2 bg-card border border-line text-ink-muted rounded-xl text-xs font-bold uppercase hover:bg-subtle transition-all"
+                        >
+                            <Upload size={16} /> {t("importProducts")}
                         </button>
                         <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-card border border-line text-ink-muted rounded-xl text-xs font-bold uppercase hover:bg-subtle transition-all">
                             <History size={16} /> {t("viewReport")}

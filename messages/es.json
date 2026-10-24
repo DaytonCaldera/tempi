@@ -22,7 +22,8 @@
         "system": "Sistema",
         "user": "Usuario",
         "backToHome": "Regresar al inicio",
-        "back": "Volver"
+        "back": "Volver",
+        "close": "Cerrar"
     },
     "errors": {
         "unauthorized": "No autorizado",
@@ -76,7 +77,10 @@
         "billingNotConfigured": "Los pagos en línea aún no están disponibles. Escríbenos para cambiar tu plan.",
         "planNotPurchasable": "Este plan no se puede comprar en línea. Escríbenos para contratarlo.",
         "checkoutFailed": "No se pudo iniciar el pago. Inténtalo de nuevo en unos minutos.",
-        "ownerOnly": "Solo el propietario de la organización puede gestionar la suscripción."
+        "ownerOnly": "Solo el propietario de la organización puede gestionar la suscripción.",
+        "importEmpty": "El archivo no tiene filas para importar",
+        "importTooManyRows": "Se pueden importar hasta {max} filas a la vez. Divide el archivo.",
+        "importConflict": "Alguien agregó uno de estos SKU mientras se importaba. Revisa la vista previa e inténtalo de nuevo."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -100,6 +104,7 @@
         "INITIAL_STOCK": "Inventario inicial",
         "RECONCILIATION": "Conciliación de inventario",
         "CORRECTION": "Corrección (deshacer)",
+        "IMPORT": "Importación de inventario",
         "none": "Sin justificación"
     },
     "nav": {
@@ -358,6 +363,73 @@
         "delete": {
             "title": "Eliminar producto",
             "confirm": "¿Estás seguro que deseas eliminar <b>{name}</b> ({sku})? Esta acción lo ocultará del inventario, pero se conservará su historial."
+        },
+        "importProducts": "Importar",
+        "import": {
+            "title": "Importar productos",
+            "intro": "Sube un archivo CSV o Excel (.xlsx) con una fila por producto, hasta {max} filas. Solo el nombre es obligatorio: sin SKU se genera uno, sin unidad se usan unidades y sin cantidad se empieza en 0.",
+            "chooseFile": "Elige o arrastra un archivo",
+            "downloadTemplate": "Descargar plantilla",
+            "templateFileName": "plantilla-inventario.xlsx",
+            "example": {
+                "water": "Agua 500 ml",
+                "rice": "Arroz",
+                "drinks": "Bebidas",
+                "pantry": "Despensa"
+            },
+            "existingLabel": "Productos cuyo SKU ya existe en el departamento",
+            "mode": {
+                "skip": {
+                    "title": "Saltarlos",
+                    "description": "Solo se agregan los productos nuevos."
+                },
+                "update": {
+                    "title": "Actualizarlos",
+                    "description": "Se cambian sus datos con los del archivo. Una cantidad distinta queda registrada como movimiento; las celdas vacías no cambian nada."
+                }
+            },
+            "reading": "Leyendo el archivo…",
+            "summary": {
+                "create": "{count, plural, one {# nuevo} other {# nuevos}}",
+                "update": "{count, plural, one {# se actualiza} other {# se actualizan}}",
+                "unchanged": "{count} sin cambios",
+                "skip": "{count, plural, one {# se salta} other {# se saltan}}",
+                "invalid": "{count} con errores"
+            },
+            "columns": {
+                "line": "Fila",
+                "product": "Producto / SKU",
+                "quantity": "Cantidad",
+                "result": "Resultado"
+            },
+            "status": {
+                "create": "Nuevo",
+                "update": "Actualizar",
+                "unchanged": "Sin cambios",
+                "skip": "Se salta",
+                "invalid": "Error"
+            },
+            "autoSku": "SKU automático",
+            "rowErrors": {
+                "nameRequired": "Falta el nombre",
+                "nameTooLong": "El nombre es demasiado largo (máx. 200)",
+                "skuTooLong": "El SKU es demasiado largo (máx. 50)",
+                "categoryTooLong": "La categoría es demasiado larga (máx. 100)",
+                "invalidUnit": "Unidad desconocida: usa unidades, kg, cajas o litros",
+                "invalidQuantity": "La cantidad debe ser un número desde 0",
+                "invalidMinStock": "El stock mínimo debe ser un número desde 0",
+                "duplicateSku": "SKU repetido en el archivo"
+            },
+            "invalidNote": "Las filas con errores no se importan. Corrígelas en el archivo y vuelve a subirlo si las necesitas.",
+            "confirm": "{count, plural, =0 {Nada que importar} one {Importar # producto} other {Importar # productos}}",
+            "doneMessage": "Listo: {created, plural, one {# producto nuevo} other {# productos nuevos}} y {updated, plural, one {# actualizado} other {# actualizados}}.",
+            "doneInvalid": "{count, plural, one {# fila no se importó} other {# filas no se importaron}} por errores.",
+            "errors": {
+                "unreadable": "No se pudo leer el archivo. Usa un CSV o un Excel (.xlsx).",
+                "missingNameColumn": "No se encontró la columna del nombre. La primera fila debe tener los títulos, como en la plantilla.",
+                "empty": "El archivo no tiene filas debajo de los títulos.",
+                "tooManyRows": "El archivo tiene {count} filas y se pueden importar hasta {max} a la vez. Divídelo en varios."
+            }
         }
     },
     "users": {
@@ -865,7 +937,8 @@
                 "changePlan": "Cambió el plan",
                 "createPlan": "Creó un plan",
                 "updatePlan": "Editó un plan",
-                "subscription": "Cambió la suscripción"
+                "subscription": "Cambió la suscripción",
+                "import": "Importó productos"
             },
             "change": "{field}: {before} → {after}",
             "fields": {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/authorize';
-import { getDb, notFound, serverError, toObjectId } from '@/lib/api';
+import { apiError, badRequest, getDb, isDuplicateKeyError, notFound, serverError, toObjectId } from '@/lib/api';
 import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { planLimitError } from '@/lib/plans';
@@ -24,21 +24,37 @@ export async function POST(req: Request, { params }: Params) {
         if (limitError) return limitError;
 
         const body = await req.json();
+        if (!body.name || !body.sku) return badRequest("nameAndSkuRequired");
         const db = await getDb();
+        const stock = db.collection('department_stock');
         const quantity = Number(body.quantity) || 0;
         const now = new Date();
 
-        const result = await db.collection('department_stock').insertOne({
-            departmentId: department._id,
-            departmentName: department.name,
-            productName: body.name,
-            sku: body.sku,
-            unit: body.unit,
-            quantity,
-            minStock: Number(body.minStock),
-            updatedAt: now,
-            createdAt: now
-        });
+        if (await stock.findOne({ departmentId: department._id, sku: body.sku, isDeleted: { $ne: true } })) {
+            return apiError("duplicateSku", 409);
+        }
+
+        let result;
+        try {
+            result = await stock.insertOne({
+                departmentId: department._id,
+                departmentName: department.name,
+                clientId: department.clientId,
+                productName: body.name,
+                sku: body.sku,
+                unit: body.unit,
+                quantity,
+                minStock: Number(body.minStock),
+                // Set explicitly: the unique SKU index only covers documents with isDeleted: false
+                isDeleted: false,
+                updatedAt: now,
+                createdAt: now
+            });
+        } catch (error) {
+            // Two saves of the same SKU at once: the index catches the one the check above missed
+            if (isDuplicateKeyError(error)) return apiError("duplicateSku", 409);
+            throw error;
+        }
 
         // The starting quantity is a movement too: reports work backwards from today's quantity
         if (quantity !== 0) {

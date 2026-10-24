@@ -19,14 +19,18 @@
     "next": "^16.2.6",
     "next-auth": "^5.0.0-beta.19",
     "next-intl": "^4.12.0",
+    "papaparse": "^5.5.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "read-excel-file": "^9.3.10",
     "swr": "^2.4.1",
-    "unstorage": "^1.10.1"
+    "unstorage": "^1.10.1",
+    "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.5",

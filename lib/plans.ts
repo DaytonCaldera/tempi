@@ -200,16 +200,16 @@ export async function getPlanUsage(clientId: ObjectId): Promise<PlanUsage> {
 }
 
 /**
- * Whether one more `resource` fits in the organization's plan. Returns null when it does, or the error
- * response to send (403, `{ error, code: "planLimit" }`, the message names the plan and the limit).
+ * Whether `adding` more of `resource` (one by default) fit in the organization's plan. Returns null when they do,
+ * or the error response to send (403, `{ error, code: "planLimit" }`, the message names the plan and the limit).
  */
-export async function planLimitError(clientId: ObjectId, resource: LimitedResource): Promise<NextResponse | null> {
+export async function planLimitError(clientId: ObjectId, resource: LimitedResource, adding = 1): Promise<NextResponse | null> {
     const plan = await getOrganizationPlan(clientId);
     const limit = limitOf(plan, resource);
     if (limit === null) return null;
 
     const used = (await countUsage(clientId))[resource];
-    if (used < limit) return null;
+    if (used + adding <= limit) return null;
 
     const t = await getTranslations("errors.planLimit");
     return NextResponse.json({ error: t(resource, { limit, plan: plan?.name ?? "" }), code: "planLimit" }, { status: 403 });

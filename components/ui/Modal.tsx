@@ -1,11 +1,13 @@
 "use client";
 
-export function Modal({ isOpen, onClose, title, children, footer }: { 
-    isOpen: boolean; 
-    onClose: () => void; 
-    title: string; 
+export function Modal({ isOpen, onClose, title, children, footer, wide = false }: {
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
     children: React.ReactNode;
     footer?: React.ReactNode;
+    /** For content like tables that needs more than the usual form width */
+    wide?: boolean;
 }) {
     if (!isOpen) return null;
 
@@ -15,7 +17,7 @@ export function Modal({ isOpen, onClose, title, children, footer }: {
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
             
             {/* Modal Content */}
-            <div className="relative bg-card border border-line w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
+            <div className={`relative bg-card border border-line w-full ${wide ? "max-w-3xl" : "max-w-md"} max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col`}>
                 <div className="p-6 border-b border-line flex justify-between items-center shrink-0">
                     <h3 className="text-lg font-semibold tracking-tight text-ink">{title}</h3>
                     <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-ink-subtle hover:text-ink hover:bg-subtle text-xl">&times;</button>

@@ -69,6 +69,8 @@ export const MOVEMENT_REASONS = {
     INITIAL_STOCK: "Inventario inicial",
     // Written by scripts/repair-stock-movements.js for quantity changes that were never logged
     RECONCILIATION: "Conciliación de inventario",
+    // Quantity set by a file import (lib/stock-import.ts) on a product that already existed
+    IMPORT: "Importación de inventario",
     // Reverses an earlier movement (the runner Undo); reports subtract it from the column it reverses
     CORRECTION: "Corrección",
 } as const;

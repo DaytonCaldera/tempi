@@ -83,6 +83,7 @@ class ImportDepartmentStock {
                             unit: "unidades", // Stored unit value, see STOCK_UNITS in lib/constants.ts
                             quantity: item.cantidad,
                             minStock: 5, // Default minimum stock
+                            isDeleted: false, // The unique SKU index only covers documents with isDeleted: false
                             updatedAt: new Date(),
                             createdAt: new Date(),
                             clientId: clientId

@@ -22,7 +22,8 @@
         "system": "System",
         "user": "User",
         "backToHome": "Back to home",
-        "back": "Back"
+        "back": "Back",
+        "close": "Close"
     },
     "errors": {
         "unauthorized": "Unauthorized",
@@ -76,7 +77,10 @@
         "billingNotConfigured": "Online payments aren't available yet. Write to us to change your plan.",
         "planNotPurchasable": "This plan can't be bought online. Write to us to get it.",
         "checkoutFailed": "The payment couldn't start. Try again in a few minutes.",
-        "ownerOnly": "Only the organization's owner can manage the subscription."
+        "ownerOnly": "Only the organization's owner can manage the subscription.",
+        "importEmpty": "The file has no rows to import",
+        "importTooManyRows": "Up to {max} rows can be imported at once. Split the file.",
+        "importConflict": "Someone added one of these SKUs during the import. Check the preview and try again."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -100,6 +104,7 @@
         "INITIAL_STOCK": "Initial stock",
         "RECONCILIATION": "Inventory reconciliation",
         "CORRECTION": "Correction (undo)",
+        "IMPORT": "Inventory import",
         "none": "No reason given"
     },
     "nav": {
@@ -358,6 +363,73 @@
         "delete": {
             "title": "Delete product",
             "confirm": "Are you sure you want to delete <b>{name}</b> ({sku})? It will be hidden from the inventory, but its history will be kept."
+        },
+        "importProducts": "Import",
+        "import": {
+            "title": "Import products",
+            "intro": "Upload a CSV or Excel (.xlsx) file with one row per product, up to {max} rows. Only the name is required: without a SKU one is generated, without a unit units are used, and without a quantity it starts at 0.",
+            "chooseFile": "Choose or drop a file",
+            "downloadTemplate": "Download template",
+            "templateFileName": "inventory-template.xlsx",
+            "example": {
+                "water": "Water 500 ml",
+                "rice": "Rice",
+                "drinks": "Drinks",
+                "pantry": "Pantry"
+            },
+            "existingLabel": "Products whose SKU the department already has",
+            "mode": {
+                "skip": {
+                    "title": "Skip them",
+                    "description": "Only new products are added."
+                },
+                "update": {
+                    "title": "Update them",
+                    "description": "Their details change to the file's. A different quantity is recorded as a movement; empty cells change nothing."
+                }
+            },
+            "reading": "Reading the file…",
+            "summary": {
+                "create": "{count} new",
+                "update": "{count} to update",
+                "unchanged": "{count} unchanged",
+                "skip": "{count} skipped",
+                "invalid": "{count} with errors"
+            },
+            "columns": {
+                "line": "Row",
+                "product": "Product / SKU",
+                "quantity": "Quantity",
+                "result": "Result"
+            },
+            "status": {
+                "create": "New",
+                "update": "Update",
+                "unchanged": "Unchanged",
+                "skip": "Skipped",
+                "invalid": "Error"
+            },
+            "autoSku": "Automatic SKU",
+            "rowErrors": {
+                "nameRequired": "The name is missing",
+                "nameTooLong": "The name is too long (max. 200)",
+                "skuTooLong": "The SKU is too long (max. 50)",
+                "categoryTooLong": "The category is too long (max. 100)",
+                "invalidUnit": "Unknown unit: use units, kg, boxes or liters",
+                "invalidQuantity": "The quantity must be a number from 0",
+                "invalidMinStock": "The minimum stock must be a number from 0",
+                "duplicateSku": "SKU repeated in the file"
+            },
+            "invalidNote": "Rows with errors aren't imported. Fix them in the file and upload it again if you need them.",
+            "confirm": "{count, plural, =0 {Nothing to import} one {Import # product} other {Import # products}}",
+            "doneMessage": "Done: {created, plural, one {# new product} other {# new products}} and {updated} updated.",
+            "doneInvalid": "{count, plural, one {# row wasn't imported} other {# rows weren't imported}} because of errors.",
+            "errors": {
+                "unreadable": "The file couldn't be read. Use a CSV or an Excel file (.xlsx).",
+                "missingNameColumn": "The name column wasn't found. The first row must have the titles, as in the template.",
+                "empty": "The file has no rows below the titles.",
+                "tooManyRows": "The file has {count} rows and up to {max} can be imported at once. Split it into several."
+            }
         }
     },
     "users": {
@@ -865,7 +937,8 @@
                 "changePlan": "Changed the plan",
                 "createPlan": "Created a plan",
                 "updatePlan": "Edited a plan",
-                "subscription": "Subscription changed"
+                "subscription": "Subscription changed",
+                "import": "Imported products"
             },
             "change": "{field}: {before} → {after}",
             "fields": {

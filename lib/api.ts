@@ -21,13 +21,16 @@ export function toObjectId(id: unknown): ObjectId | null {
     return typeof id === "string" && ObjectId.isValid(id) ? new ObjectId(id) : null;
 }
 
+/** Whether a MongoDB write failed on a unique index (e.g. a SKU already used in the department). */
+export const isDuplicateKeyError = (error: unknown) => (error as { code?: number } | null)?.code === 11000;
+
 /** Key of a message in the "errors" namespace of messages/*.json. */
 export type ErrorKey = keyof typeof en.errors;
 
-/** Error response with the message translated to the request's locale. */
-export async function apiError(key: ErrorKey, status: number) {
+/** Error response with the message translated to the request's locale (`values` fill its {placeholders}). */
+export async function apiError(key: ErrorKey, status: number, values?: Record<string, string | number>) {
     const t = await getTranslations("errors");
-    return NextResponse.json({ error: t(key) }, { status });
+    return NextResponse.json({ error: t(key, values) }, { status });
 }
 
 export const unauthorized = () => apiError("unauthorized", 401);

@@ -5,16 +5,10 @@ import { Package, Hash, Ruler, RefreshCw } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { usePlanLimitDialog } from "@/components/admin/PlanLimitDialog";
 import { STOCK_UNITS } from "@/lib/constants";
+import { generateSKU } from "@/lib/sku";
 import type { StockRow } from "./useDepartmentStock";
 
 export type StockItemForm = { name: string; sku: string; unit: string; quantity: number; minStock: number };
-
-/** Random SKU with the department prefix, e.g. "LOG-4832". */
-export const generateSKU = (departmentName: string) => {
-    const prefix = departmentName.substring(0, 3).toUpperCase().replace(/\s/g, 'X');
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    return `${prefix}-${randomNum}`;
-};
 
 interface StockItemModalProps {
     isOpen: boolean;
