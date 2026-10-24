@@ -1,6 +1,5 @@
 import { useFormatter, useTranslations } from "next-intl";
 import type { ConsumptionReportDepartment } from "@/types/models";
-import type { DateRange } from "./useConsumptionReport";
 
 // Next.js layouts use fixed-height, scrolling containers; reset them so the browser prints every page
 const PRINT_STYLES = `
@@ -20,14 +19,15 @@ const PRINT_STYLES = `
 
 interface PrintableReportProps {
     title: string;
-    range: DateRange;
+    /** The instants the report covers (null until both dates are picked) */
+    bounds: { start: Date; end: Date } | null;
     data: ConsumptionReportDepartment[];
     showDepartmentNames: boolean;
     currency: string;
 }
 
 /** Plain-table version of the report, hidden on screen and shown only when printing. */
-export function PrintableReport({ title, range, data, showDepartmentNames, currency }: PrintableReportProps) {
+export function PrintableReport({ title, bounds, data, showDepartmentNames, currency }: PrintableReportProps) {
     const t = useTranslations("reports");
     const format = useFormatter();
     const formatDate = (date: Date) => format.dateTime(date, { dateStyle: "medium", timeStyle: "short" });
@@ -41,7 +41,7 @@ export function PrintableReport({ title, range, data, showDepartmentNames, curre
                 <div className="mb-8 border-b-2 border-black pb-4">
                     <h1 className="text-3xl font-black uppercase tracking-tight">{title}</h1>
                     <p className="text-[1rem] font-bold mt-2 text-gray-700">
-                        {t("printView.range", { start: formatDate(new Date(range.start)), end: formatDate(new Date(range.end)) })}
+                        {bounds && t("printView.range", { start: formatDate(bounds.start), end: formatDate(bounds.end) })}
                     </p>
                     <p className="text-[1rem] mt-1 text-gray-600">
                         {t("printView.generated", { date: formatDate(new Date()) })}

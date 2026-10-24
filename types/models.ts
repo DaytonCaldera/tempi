@@ -34,6 +34,8 @@ export interface User {
     organizations: Membership[];
     activeOrganization?: ObjectId | null;
     startPage?: StartPage;
+    /** IANA time zone chosen in the account. Missing: the browser's (lib/timezone.ts) */
+    timeZone?: string;
 }
 
 /** An organization. Stored in the "clients" collection. */

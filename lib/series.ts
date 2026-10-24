@@ -1,9 +1,10 @@
 import type { Collection, Document } from "mongodb";
-import { timeZone } from "@/i18n/config";
+import { timeZone as defaultTimeZone } from "@/i18n/config";
 
 /**
- * Server only: counts over time for the charts (components/ui/stats.tsx BarChart), in the app's time zone.
- * Used by the superadmin overview (lib/superadmin.ts) and the organization dashboard (lib/dashboard.ts).
+ * Server only: counts over time for the charts (components/ui/stats.tsx BarChart), by hour or day on the clocks of
+ * a time zone: the viewer's for the organization dashboard (lib/dashboard.ts), the default one for the superadmin
+ * overview (lib/superadmin.ts).
  */
 
 /** A number and, when there is one to compare with, its value in the previous period. */
@@ -15,7 +16,7 @@ const DAY_MS = 24 * 60 * 60_000;
 const BUCKET_FORMAT = { hour: "%Y-%m-%dT%H:00", day: "%Y-%m-%d" };
 
 /** Documents per hour or day, keyed like fillBuckets() keys them. */
-export async function bucketCounts(collection: Collection<Document>, date: unknown, match: Document, unit: "hour" | "day") {
+export async function bucketCounts(collection: Collection<Document>, date: unknown, match: Document, unit: "hour" | "day", timeZone = defaultTimeZone) {
     const rows = await collection.aggregate([
         { $match: match },
         { $group: { _id: { $dateToString: { date: { $dateTrunc: { date, unit, timezone: timeZone } }, format: BUCKET_FORMAT[unit], timezone: timeZone } }, value: { $sum: 1 } } },
@@ -24,7 +25,7 @@ export async function bucketCounts(collection: Collection<Document>, date: unkno
 }
 
 /** Every bucket of the range in order, with 0 where nothing happened, so the chart has no gaps. */
-export function fillBuckets(counts: Map<string, number>, start: Date, end: Date, unit: "hour" | "day"): SeriesPoint[] {
+export function fillBuckets(counts: Map<string, number>, start: Date, end: Date, unit: "hour" | "day", timeZone = defaultTimeZone): SeriesPoint[] {
     const step = unit === "hour" ? 60 * 60_000 : DAY_MS;
     const keyOf = (date: Date) => {
         const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {

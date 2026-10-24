@@ -1,4 +1,5 @@
 import type { Session } from "next-auth";
+import { getTimeZone } from "next-intl/server";
 import type { Document, ObjectId } from "mongodb";
 import { getDb, toObjectId } from "@/lib/api";
 import { MOVEMENT_REASONS, PERMISSIONS, SYSTEM_REASONS } from "@/lib/constants";
@@ -63,13 +64,15 @@ async function dashboardScope(session: Session) {
 }
 
 export async function getDashboardData(session: Session): Promise<DashboardData> {
+    // Days of the chart on the viewer's clocks (i18n/request.ts)
+    const timeZone = (await getTimeZone()) ?? undefined;
     const { scope, departmentIds } = await dashboardScope(session);
     const now = new Date();
     const periodStart = new Date(now.getTime() - PERIOD_DAYS * DAY_MS);
     const previousStart = new Date(now.getTime() - 2 * PERIOD_DAYS * DAY_MS);
     const empty: DashboardData = {
         scope, departmentCount: 0, productCount: 0, inventoryValue: null, lowStock: { total: 0, items: [] },
-        movements: { value: 0 }, activePeople: { value: 0 }, series: fillBuckets(new Map(), new Date(now.getTime() - (SERIES_DAYS - 1) * DAY_MS), now, "day"), topConsumed: [],
+        movements: { value: 0 }, activePeople: { value: 0 }, series: fillBuckets(new Map(), new Date(now.getTime() - (SERIES_DAYS - 1) * DAY_MS), now, "day", timeZone), topConsumed: [],
     };
     if (departmentIds.length === 0) return empty;
 
@@ -100,7 +103,7 @@ export async function getDashboardData(session: Session): Promise<DashboardData>
         comparable ? movements.countDocuments(between(previousStart, periodStart)) : Promise.resolve(undefined),
         countPeople(between(periodStart, now)),
         comparable ? countPeople(between(previousStart, periodStart)) : Promise.resolve(undefined),
-        bucketCounts(movements, "$createdAt", between(seriesStart, now), "day"),
+        bucketCounts(movements, "$createdAt", between(seriesStart, now), "day", timeZone),
         consumedProducts(departmentIds, periodStart, now, showsCosts),
         showsCosts ? stockValue(departmentIds) : Promise.resolve(null),
     ]);
@@ -125,7 +128,7 @@ export async function getDashboardData(session: Session): Promise<DashboardData>
         },
         movements: { value: current, previous },
         activePeople: { value: people, previous: previousPeople },
-        series: fillBuckets(counts, seriesStart, now, "day"),
+        series: fillBuckets(counts, seriesStart, now, "day", timeZone),
         topConsumed: consumed,
     };
 }

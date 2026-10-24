@@ -11,6 +11,7 @@ import { getRolePermissions } from "@/lib/roles"
 import { recordDailyActivity } from "@/lib/activity"
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit"
 import { findUserByEmail, forgetCachedUsers } from "@/lib/users"
+import { isTimeZone } from "@/lib/timezone"
 import { getSuperAdminEmail, isPlaceholderOrg, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants"
 import { nameFromEmail, NEW_USER_DEFAULTS, SIGN_IN_METHODS } from "@/lib/auth-methods"
 import { MAGIC_LINK_MAX_AGE_SECONDS, sendMagicLink } from "@/lib/magic-link"
@@ -115,6 +116,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			const startedAt = Date.now();
 			Object.assign(token, await resolveContext(token, requestedClientId, fresh));
 			if (fresh) token.resolvedAt = startedAt;
+			// The time zone set in the account. Read from the users cache resolveContext just filled
+			const timeZone = (await findUserByEmail(token.email, { notBefore: token.resolvedAt }))?.timeZone;
+			token.timeZone = isTimeZone(timeZone) ? timeZone : null;
 			await recordLastSeen(token);
 			return token;
 		},
@@ -129,6 +133,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				session.user.organizations = token.organizations;
 				session.user.activeOrganization = token.clientId ?? undefined;
 				session.user.startPage = token.startPage ?? null;
+				session.user.timeZone = token.timeZone ?? null;
 			}
 			return session;
 		},

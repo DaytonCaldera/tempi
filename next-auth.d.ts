@@ -22,6 +22,8 @@ declare module "next-auth" {
       permissions?: Record<string, boolean>
       organizations?: SessionMembership[]
       startPage?: StartPage | null
+      /** The time zone set in the account, null to follow the browser (lib/timezone.ts) */
+      timeZone?: string | null
     } & DefaultSession["user"]
   }
 }
@@ -36,6 +38,7 @@ declare module "next-auth/jwt" {
     permissions?: Record<string, boolean>
     organizations?: SessionMembership[]
     startPage?: StartPage | null
+    timeZone?: string | null
     /** When the token was last resolved from a fresh DB read (ms). See findUserByEmail's notBefore. */
     resolvedAt?: number
     /** When users.lastSeenAt was last written for this session (ms). See recordLastSeen in auth.ts. */

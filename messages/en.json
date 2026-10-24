@@ -89,7 +89,8 @@
         "transferUnitMismatch": "The destination's product is counted in another unit. Change it in one of them to transfer.",
         "transferConflict": "The stock changed during the transfer. Check the quantities and try again.",
         "invalidCost": "The cost must be a number from 0.",
-        "invalidCurrency": "That currency isn't available."
+        "invalidCurrency": "That currency isn't available.",
+        "invalidTimeZone": "That time zone doesn't exist."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -793,7 +794,9 @@
             "title": "Preferences",
             "language": "Language",
             "theme": "Theme",
-            "startPage": "Start page"
+            "startPage": "Start page",
+            "timeZone": "Time zone",
+            "timeZoneAuto": "Automatic ({zone})"
         },
         "organizations": {
             "title": "My organizations",

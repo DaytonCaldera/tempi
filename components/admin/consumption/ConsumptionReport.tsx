@@ -36,7 +36,7 @@ export default function ConsumptionReport({ deptId, title: titleProp, canExport 
     const tPlan = useTranslations("plan");
     const format = useFormatter();
     const title = titleProp ?? t("title");
-    const { range, setRange, data, loading, limitedFrom, exportUrl, expandedId, details, toggleDetails } = useConsumptionReport(deptId);
+    const { range, setRange, bounds, data, loading, limitedFrom, exportUrl, expandedId, details, toggleDetails } = useConsumptionReport(deptId);
     const updateRange = (changes: Partial<DateRange>) => setRange({ ...range, ...changes });
 
     const handlePrint = (e: React.MouseEvent) => {
@@ -162,7 +162,7 @@ export default function ConsumptionReport({ deptId, title: titleProp, canExport 
             </div>
 
             {/* PRINT VIEW (hidden on screen) */}
-            <PrintableReport title={title} range={range} data={data} showDepartmentNames={!deptId} currency={currency} />
+            <PrintableReport title={title} bounds={bounds} data={data} showDepartmentNames={!deptId} currency={currency} />
         </div>
     );
 }

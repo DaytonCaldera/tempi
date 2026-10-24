@@ -1,33 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTimeZone } from "next-intl";
+import { zonedRange, zonedToday } from "@/lib/timezone";
 import type { ConsumptionReportDepartment, StockMovement } from "@/types/models";
 
 /** Same as HISTORY_LIMITED_HEADER in lib/consumption.ts (server only, so it can't be imported here) */
 const HISTORY_LIMITED_HEADER = "X-History-Limited-From";
 
+/** Wall-clock times as datetime-local inputs hold them ("2026-10-24T00:00"), in the user's time zone */
 export type DateRange = { start: string; end: string };
 export type MovementLog = StockMovement<string>;
 
-/** Formats a date for a <input type="datetime-local"> in the browser's timezone. */
-const toLocalInputValue = (date: Date) => {
-    const tzOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
-};
-
-/** Today from 00:00 to 23:59. */
-const todayRange = (): DateRange => ({
-    start: toLocalInputValue(new Date(new Date().setHours(0, 0, 0, 0))),
-    end: toLocalInputValue(new Date(new Date().setHours(23, 59, 59, 999)))
-});
-
-const rangeQuery = (range: DateRange) =>
-    `start=${new Date(range.start).toISOString()}&end=${new Date(range.end).toISOString()}`;
+/** The instants the range covers, for the server (which stores and compares UTC). */
+const rangeQuery = (bounds: { start: Date; end: Date }) =>
+    `start=${bounds.start.toISOString()}&end=${bounds.end.toISOString()}`;
 
 /**
  * Loads the consumption report for a date range (and optionally one department),
  * plus the movement log of the product row the user expands.
+ * The range is picked in the user's time zone (i18n/request.ts), not the device's: the two differ when the
+ * account sets one, and the report must match the times shown everywhere else.
  */
 export function useConsumptionReport(deptId?: string) {
-    const [range, setRange] = useState<DateRange>(todayRange);
+    // Always set: i18n/request.ts resolves one for every request
+    const timeZone = useTimeZone() ?? "UTC";
+    const [range, setRange] = useState<DateRange>(() => zonedToday(timeZone));
+    const bounds = useMemo(
+        () => (range.start && range.end ? zonedRange(range.start, range.end, timeZone) : null),
+        [range.start, range.end, timeZone]
+    );
     const [data, setData] = useState<ConsumptionReportDepartment[]>([]);
     const [loading, setLoading] = useState(true);
     // Set when the plan's history cut the start of the range (see lib/consumption.ts historyHeaders)
@@ -36,12 +36,12 @@ export function useConsumptionReport(deptId?: string) {
     const [loadedDetails, setLoadedDetails] = useState<{ query: string | null; logs: MovementLog[] }>({ query: null, logs: [] });
 
     useEffect(() => {
-        if (!range.start || !range.end) return;
+        if (!bounds) return;
 
         const loadReport = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/admin/reports/consumption?${rangeQuery(range)}${deptId ? `&deptId=${deptId}` : ""}`);
+                const res = await fetch(`/api/admin/reports/consumption?${rangeQuery(bounds)}${deptId ? `&deptId=${deptId}` : ""}`);
                 const limited = res.headers.get(HISTORY_LIMITED_HEADER);
                 setLimitedFrom(limited ? new Date(limited) : null);
                 setData(await res.json());
@@ -52,12 +52,12 @@ export function useConsumptionReport(deptId?: string) {
             }
         };
         loadReport();
-    }, [range, deptId]);
+    }, [bounds, deptId]);
 
     // Movements of the expanded row, reloaded when the range changes. Each result is stored with the
     // request it answers, so a slow response never shows under another row or range.
-    const detailsQuery = expandedId && range.start && range.end
-        ? `inventoryId=${expandedId}&${rangeQuery(range)}`
+    const detailsQuery = expandedId && bounds
+        ? `inventoryId=${expandedId}&${rangeQuery(bounds)}`
         : null;
     const details = loadedDetails.query === detailsQuery ? loadedDetails.logs : [];
 
@@ -83,9 +83,9 @@ export function useConsumptionReport(deptId?: string) {
         setExpandedId(current => (current === inventoryId ? null : inventoryId));
     };
 
-    const exportUrl = range.start && range.end
-        ? `/api/admin/reports/export?${rangeQuery(range)}${deptId ? `&deptId=${deptId}` : ""}`
+    const exportUrl = bounds
+        ? `/api/admin/reports/export?${rangeQuery(bounds)}${deptId ? `&deptId=${deptId}` : ""}`
         : null;
 
-    return { range, setRange, data, loading, limitedFrom, exportUrl, expandedId, details, toggleDetails };
+    return { range, setRange, bounds, data, loading, limitedFrom, exportUrl, expandedId, details, toggleDetails };
 }

@@ -9,7 +9,10 @@ export type Locale = (typeof locales)[number];
 /** Used when there is no cookie and the browser asks for no supported language. */
 export const defaultLocale: Locale = "es";
 
-/** Dates and times are shown in the organization's timezone, not the viewer's. */
+/**
+ * The time zone dates show in when the person has none yet (no account setting, browser not seen; lib/timezone.ts),
+ * and the one of server-side counts that aren't anyone's (the superadmin's daily activity).
+ */
 export const timeZone = "America/Costa_Rica";
 
 export const LOCALE_COOKIE = "NEXT_LOCALE";

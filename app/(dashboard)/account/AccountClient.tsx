@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { AlertTriangle, Building2, Check, LogOut, User } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import ThemeToggle from "@/components/ThemeToggle";
+import TimeZoneSetting from "./TimeZoneSetting";
 import { localeNames, locales } from "@/i18n/config";
 import { useLocaleSwitcher } from "@/i18n/useLocaleSwitcher";
 import { labelOf } from "@/i18n/labels";
@@ -179,6 +180,7 @@ export default function AccountClient({ ownedOrganizations, justClosedOrganizati
                         <p className="text-sm font-semibold text-ink">{t("preferences.theme")}</p>
                         <ThemeToggle />
                     </div>
+                    <TimeZoneSetting />
                     {canChooseStartPage && (
                         <div className="flex items-center justify-between gap-4">
                             <p className="text-sm font-semibold text-ink">{t("preferences.startPage")}</p>
