@@ -20,13 +20,21 @@ export const currencyOf = (organization: Pick<Organization, "currency"> | null |
 export const costSnapshot = (unitCost: number | null | undefined) => (unitCost !== null && unitCost !== undefined ? { unitCost } : {});
 
 /**
- * A number typed by a person: "1500", "1.5", "1,5", "1.500,50" or "₡1,500.50". Currency signs and spaces are
- * ignored; the last "." or "," is the decimal separator (like the import's amounts).
+ * An amount of money typed by a person: "1500", "1.5", "1,5", "1.500", "1.500,50" or "₡1,500.50". Currency signs
+ * and spaces are ignored. With both "." and ",", the last one is the decimal separator. With only one kind, it
+ * separates thousands when it repeats ("1.500.000") or has exactly 3 digits after it ("1.500", "1,500"), unless
+ * the whole part is 0 ("0.125", a cost per gram); otherwise it is the decimal separator ("1,5", "12.75").
  */
 function parseNumber(text: string) {
     let raw = text.replace(/[^\d.,-]/g, "");
-    const decimal = Math.max(raw.lastIndexOf("."), raw.lastIndexOf(","));
-    if (decimal !== -1) raw = raw.slice(0, decimal).replace(/[.,]/g, "") + "." + raw.slice(decimal + 1);
+    const separators = raw.match(/[.,]/g) ?? [];
+    const kinds = new Set(separators);
+    const last = Math.max(raw.lastIndexOf("."), raw.lastIndexOf(","));
+    const thousandsOnly = kinds.size === 1 && last !== -1 && (
+        separators.length > 1 || (raw.length - last - 1 === 3 && !/^-?0$/.test(raw.slice(0, last)))
+    );
+    if (thousandsOnly) raw = raw.replace(/[.,]/g, "");
+    else if (last !== -1) raw = raw.slice(0, last).replace(/[.,]/g, "") + "." + raw.slice(last + 1);
     return raw && /^-?\d+(\.\d+)?$/.test(raw) ? Number(raw) : NaN;
 }
 
