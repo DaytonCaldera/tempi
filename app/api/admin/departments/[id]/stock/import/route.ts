@@ -7,6 +7,7 @@ import { MOVEMENT_REASONS, PERMISSIONS, STOCK_UNITS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { planLimitError } from '@/lib/plans';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { afterStockChange } from '@/lib/stock-alerts';
 import { generateUniqueSKU } from '@/lib/sku';
 import {
     MAX_IMPORT_ROWS, validateImportRow,
@@ -201,6 +202,8 @@ export async function POST(req: Request, { params }: Params) {
                     throw error;
                 }
             }
+            // A new quantity can take a product to its minimum (or back above it), like a move
+            await afterStockChange(req, applied.map(a => a._id));
         }
 
         const summary = { create: 0, update: 0, unchanged: 0, skip: 0, invalid: 0 } satisfies ImportResponse["summary"];

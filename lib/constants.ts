@@ -76,7 +76,10 @@ export const MOVEMENT_REASONS = {
 } as const;
 
 /** Units a stock item can be counted in. Stored as-is in department_stock.unit; labels are in the "units" messages. */
-export const STOCK_UNITS = ["unidades", "kg", "cajas", "litros"] as const;
+/** Movements written by maintenance (sync, repair scripts), not by people: they don't count as activity. */
+export const SYSTEM_REASONS = [MOVEMENT_REASONS.INITIAL_SYNC, MOVEMENT_REASONS.RECONCILIATION];
+
+export const STOCK_UNITS =["unidades", "kg", "cajas", "litros"] as const;
 
 /** Minimum length of the reason the superadmin types for a support tool, so every audit entry says something useful. */
 export const SUPPORT_REASON_MIN_LENGTH = 10;

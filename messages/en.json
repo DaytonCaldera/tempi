@@ -80,7 +80,9 @@
         "ownerOnly": "Only the organization's owner can manage the subscription.",
         "importEmpty": "The file has no rows to import",
         "importTooManyRows": "Up to {max} rows can be imported at once. Split the file.",
-        "importConflict": "Someone added one of these SKUs during the import. Check the preview and try again."
+        "importConflict": "Someone added one of these SKUs during the import. Check the preview and try again.",
+        "tooManyAlertEmails": "You can add up to 5 addresses.",
+        "invalidEmail": "One of the addresses isn't valid."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -311,7 +313,26 @@
     },
     "dashboard": {
         "reportsTitle": "Consumption reports",
-        "reportsDescription": "Review your departments' consumption"
+        "reportsDescription": "Review your departments' consumption",
+        "scopeOrganization": "Whole organization · {count, plural, one {# department} other {# departments}}",
+        "scopeAssigned": "Your areas · {count, plural, one {# department} other {# departments}}",
+        "emptyOrganization": "There are no departments yet. Create the first one and add its products to see stock and activity here.",
+        "emptyAssigned": "You have no areas assigned yet. Ask an admin to assign you one.",
+        "createDepartment": "Create a department",
+        "lowStock": "Products low on stock",
+        "lowStockHint": "of {count, plural, one {# product} other {# products}}",
+        "movements": "Movements (7 days)",
+        "activePeople": "Active people (7 days)",
+        "products": "Products",
+        "productsHint": "in {count, plural, one {# department} other {# departments}}",
+        "movementsChart": "Stock movements",
+        "lowStockTitle": "Low stock",
+        "lowStockNone": "Every product is above its minimum.",
+        "lowStockMore": "and {count, plural, one {# more product} other {# more products}}",
+        "outOfStock": "Out of stock",
+        "minimum": "min. {amount}",
+        "topConsumed": "Most used (7 days)",
+        "topConsumedNone": "Nothing was used in the last 7 days."
     },
     "departments": {
         "title": "Departments",
@@ -461,6 +482,17 @@
             "lastTitle": "This is your only organization",
             "lastDescription": "Closing {name} leaves you without an organization. Your account stays active: we'll take you to your account page, where you can create or join another organization, or delete your account.",
             "confirmLast": "Close and leave me without an organization"
+        },
+        "alerts": {
+            "title": "Email alerts",
+            "description": "Lets you know when a product reaches its minimum stock, once each time it drops. Admins get it, and so do the addresses you add.",
+            "notConfigured": "Email isn't set up on this server: alerts are saved but not sent.",
+            "lowStockLabel": "Low stock alerts",
+            "lowStockDescription": "An email when a product is at or below its minimum.",
+            "extraLabel": "Other addresses (up to {max})",
+            "extraPlaceholder": "purchasing@company.com and Enter",
+            "remove": "Remove {email}",
+            "saved": "Saved"
         }
     },
     "reports": {
@@ -755,9 +787,6 @@
         "overview": {
             "title": "Overview",
             "subtitle": "How the whole app is being used",
-            "vsPrevious": "vs previous period",
-            "noChange": "no change",
-            "notComparable": "No previous period to compare",
             "usage": "Usage",
             "growth": "Growth",
             "metrics": {
@@ -782,13 +811,7 @@
             },
             "charts": {
                 "movements": "Stock movements",
-                "signUps": "New users",
-                "table": "Show as table",
-                "bucket": "Date",
-                "count": "Count",
-                "total": "{count} in the period",
-                "byHour": "By hour",
-                "byDay": "By day"
+                "signUps": "New users"
             },
             "activeUsers": "Active users",
             "dau": "Today",
@@ -938,7 +961,8 @@
                 "createPlan": "Created a plan",
                 "updatePlan": "Edited a plan",
                 "subscription": "Subscription changed",
-                "import": "Imported products"
+                "import": "Imported products",
+                "updateAlerts": "Changed the email alerts"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -1331,5 +1355,25 @@
         "title": "We couldn't start the payment",
         "toPlan": "See my plan",
         "toHome": "Back to home"
+    },
+    "stats": {
+        "notComparable": "No previous period to compare",
+        "noChange": "no change",
+        "vsPrevious": "vs previous period",
+        "table": "Show as table",
+        "bucket": "Date",
+        "count": "Count",
+        "total": "{count} in the period",
+        "byHour": "By hour",
+        "byDay": "By day"
+    },
+    "stockAlerts": {
+        "subjectOne": "Low stock: {product}",
+        "subjectMany": "{count} products low on stock",
+        "left": "{amount} left",
+        "outOfStock": "Out of stock",
+        "minimum": "Minimum: {amount}",
+        "button": "View inventory",
+        "footer": "You get this alert for the organization {organization}. Admins can turn it off in Staff > Email alerts."
     }
 }

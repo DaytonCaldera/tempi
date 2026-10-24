@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
 import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
 import { findOwnDepartment, runnerDepartmentIds } from "@/lib/departments";
+import { afterStockChange } from "@/lib/stock-alerts";
 import type { MovementType, StockItem } from "@/types/models";
 
 const MANAGEMENT_ROLES = [ROLES.ADMIN];
@@ -76,6 +77,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             await stock.updateOne({ _id: itemId }, { $inc: { quantity: -delta } });
             throw error;
         }
+
+        // Emails the admins when this move took it to its minimum (or clears the alert once it's back above)
+        await afterStockChange(req, [itemId]);
 
         return NextResponse.json({ success: true, newQuantity: newBalance });
     } catch (error) {

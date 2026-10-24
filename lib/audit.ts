@@ -13,6 +13,8 @@ export const AUDIT_ACTIONS = {
     CLOSE_ORGANIZATION: "organization.close",
     APPROVE_MEMBER: "member.approve",
     UPDATE_MEMBER: "member.update",
+    // An admin changed which emails the organization gets (app/api/admin/organization/alerts)
+    UPDATE_ALERTS: "organization.updateAlerts",
     // Superadmin support tools (app/(superadmin)/superadmin/organizations/[id]/actions.ts). details.reason says why
     REGENERATE_CODE: "organization.regenerateCode",
     TRANSFER_OWNERSHIP: "organization.transferOwnership",

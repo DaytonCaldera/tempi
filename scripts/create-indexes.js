@@ -40,6 +40,8 @@ const INDEXES = [
     // Consumption report and movement drill-down
     ['stock_movements', { inventoryId: 1, createdAt: 1 }, 'movements of an item by date'],
     ['stock_movements', { clientId: 1, createdAt: -1 }, 'movements of an organization'],
+    // Dashboard (lib/dashboard.ts): movements and consumption of some departments in a period
+    ['stock_movements', { departmentId: 1, createdAt: -1 }, 'movements of departments by date'],
     // Superadmin panel (lib/superadmin.ts): activity by period, and the audit log
     ['stock_movements', { createdAt: -1 }, 'movements of a period (superadmin overview)'],
     ['users', { lastSeenAt: -1 }, 'active users (superadmin overview)'],

@@ -3,8 +3,8 @@ import type { Collection, Document, ObjectId } from "mongodb";
 import { auth } from "@/auth";
 import { getDb, toObjectId } from "@/lib/api";
 import type { AuditEntry } from "@/lib/audit";
-import { getSuperAdminEmail, MOVEMENT_REASONS, ROLES } from "@/lib/constants";
-import { timeZone } from "@/i18n/config";
+import { getSuperAdminEmail, ROLES, SYSTEM_REASONS } from "@/lib/constants";
+import { bucketCounts, fillBuckets, type Metric } from "@/lib/series";
 import type { Membership, Organization, User } from "@/types/models";
 
 /**
@@ -42,9 +42,6 @@ export function periodRange(key: PeriodKey) {
     return { start, end, previousStart: new Date(start.getTime() - length), unit: key === "1d" ? "hour" as const : "day" as const };
 }
 
-/** Movements written by maintenance (sync, repair scripts), not by people: they don't count as activity. */
-export const SYSTEM_REASONS = [MOVEMENT_REASONS.INITIAL_SYNC, MOVEMENT_REASONS.RECONCILIATION];
-
 /** A user's creation date: createdAt, or the ObjectId's timestamp for users from before it was stored. */
 export const USER_CREATED_AT = { $ifNull: ["$createdAt", { $toDate: "$_id" }] };
 
@@ -63,8 +60,8 @@ export const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g,
 
 // ---------------------------------------------------------------- overview
 
-export type Metric = { value: number; previous?: number };
-export type SeriesPoint = { bucket: string; value: number };
+// Shared with the organization dashboard; re-exported for the superadmin pages
+export { bucketCounts, fillBuckets, type Metric, type SeriesPoint } from "@/lib/series";
 
 /** Everything the overview shows for one period. */
 export async function getOverview(key: PeriodKey) {
@@ -154,34 +151,6 @@ async function pendingApprovals() {
         { $group: { _id: null, count: { $sum: 1 }, oldest: { $min: "$organizations.joinedAt" } } },
     ]).toArray();
     return { pendingMembers: (result?.count as number) ?? 0, oldestPendingSince: (result?.oldest as Date | null) ?? null };
-}
-
-/** Documents per hour or day, keyed like fillBuckets() keys them. */
-export async function bucketCounts(collection: Collection<Document>, date: unknown, match: Document, unit: "hour" | "day") {
-    const rows = await collection.aggregate([
-        { $match: match },
-        { $group: { _id: { $dateToString: { date: { $dateTrunc: { date, unit, timezone: timeZone } }, format: BUCKET_FORMAT[unit], timezone: timeZone } }, value: { $sum: 1 } } },
-    ]).toArray();
-    return new Map(rows.map(row => [row._id as string, row.value as number]));
-}
-
-const BUCKET_FORMAT = { hour: "%Y-%m-%dT%H:00", day: "%Y-%m-%d" };
-
-/** Every bucket of the range in order, with 0 where nothing happened, so the chart has no gaps. */
-export function fillBuckets(counts: Map<string, number>, start: Date, end: Date, unit: "hour" | "day"): SeriesPoint[] {
-    const step = unit === "hour" ? 60 * 60_000 : DAY_MS;
-    const keyOf = (date: Date) => {
-        const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
-            timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
-        }).formatToParts(date).map(p => [p.type, p.value]));
-        return unit === "hour" ? `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:00` : `${parts.year}-${parts.month}-${parts.day}`;
-    };
-
-    // The first and last buckets are partial: the range starts and ends at the current time of day
-    const buckets = new Set<string>();
-    for (let time = start.getTime(); time < end.getTime(); time += step) buckets.add(keyOf(new Date(time)));
-    buckets.add(keyOf(end));
-    return [...buckets].map(bucket => ({ bucket, value: counts.get(bucket) ?? 0 }));
 }
 
 // ---------------------------------------------------------------- organizations

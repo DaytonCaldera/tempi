@@ -8,7 +8,10 @@ import { hasPermission } from '@/lib/permissions';
 import { getClientTenantQuery, getTenantQuery, getUserTenantQuery } from '@/lib/tenant-guard';
 import { canCloseOrganization, OPEN_ORGANIZATION, otherActiveMemberships } from '@/lib/organizations';
 import type { Organization, User } from '@/types/models';
+import { emailConfigured } from '@/lib/email';
+import { alertSettingsOf } from '@/lib/stock-alerts';
 import UserManagementClient, { type UserRow } from "./UserManagementClient";
+import AlertSettingsCard from "./AlertSettingsCard";
 
 export default async function UserManagementPage() {
     const session = await auth();
@@ -19,7 +22,7 @@ export default async function UserManagementPage() {
     const [usersRaw, departmentsRaw, organization] = await Promise.all([
         db.collection<User>('users').find(getUserTenantQuery(session)).toArray(),
         db.collection('departments').find(getTenantQuery(session)).toArray(),
-        db.collection<Organization>('clients').findOne({ ...getClientTenantQuery(session), ...OPEN_ORGANIZATION }, { projection: { clientCode: 1, name: 1, ownerEmail: 1 } }),
+        db.collection<Organization>('clients').findOne({ ...getClientTenantQuery(session), ...OPEN_ORGANIZATION }, { projection: { clientCode: 1, name: 1, ownerEmail: 1, alerts: 1 } }),
     ]);
 
     // Flatten each user's membership in the current organization
@@ -46,6 +49,7 @@ export default async function UserManagementPage() {
     return (
         <div className="p-6 lg:p-10">
             {usage && <div className="mb-8"><PlanUsageCard usage={usage} /></div>}
+            {organization && <div className="mb-8"><AlertSettingsCard initial={alertSettingsOf(organization)} emailAvailable={emailConfigured()} /></div>}
             <UserManagementClient
                 users={users}
                 departments={departments}

@@ -56,6 +56,8 @@ export interface Organization {
     subscription?: Subscription;
     /** Free time on another plan (e.g. Pro for the organizations that existed before paid plans). See lib/plans.ts */
     trial?: { planId: ObjectId; endsAt: Date };
+    /** Emails the organization gets. Missing: the defaults of alertSettingsOf (lib/stock-alerts.ts) */
+    alerts?: { lowStockEmail?: boolean; extraEmails?: string[] };
 }
 
 /** Lemon Squeezy subscription statuses (https://docs.lemonsqueezy.com/api/subscriptions). */
@@ -132,6 +134,8 @@ export interface StockItem<Id = ObjectId> {
     category?: string;
     quantity: number;
     minStock: number;
+    /** Set when the low stock email went out, cleared when the quantity is back above minStock (lib/stock-alerts.ts) */
+    lowStockAlertedAt?: Date;
     isDeleted?: boolean;
     createdAt: Date;
     updatedAt: Date;

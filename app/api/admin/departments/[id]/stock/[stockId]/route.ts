@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/authorize";
 import { PERMISSIONS } from "@/lib/constants";
 import { apiError, badRequest, getDb, isDuplicateKeyError, notFound, serverError, toObjectId } from "@/lib/api";
 import { findOwnDepartment } from "@/lib/departments";
+import { afterStockChange } from "@/lib/stock-alerts";
 
 type Params = { params: Promise<{ id: string; stockId: string }> };
 
@@ -47,6 +48,9 @@ export async function PUT(req: Request, { params }: Params) {
             if (isDuplicateKeyError(error)) return apiError("duplicateSku", 409);
             throw error;
         }
+
+        // A new minimum can put the product below it, or above it again
+        if (Number(minStock) !== item.minStock) await afterStockChange(req, [itemId]);
 
         const updatedItem = await stock.findOne({ _id: itemId });
         return NextResponse.json({ success: true, item: updatedItem });

@@ -80,7 +80,9 @@
         "ownerOnly": "Solo el propietario de la organización puede gestionar la suscripción.",
         "importEmpty": "El archivo no tiene filas para importar",
         "importTooManyRows": "Se pueden importar hasta {max} filas a la vez. Divide el archivo.",
-        "importConflict": "Alguien agregó uno de estos SKU mientras se importaba. Revisa la vista previa e inténtalo de nuevo."
+        "importConflict": "Alguien agregó uno de estos SKU mientras se importaba. Revisa la vista previa e inténtalo de nuevo.",
+        "tooManyAlertEmails": "Puedes agregar hasta 5 direcciones.",
+        "invalidEmail": "Una de las direcciones no es válida."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -311,7 +313,26 @@
     },
     "dashboard": {
         "reportsTitle": "Reportes de consumo",
-        "reportsDescription": "Revisa el consumo de tus departamentos"
+        "reportsDescription": "Revisa el consumo de tus departamentos",
+        "scopeOrganization": "Toda la organización · {count, plural, one {# departamento} other {# departamentos}}",
+        "scopeAssigned": "Tus áreas · {count, plural, one {# departamento} other {# departamentos}}",
+        "emptyOrganization": "Todavía no hay departamentos. Crea el primero y agrega sus productos para ver aquí el stock y la actividad.",
+        "emptyAssigned": "Todavía no tienes áreas asignadas. Pide a un administrador que te asigne una.",
+        "createDepartment": "Crear un departamento",
+        "lowStock": "Productos con stock bajo",
+        "lowStockHint": "de {count, plural, one {# producto} other {# productos}}",
+        "movements": "Movimientos (7 días)",
+        "activePeople": "Personas activas (7 días)",
+        "products": "Productos",
+        "productsHint": "en {count, plural, one {# departamento} other {# departamentos}}",
+        "movementsChart": "Movimientos de stock",
+        "lowStockTitle": "Stock bajo",
+        "lowStockNone": "Todos los productos están sobre su mínimo.",
+        "lowStockMore": "y {count, plural, one {# producto más} other {# productos más}}",
+        "outOfStock": "Agotado",
+        "minimum": "mín. {amount}",
+        "topConsumed": "Más consumidos (7 días)",
+        "topConsumedNone": "No hubo consumo en los últimos 7 días."
     },
     "departments": {
         "title": "Departamentos",
@@ -461,6 +482,17 @@
             "lastTitle": "Esta es tu única organización",
             "lastDescription": "Al cerrar {name} te quedarás sin organización. Tu cuenta sigue activa: te llevaremos a tu página de cuenta, desde donde podrás crear o unirte a otra organización, o eliminar tu cuenta.",
             "confirmLast": "Cerrar y quedarme sin organización"
+        },
+        "alerts": {
+            "title": "Avisos por correo",
+            "description": "Avisa cuando un producto llega a su stock mínimo, una vez por cada vez que baja. Lo reciben los administradores y las direcciones que agregues.",
+            "notConfigured": "El envío de correos no está configurado en este servidor: los avisos se guardan pero no se envían.",
+            "lowStockLabel": "Avisar de stock bajo",
+            "lowStockDescription": "Un correo cuando un producto queda en su mínimo o por debajo.",
+            "extraLabel": "Otras direcciones (hasta {max})",
+            "extraPlaceholder": "compras@empresa.com y Enter",
+            "remove": "Quitar {email}",
+            "saved": "Guardado"
         }
     },
     "reports": {
@@ -755,9 +787,6 @@
         "overview": {
             "title": "Resumen",
             "subtitle": "Cómo se está usando toda la app",
-            "vsPrevious": "vs periodo anterior",
-            "noChange": "sin cambios",
-            "notComparable": "Sin periodo anterior para comparar",
             "usage": "Uso",
             "growth": "Crecimiento",
             "metrics": {
@@ -782,13 +811,7 @@
             },
             "charts": {
                 "movements": "Movimientos de stock",
-                "signUps": "Usuarios nuevos",
-                "table": "Ver como tabla",
-                "bucket": "Fecha",
-                "count": "Cantidad",
-                "total": "{count} en el periodo",
-                "byHour": "Por hora",
-                "byDay": "Por día"
+                "signUps": "Usuarios nuevos"
             },
             "activeUsers": "Usuarios activos",
             "dau": "Hoy",
@@ -938,7 +961,8 @@
                 "createPlan": "Creó un plan",
                 "updatePlan": "Editó un plan",
                 "subscription": "Cambió la suscripción",
-                "import": "Importó productos"
+                "import": "Importó productos",
+                "updateAlerts": "Cambió los avisos por correo"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -1331,5 +1355,25 @@
         "title": "No pudimos iniciar el pago",
         "toPlan": "Ver mi plan",
         "toHome": "Volver al inicio"
+    },
+    "stats": {
+        "notComparable": "Sin periodo anterior para comparar",
+        "noChange": "sin cambios",
+        "vsPrevious": "vs periodo anterior",
+        "table": "Ver como tabla",
+        "bucket": "Fecha",
+        "count": "Cantidad",
+        "total": "{count} en el periodo",
+        "byHour": "Por hora",
+        "byDay": "Por día"
+    },
+    "stockAlerts": {
+        "subjectOne": "Stock bajo: {product}",
+        "subjectMany": "{count} productos con stock bajo",
+        "left": "Quedan {amount}",
+        "outOfStock": "Agotado",
+        "minimum": "Mínimo: {amount}",
+        "button": "Ver inventario",
+        "footer": "Recibes este aviso por la organización {organization}. Los administradores pueden desactivarlo en Personal > Avisos por correo."
     }
 }
