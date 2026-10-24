@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { DataTable, DataTableCell, DataTableRow } from "@/components/ui/DataTable";
-import { Badge, hrefWith, PageHeader, Pagination, SearchForm, Segmented } from "@/components/superadmin/ui";
+import { Badge, ExportLink, hrefWith, PageHeader, Pagination, SearchForm, Segmented } from "@/components/superadmin/ui";
 import {
     INACTIVE_AFTER_DAYS, listOrganizations, ORGANIZATION_FILTERS, pageOf, requireSuperadmin,
     type OrganizationFilter, type OrganizationStatus,
@@ -26,7 +26,9 @@ export default async function SuperadminOrganizationsPage({ searchParams }: { se
 
     return (
         <>
-            <PageHeader title={t("title")} subtitle={t("subtitle")} />
+            <PageHeader title={t("title")} subtitle={t("subtitle")}>
+                <ExportLink kind="organizations" params={{ q: params.q, filter: filter === "all" ? undefined : filter }} />
+            </PageHeader>
 
             <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <SearchForm action="/superadmin/organizations" q={params.q} placeholder={t("searchPlaceholder")} keep={filter === "all" ? {} : { filter }} />

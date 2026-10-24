@@ -5,6 +5,7 @@ import { apiError, badRequest, forbidden, getDb, notFound, serverError, toObject
 import { PERMISSIONS, ROLES } from "@/lib/constants";
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit";
 import { isOrganizationOwner } from "@/lib/organizations";
+import { planLimitError } from "@/lib/plans";
 import { forgetCachedUsers } from "@/lib/users";
 import type { Organization, User } from "@/types/models";
 
@@ -18,6 +19,7 @@ const ASSIGNABLE_ROLES: string[] = [ROLES.USER, ROLES.ADMIN];
  *
  * - The role must be one of ASSIGNABLE_ROLES and every department must belong to the organization.
  * - Admins can't edit their own membership, and the owner always stays an active admin.
+ * - Approving or reactivating a member needs room in the organization's plan (lib/plans.ts).
  */
 export async function PATCH(request: Request) {
     const { session, error } = await requirePermission(PERMISSIONS.MANAGE_USERS);
@@ -52,6 +54,12 @@ export async function PATCH(request: Request) {
             return apiError("ownerLocked", 403);
         }
         const before = target.organizations?.find(m => m.clientId.toString() === clientId.toString());
+        // Only members who start counting take room in the plan: changes to active members never do
+        const counted = before?.status === "active" && before.role !== ROLES.PENDING_USER;
+        if (isActive && !counted) {
+            const limitError = await planLimitError(clientId, "users");
+            if (limitError) return limitError;
+        }
 
         // Memberships migrated from the old top-level clientId may store it as a string
         const result = await db.collection('users').updateOne(

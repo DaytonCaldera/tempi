@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, Minus, Search } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Download, Minus, Search } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Metric, SeriesPoint } from "@/lib/superadmin";
 
@@ -221,6 +221,23 @@ const BADGE_TONES = {
 /** A status pill. The text says the state; the color only supports it. */
 export function Badge({ tone, children }: { tone: keyof typeof BADGE_TONES; children: React.ReactNode }) {
     return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${BADGE_TONES[tone]}`}>{children}</span>;
+}
+
+/**
+ * Downloads a registry as CSV (app/(superadmin)/superadmin/export/[kind]/route.ts) with the page's filters.
+ * A plain link: the browser downloads the file, no client code needed.
+ */
+export async function ExportLink({ kind, params }: { kind: "organizations" | "users" | "audit"; params: Record<string, string | undefined> }) {
+    const t = await getTranslations("superadmin");
+    return (
+        <a
+            href={hrefWith(`/superadmin/export/${kind}`, params)}
+            download
+            className="inline-flex items-center gap-2 rounded-2xl border border-line bg-card px-4 py-2.5 text-xs font-semibold text-ink-muted hover:border-line-strong hover:text-ink"
+        >
+            <Download size={14} aria-hidden /> {t("exportCsv")}
+        </a>
+    );
 }
 
 /** Builds `path?…` from parameters, leaving out empty ones (and page 1). */

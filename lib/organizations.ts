@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import { getDb, toObjectId } from "@/lib/api";
 import { isPlaceholderOrg, ROLES } from "@/lib/constants";
 import { forgetCachedUsers } from "@/lib/users";
+import type { ObjectId } from "mongodb";
 import type { Membership, Organization, User } from "@/types/models";
 
 /**
@@ -78,10 +79,14 @@ export async function ownedOpenOrganizations(email: string) {
         .toArray();
 }
 
+/** A membership saved when its organization was closed. */
+export type ClosedMembership = { userId: ObjectId; membership: Membership };
+
 /**
  * Closes an organization: it is marked as closed and every user loses their membership, so it no longer
  * appears in their switcher and its join code stops working. Users left without an organization go back
- * to the lobby. Departments, stock and movements are kept, so a closed organization can be restored from the DB.
+ * to the lobby. Departments, stock and movements are kept and the memberships are saved in closedMemberships,
+ * so the superadmin can restore it (restoreOrganization).
  */
 export async function closeOrganization(clientId: string, closedBy: string): Promise<boolean> {
     const _id = toObjectId(clientId);
@@ -97,6 +102,15 @@ export async function closeOrganization(clientId: string, closedBy: string): Pro
     const users = db.collection<User>('users');
     // Memberships migrated from the old top-level clientId may store it as a string
     const anyIdForm = { $in: [_id, _id.toString()] };
+
+    // Keep a copy of every membership, so the superadmin can restore the organization (restoreOrganization)
+    const members = await users.find({ "organizations.clientId": anyIdForm } as object, { projection: { organizations: 1 } }).toArray();
+    const closedMemberships: ClosedMembership[] = members.flatMap(user => user.organizations
+        .filter(m => m.clientId.toString() === _id.toString())
+        .slice(0, 1)
+        .map(membership => ({ userId: user._id, membership: { ...membership, clientId: _id } })));
+    await db.collection('clients').updateOne({ _id }, { $set: { closedMemberships } });
+
     // Sign-in falls back to the user's first active membership when activeOrganization is null
     await users.updateMany({ activeOrganization: anyIdForm } as object, { $set: { activeOrganization: null } });
     await users.updateMany(
@@ -105,4 +119,48 @@ export async function closeOrganization(clientId: string, closedBy: string): Pro
     );
     forgetCachedUsers();
     return true;
+}
+
+/**
+ * Reopens a closed organization (superadmin support tool) with a new join code, since the old one may have
+ * been shared while it was closed. Members saved when it was closed get their membership back, unless they
+ * deleted their account or are already in it again. Organizations closed before memberships were saved only
+ * get their owner back, as an active admin.
+ * Returns how many memberships were restored, and the new code. Null when it isn't a closed organization.
+ */
+export async function restoreOrganization(clientId: ObjectId, reopenedBy: string) {
+    const db = await getDb();
+    const organization = await db.collection<Organization>('clients').findOne({ _id: clientId, status: "closed" });
+    if (!organization) return null;
+
+    const clientCode = await generateClientCode();
+    await db.collection('clients').updateOne(
+        { _id: clientId, status: "closed" },
+        { $set: { status: "active", clientCode, reopenedAt: new Date(), reopenedBy }, $unset: { closedAt: "", closedBy: "", closedMemberships: "" } }
+    );
+
+    const users = db.collection<User>('users');
+    let saved = organization.closedMemberships ?? [];
+    if (saved.length === 0 && organization.ownerEmail) {
+        const owner = await findUserByEmailInsensitive(organization.ownerEmail);
+        if (owner) saved = [{ userId: owner._id, membership: { clientId, clientName: organization.name, role: ROLES.ADMIN, status: "active", joinedAt: new Date() } }];
+    }
+
+    let restored = 0;
+    for (const { userId, membership } of saved) {
+        // Skips users who were deleted or already joined again
+        const result = await users.updateOne(
+            { _id: userId, "organizations.clientId": { $nin: [clientId, clientId.toString()] } } as object,
+            { $push: { organizations: { ...membership, clientId, clientName: organization.name, ...(membership.clientCode && { clientCode }) } } }
+        );
+        restored += result.modifiedCount;
+    }
+    forgetCachedUsers();
+    return { restored, clientCode };
+}
+
+/** A user by email, ignoring case (ownerEmail is stored as Google returned it). */
+async function findUserByEmailInsensitive(email: string) {
+    const db = await getDb();
+    return db.collection<User>('users').findOne({ email: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" } } as object);
 }

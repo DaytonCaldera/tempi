@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/authorize";
 import { PERMISSIONS } from "@/lib/constants";
 import { badRequest, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
+import { planLimitError } from "@/lib/plans";
 import { getTenantQuery } from "@/lib/tenant-guard";
 
 /** GET /api/admin/departments - Departments of the user's organization, sorted by name. */
@@ -23,7 +24,7 @@ export async function GET() {
     }
 }
 
-/** POST /api/admin/departments - Creates a department in the user's organization. Body: { name, description } */
+/** POST /api/admin/departments - Creates a department in the user's organization, if its plan allows another. Body: { name, description } */
 export async function POST(req: Request) {
     const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
     if (error) return error;
@@ -35,6 +36,8 @@ export async function POST(req: Request) {
         const db = await getDb();
         const clientId = toObjectId(session.user.clientId);
         if (!clientId) return unauthorized();
+        const limitError = await planLimitError(clientId, "departments");
+        if (limitError) return limitError;
 
         const newDepartment = { name, description, clientId, createdAt: new Date() };
         const result = await db.collection("departments").insertOne(newDepartment);

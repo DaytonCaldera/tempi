@@ -356,6 +356,8 @@ export async function getOrganizationDetail(id: string) {
             status: organization.status === "closed" ? "closed" as const : "open" as const,
             closedAt: organization.closedAt ?? null,
             closedBy: organization.closedBy ?? null,
+            /** Memberships saved when it was closed (null: closed before they were saved, only the owner can come back) */
+            closedMemberships: organization.closedMemberships ? organization.closedMemberships.length : null,
             lastActivity: stats.get(id)?.lastActivity ?? null,
         },
         members,

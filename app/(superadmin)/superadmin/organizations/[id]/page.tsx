@@ -1,23 +1,30 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import AuditTable from "@/components/superadmin/AuditTable";
-import OrganizationTools from "@/components/superadmin/OrganizationTools";
+import OrganizationTools, { RestoreOrganization } from "@/components/superadmin/OrganizationTools";
 import { Badge, BarChart, Card, PageHeader } from "@/components/superadmin/ui";
 import { DataTable, DataTableCell, DataTableRow } from "@/components/ui/DataTable";
 import { labelOf } from "@/i18n/labels";
 import { ROLES } from "@/lib/constants";
 import { getOrganizationDetail, requireSuperadmin } from "@/lib/superadmin";
+import { getPlanUsage, listActivePlans } from "@/lib/plans";
+import PlanUsageCard from "@/components/admin/PlanUsageCard";
+import { toObjectId } from "@/lib/api";
 
 /** One organization: who is in it, what it has, how much it is used, its history, and the support tools. */
 export default async function SuperadminOrganizationPage({ params }: { params: Promise<{ id: string }> }) {
     await requireSuperadmin();
-    const detail = await getOrganizationDetail((await params).id);
-    if (!detail) notFound();
+    const { id } = await params;
+    const clientId = toObjectId(id);
+    const [detail, usage, plans] = await Promise.all([
+        getOrganizationDetail(id), clientId ? getPlanUsage(clientId) : null, listActivePlans(),
+    ]);
+    if (!detail || !usage) notFound();
 
-    const [t, tRoles, tCommon, format] = await Promise.all([
-        getTranslations("superadmin.organizations"), getTranslations("roles"), getTranslations("common"), getFormatter(),
+    const [t, tRoles, tCommon, tViewAs, format] = await Promise.all([
+        getTranslations("superadmin.organizations"), getTranslations("roles"), getTranslations("common"), getTranslations("superadmin.viewAs"), getFormatter(),
     ]);
     const { organization: org, members, departments, activity, audit } = detail;
     const date = (value: Date | null) => value ? format.dateTime(value, { dateStyle: "medium" }) : "—";
@@ -36,7 +43,12 @@ export default async function SuperadminOrganizationPage({ params }: { params: P
                 <ArrowLeft size={14} aria-hidden /> {t("detail.back")}
             </Link>
             <PageHeader title={org.name} subtitle={org.status === "closed" && org.closedAt ? t("detail.closedOn", { date: date(org.closedAt), email: org.closedBy ?? "—" }) : undefined}>
-                <Badge tone={org.status === "closed" ? "neutral" : "success"}>{t(`status.${org.status}`)}</Badge>
+                <div className="flex items-center gap-3">
+                    <Badge tone={org.status === "closed" ? "neutral" : "success"}>{t(`status.${org.status}`)}</Badge>
+                    <Link href={`/superadmin/organizations/${org._id}/view`} className="inline-flex items-center gap-2 rounded-2xl border border-line bg-card px-4 py-2.5 text-xs font-semibold text-ink hover:border-line-strong">
+                        <Eye size={14} aria-hidden /> {tViewAs("button")}
+                    </Link>
+                </div>
             </PageHeader>
 
             <dl className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -47,6 +59,10 @@ export default async function SuperadminOrganizationPage({ params }: { params: P
                     </div>
                 ))}
             </dl>
+
+            <div className="mb-8">
+                <PlanUsageCard usage={usage} title={t("detail.plan")} />
+            </div>
 
             <div className="mb-8">
                 <BarChart title={t("detail.activity")} points={activity} unit="day" />
@@ -95,10 +111,18 @@ export default async function SuperadminOrganizationPage({ params }: { params: P
                     <OrganizationTools
                         clientId={org._id}
                         name={org.name}
+                        plans={plans}
+                        currentPlanId={usage.plan?._id ?? null}
                         candidates={members
                             .filter(m => !m.isOwner && m.status === "active" && m.role !== ROLES.PENDING_USER)
                             .map(m => ({ _id: m._id, name: m.name, email: m.email }))}
                     />
+                </div>
+            )}
+
+            {org.status === "closed" && (
+                <div id="tools" className="mb-8 scroll-mt-6">
+                    <RestoreOrganization clientId={org._id} name={org.name} savedMembers={org.closedMemberships} />
                 </div>
             )}
 

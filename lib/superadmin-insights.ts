@@ -3,6 +3,7 @@ import { getDb, toObjectId } from "@/lib/api";
 import { dayKey } from "@/lib/activity";
 import { getSuperAdminEmail, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
 import { getRolePermissions } from "@/lib/roles";
+import { planStockRepair } from "@/lib/stock-repair";
 import {
     DAY_MS, escapeRegex, listOrganizations, NO_ACTIVE_MEMBERSHIP, notSuperadmin, organizationNames,
     organizationStats, periodRange, USER_CREATED_AT, type PeriodKey, type SeriesPoint,
@@ -170,36 +171,16 @@ export async function getHealth() {
 }
 
 /**
- * Stock items whose quantity isn't the sum of their movements (the check of /api/admin/reports/sync, read-only).
- * They mean a change that wasn't recorded, and make the reports wrong.
+ * Stock items whose movement history doesn't explain their quantity (the same check the repair tool and
+ * scripts/repair-stock-movements.js use). They make the consumption reports wrong until repaired.
  */
 async function stockMismatchList() {
-    const db = await getDb();
-    const rows = await db.collection("stock_movements").aggregate([
-        {
-            $group: {
-                _id: "$inventoryId",
-                calculated: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$amount", { $multiply: ["$amount", -1] }] } },
-            },
-        },
-        { $lookup: { from: "department_stock", localField: "_id", foreignField: "_id", as: "item" } },
-        { $unwind: "$item" },
-        { $match: { "item.isDeleted": { $ne: true }, $expr: { $ne: ["$item.quantity", "$calculated"] } } },
-        { $lookup: { from: "departments", localField: "item.departmentId", foreignField: "_id", as: "department" } },
-        { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } },
-        { $limit: ALERT_LIMIT },
-        {
-            $project: {
-                productName: "$item.productName", sku: "$item.sku", quantity: "$item.quantity", calculated: 1,
-                departmentName: "$department.name", clientId: "$department.clientId",
-            },
-        },
-    ]).toArray();
-    const names = await organizationNames(rows.map(r => r.clientId).filter(Boolean));
-    return rows.map(r => ({
-        _id: r._id.toString(), productName: r.productName as string, sku: r.sku as string,
-        quantity: r.quantity as number, calculated: r.calculated as number, departmentName: (r.departmentName as string) ?? "",
-        clientId: r.clientId?.toString() ?? null, organization: r.clientId ? names.get(r.clientId.toString()) ?? "" : "",
+    const repairs = await planStockRepair();
+    const names = await organizationNames(repairs.map(r => r.clientId));
+    return repairs.slice(0, ALERT_LIMIT).map(r => ({
+        _id: r.itemId, productName: r.productName, sku: r.sku, departmentName: r.departmentName,
+        clientId: r.clientId || null, organization: names.get(r.clientId) ?? "",
+        missing: r.missing.length, syncMovements: r.syncMovements,
     }));
 }
 

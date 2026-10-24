@@ -62,7 +62,12 @@
         "ownerLocked": "El propietario de la organización debe seguir siendo administrador activo",
         "invalidRole": "Rol no válido",
         "organizationRequired": "Primero elige una organización",
-        "tooManyAttempts": "Demasiados intentos. Vuelve a intentarlo en unos minutos"
+        "tooManyAttempts": "Demasiados intentos. Vuelve a intentarlo en unos minutos",
+        "planLimit": {
+            "users": "Tu plan ({plan}) permite hasta {limit} miembros activos. Mejora el plan para añadir más.",
+            "departments": "Tu plan ({plan}) permite hasta {limit} departamentos. Mejora el plan para añadir más.",
+            "items": "Tu plan ({plan}) permite hasta {limit} productos. Mejora el plan para añadir más."
+        }
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -802,7 +807,12 @@
                 "approve": "Aprobó a un miembro",
                 "update": "Cambió una membresía",
                 "regenerateCode": "Creó un código de invitación nuevo",
-                "transferOwnership": "Transfirió la propiedad"
+                "transferOwnership": "Transfirió la propiedad",
+                "repairStock": "Reparó el historial de stock",
+                "restore": "Restauró una organización",
+                "export": "Exportó datos",
+                "viewAs": "Vio una organización (solo lectura)",
+                "changePlan": "Cambió el plan"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -811,7 +821,9 @@
                 "departments": "Departamentos"
             },
             "reason": "Motivo: {reason}",
-            "owner": "Propietario: {before} → {after}"
+            "owner": "Propietario: {before} → {after}",
+            "details": "Detalles",
+            "plan": "Plan: {before} → {after}"
         },
         "health": {
             "title": "Salud",
@@ -828,13 +840,13 @@
             "emptyOrganizations": "Organizaciones sin productos",
             "emptyOrganizationsHint": "Con más de {days} días y todavía sin productos",
             "stockMismatches": "Stock que no cuadra con sus movimientos",
-            "stockMismatchesHint": "Los reportes de estos productos están mal hasta que se corrijan",
+            "stockMismatchesHint": "Su historial no explica la cantidad, así que los reportes están mal. Repáralos desde las herramientas de la organización",
             "waitingSince": "Espera desde el {date}",
             "registeredOn": "Se registró el {date}",
             "lastActivity": "Última actividad: {date}",
             "neverActive": "Nunca tuvo actividad",
-            "quantity": "Guardado: {quantity} · según movimientos: {calculated}",
-            "seeAll": "Ver todas"
+            "seeAll": "Ver todas",
+            "repairNeeded": "{missing, plural, =0 {} one {# movimiento faltante} other {# movimientos faltantes}}{sync, plural, =0 {} one { · # movimiento de sincronización antiguo} other { · # movimientos de sincronización antiguos}}"
         },
         "support": {
             "title": "Soporte",
@@ -854,7 +866,13 @@
                 "transferHint": "En la ficha de una organización: hace propietario a otro miembro, por ejemplo cuando el dueño deja la empresa.",
                 "diagnosisCta": "Elegir un usuario",
                 "regenerateCta": "Elegir una organización",
-                "transferCta": "Elegir una organización"
+                "transferCta": "Elegir una organización",
+                "repair": "Reparar historial de stock",
+                "repairHint": "En la ficha de una organización: agrega los movimientos que faltan en productos cuyo historial no explica su cantidad.",
+                "repairCta": "Ver productos afectados",
+                "restore": "Restaurar organización",
+                "restoreHint": "En la ficha de una organización cerrada: la reabre con un código nuevo y devuelve el acceso a sus miembros.",
+                "restoreCta": "Ver organizaciones cerradas"
             },
             "openTools": "Herramientas",
             "openDiagnosis": "Diagnóstico"
@@ -914,9 +932,98 @@
                 "closed": "La organización está cerrada.",
                 "confirmMismatch": "El nombre no coincide.",
                 "invalid": "Revisa el formulario e inténtalo de nuevo.",
-                "pickMember": "Elige al nuevo propietario."
+                "pickMember": "Elige al nuevo propietario.",
+                "notClosed": "La organización no está cerrada.",
+                "pickPlan": "Elige un plan."
             },
-            "processing": "Procesando…"
+            "processing": "Procesando…",
+            "repair": {
+                "title": "Reparar historial de stock",
+                "description": "Busca productos cuyos movimientos no explican su cantidad (el reporte de consumo sale mal para ellos) y agrega los movimientos que faltan. Los movimientos de sincronización antiguos se archivan, no se borran.",
+                "preview": "Revisar",
+                "apply": "Reparar",
+                "nothingToDo": "El historial de todos los productos está correcto.",
+                "summary": "{items, plural, one {# producto} other {# productos}} por reparar: {missing} movimientos por agregar, {sync} de sincronización por archivar.",
+                "itemDetail": "{missing} por agregar · {sync} por archivar",
+                "done": "Reparados {items} productos: {inserted} movimientos agregados, {archived} archivados."
+            },
+            "restore": {
+                "title": "Restaurar organización",
+                "button": "Restaurar organización",
+                "confirm": "Escribe {name} para confirmar",
+                "description": "La reabre con un código de invitación nuevo y devuelve el acceso a {count, plural, one {el miembro} other {los # miembros}} que tenía al cerrarse (salvo cuentas eliminadas).",
+                "descriptionOwnerOnly": "Se cerró antes de que se guardaran las membresías: se reabre con un código nuevo y solo con su propietario, como administrador. Los demás se vuelven a unir con el código.",
+                "done": "Restaurada: {count, plural, one {# miembro recuperó} other {# miembros recuperaron}} el acceso. Código nuevo: {code}"
+            },
+            "plan": {
+                "title": "Cambiar plan",
+                "description": "Sus límites se aplican desde la próxima acción. Un plan menor no quita nada: la organización solo no puede crecer hasta volver a estar dentro de los límites.",
+                "plan": "Plan",
+                "pick": "Elige un plan…",
+                "limits": "{users} miembros · {departments} departamentos · {items} productos",
+                "button": "Cambiar plan",
+                "done": "La organización ahora está en {name}."
+            }
+        },
+        "exportCsv": "Exportar CSV",
+        "viewAs": {
+            "button": "Ver como (solo lectura)",
+            "title": "{name} · vista de solo lectura",
+            "tabsLabel": "Sección",
+            "banner": "Ves los datos de esta organización igual que su administrador, sin poder cambiar nada. Abrir esta vista queda registrado en la auditoría.",
+            "tabs": {
+                "inventory": "Inventario",
+                "report": "Reporte de consumo",
+                "movements": "Movimientos"
+            },
+            "noDepartments": "Esta organización no tiene departamentos.",
+            "emptyDepartment": "Sin productos.",
+            "products": "{count, plural, one {# producto} other {# productos}}",
+            "inventory": {
+                "product": "Producto",
+                "quantity": "Cantidad",
+                "minStock": "Mínimo",
+                "status": "Estado",
+                "updated": "Actualizado",
+                "low": "Stock bajo",
+                "ok": "Correcto"
+            },
+            "report": {
+                "from": "Desde",
+                "to": "Hasta",
+                "department": "Departamento",
+                "allDepartments": "Todos los departamentos",
+                "apply": "Mostrar",
+                "empty": "Sin productos en este rango."
+            },
+            "movements": {
+                "title": "Últimos {count} movimientos",
+                "empty": "Todavía no hay movimientos.",
+                "when": "Cuándo",
+                "product": "Producto",
+                "movement": "Movimiento",
+                "balance": "Saldo",
+                "reason": "Motivo",
+                "user": "Por",
+                "in": "entrada",
+                "out": "salida",
+                "system": "Sistema"
+            }
         }
+    },
+    "plan": {
+        "title": "Tu plan",
+        "noPlan": "Sin plan",
+        "unlimited": "Ilimitado",
+        "resources": {
+            "users": "Miembros activos",
+            "departments": "Departamentos",
+            "items": "Productos"
+        },
+        "usage": "{used} de {limit}",
+        "usageUnlimited": "{used}",
+        "full": "Límite alcanzado",
+        "over": "Por encima del límite: no se quita nada, pero no puedes añadir más",
+        "contact": "Para cambiar tu plan, escribe a {email}."
     }
 }

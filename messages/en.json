@@ -62,7 +62,12 @@
         "ownerLocked": "The organization's owner must stay an active admin",
         "invalidRole": "Invalid role",
         "organizationRequired": "Pick an organization first",
-        "tooManyAttempts": "Too many attempts. Try again in a few minutes"
+        "tooManyAttempts": "Too many attempts. Try again in a few minutes",
+        "planLimit": {
+            "users": "Your plan ({plan}) allows up to {limit} active members. Upgrade the plan to add more.",
+            "departments": "Your plan ({plan}) allows up to {limit} departments. Upgrade the plan to add more.",
+            "items": "Your plan ({plan}) allows up to {limit} products. Upgrade the plan to add more."
+        }
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -802,7 +807,12 @@
                 "approve": "Approved a member",
                 "update": "Changed a membership",
                 "regenerateCode": "Created a new join code",
-                "transferOwnership": "Transferred ownership"
+                "transferOwnership": "Transferred ownership",
+                "repairStock": "Repaired stock history",
+                "restore": "Restored an organization",
+                "export": "Exported data",
+                "viewAs": "Viewed an organization (read-only)",
+                "changePlan": "Changed the plan"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -811,7 +821,9 @@
                 "departments": "Departments"
             },
             "reason": "Reason: {reason}",
-            "owner": "Owner: {before} → {after}"
+            "owner": "Owner: {before} → {after}",
+            "details": "Details",
+            "plan": "Plan: {before} → {after}"
         },
         "health": {
             "title": "Health",
@@ -828,13 +840,13 @@
             "emptyOrganizations": "Organizations without products",
             "emptyOrganizationsHint": "Older than {days} days and no products yet",
             "stockMismatches": "Stock that doesn't match its movements",
-            "stockMismatchesHint": "Reports are wrong for these items until they are fixed",
+            "stockMismatchesHint": "Their history doesn't explain the quantity, so reports are wrong. Repair them from the organization's tools",
             "waitingSince": "Waiting since {date}",
             "registeredOn": "Signed up {date}",
             "lastActivity": "Last activity: {date}",
             "neverActive": "Never active",
-            "quantity": "Stored: {quantity} · movements say: {calculated}",
-            "seeAll": "See all"
+            "seeAll": "See all",
+            "repairNeeded": "{missing, plural, =0 {} one {# missing movement} other {# missing movements}}{sync, plural, =0 {} other { · # old sync movements}}"
         },
         "support": {
             "title": "Support",
@@ -854,7 +866,13 @@
                 "transferHint": "On an organization's page: makes another member the owner, e.g. when the owner leaves the company.",
                 "diagnosisCta": "Pick a user",
                 "regenerateCta": "Pick an organization",
-                "transferCta": "Pick an organization"
+                "transferCta": "Pick an organization",
+                "repair": "Repair stock history",
+                "repairHint": "On an organization's page: adds the movements missing from items whose history doesn't explain their quantity.",
+                "repairCta": "See affected items",
+                "restore": "Restore organization",
+                "restoreHint": "On a closed organization's page: reopens it with a new code and gives the members back their access.",
+                "restoreCta": "See closed organizations"
             },
             "openTools": "Tools",
             "openDiagnosis": "Diagnosis"
@@ -914,9 +932,98 @@
                 "closed": "The organization is closed.",
                 "confirmMismatch": "The name doesn't match.",
                 "invalid": "Check the form and try again.",
-                "pickMember": "Pick the new owner."
+                "pickMember": "Pick the new owner.",
+                "notClosed": "The organization isn't closed.",
+                "pickPlan": "Pick a plan."
             },
-            "processing": "Working…"
+            "processing": "Working…",
+            "repair": {
+                "title": "Repair stock history",
+                "description": "Finds items whose movements don't explain their quantity (the consumption report is wrong for them) and adds the missing movements. Old sync movements are archived, not deleted.",
+                "preview": "Check",
+                "apply": "Repair",
+                "nothingToDo": "Every item's history is correct.",
+                "summary": "{items, plural, one {# item} other {# items}} to repair: {missing} movements to add, {sync} sync movements to archive.",
+                "itemDetail": "{missing} to add · {sync} to archive",
+                "done": "Repaired {items} items: {inserted} movements added, {archived} archived."
+            },
+            "restore": {
+                "title": "Restore organization",
+                "button": "Restore organization",
+                "confirm": "Type {name} to confirm",
+                "description": "Reopens it with a new join code and gives back their access to the {count, plural, one {# member} other {# members}} it had when it was closed (except deleted accounts).",
+                "descriptionOwnerOnly": "It was closed before memberships were saved: it reopens with a new join code and only its owner, as an admin. The others join again with the code.",
+                "done": "Restored: {count, plural, one {# member} other {# members}} back. New join code: {code}"
+            },
+            "plan": {
+                "title": "Change plan",
+                "description": "Its limits apply from the next action. A smaller plan removes nothing: the organization just can't grow until it is back under the limits.",
+                "plan": "Plan",
+                "pick": "Pick a plan…",
+                "limits": "{users} members · {departments} departments · {items} products",
+                "button": "Change plan",
+                "done": "The organization is now on {name}."
+            }
+        },
+        "exportCsv": "Export CSV",
+        "viewAs": {
+            "button": "View as (read-only)",
+            "title": "{name} · read-only view",
+            "tabsLabel": "Section",
+            "banner": "You see this organization's data as its admin does, without being able to change anything. Opening this view is recorded in the audit log.",
+            "tabs": {
+                "inventory": "Inventory",
+                "report": "Consumption report",
+                "movements": "Movements"
+            },
+            "noDepartments": "This organization has no departments.",
+            "emptyDepartment": "No products.",
+            "products": "{count, plural, one {# product} other {# products}}",
+            "inventory": {
+                "product": "Product",
+                "quantity": "Quantity",
+                "minStock": "Minimum",
+                "status": "Status",
+                "updated": "Updated",
+                "low": "Low stock",
+                "ok": "OK"
+            },
+            "report": {
+                "from": "From",
+                "to": "To",
+                "department": "Department",
+                "allDepartments": "All departments",
+                "apply": "Show",
+                "empty": "No products in this range."
+            },
+            "movements": {
+                "title": "Latest {count} movements",
+                "empty": "No movements yet.",
+                "when": "When",
+                "product": "Product",
+                "movement": "Movement",
+                "balance": "Balance",
+                "reason": "Reason",
+                "user": "By",
+                "in": "in",
+                "out": "out",
+                "system": "System"
+            }
         }
+    },
+    "plan": {
+        "title": "Your plan",
+        "noPlan": "No plan",
+        "unlimited": "Unlimited",
+        "resources": {
+            "users": "Active members",
+            "departments": "Departments",
+            "items": "Products"
+        },
+        "usage": "{used} of {limit}",
+        "usageUnlimited": "{used}",
+        "full": "Limit reached",
+        "over": "Over the limit: nothing is removed, but you can't add more",
+        "contact": "To change your plan, contact {email}."
     }
 }

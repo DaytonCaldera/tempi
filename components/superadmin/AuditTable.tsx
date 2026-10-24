@@ -20,6 +20,8 @@ export default async function AuditTable({ rows, showOrganization = true }: { ro
         const extra: string[] = [];
         const owner = details?.owner as { before?: string | null; after?: string | null } | undefined;
         if (owner) extra.push(t("owner", { before: owner.before ?? "—", after: owner.after ?? "—" }));
+        const plan = details?.plan as { before?: string | null; after?: string | null } | undefined;
+        if (plan) extra.push(t("plan", { before: plan.before ?? "—", after: plan.after ?? "—" }));
         if (typeof details?.reason === "string") extra.push(t("reason", { reason: details.reason }));
         return [...memberChanges(details), ...extra];
     };

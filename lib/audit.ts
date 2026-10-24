@@ -16,6 +16,12 @@ export const AUDIT_ACTIONS = {
     // Superadmin support tools (app/(superadmin)/superadmin/organizations/[id]/actions.ts). details.reason says why
     REGENERATE_CODE: "organization.regenerateCode",
     TRANSFER_OWNERSHIP: "organization.transferOwnership",
+    REPAIR_STOCK: "organization.repairStock",
+    CHANGE_PLAN: "organization.changePlan",
+    RESTORE_ORGANIZATION: "organization.restore",
+    EXPORT_CSV: "superadmin.export",
+    // The superadmin opened an organization's read-only view (lib/superadmin-view.ts)
+    VIEW_AS: "superadmin.viewAs",
 } as const;
 
 export type AuditAction = typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS];

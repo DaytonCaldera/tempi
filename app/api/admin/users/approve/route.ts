@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/authorize";
 import { badRequest, getDb, notFound, toObjectId, unauthorized } from '@/lib/api';
 import { PERMISSIONS, ROLES } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
+import { planLimitError } from '@/lib/plans';
 import { forgetCachedUsers } from '@/lib/users';
 import { AUDIT_ACTIONS, logAudit } from '@/lib/audit';
 
@@ -23,6 +24,9 @@ export async function POST(req: Request) {
     if (!userObjectId || !departmentId) return badRequest();
 
     if (!await findOwnDepartment(session, departmentId)) return notFound("departmentNotFound");
+    // An approved member takes room in the organization's plan
+    const limitError = await planLimitError(clientId, "users");
+    if (limitError) return limitError;
 
     const db = await getDb();
     const result = await db.collection('users').updateOne(

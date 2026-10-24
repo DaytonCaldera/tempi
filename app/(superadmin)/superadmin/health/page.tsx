@@ -44,9 +44,9 @@ export default async function SuperadminHealthPage() {
         {
             id: "stockMismatches", hint: t("stockMismatchesHint"), count: health.stockMismatches.length,
             items: health.stockMismatches.map(item => ({
-                key: item._id, href: item.clientId ? `/superadmin/organizations/${item.clientId}` : null,
+                key: item._id, href: item.clientId ? `/superadmin/organizations/${item.clientId}#tools` : null,
                 title: `${item.productName} (${item.sku}) · ${item.departmentName} · ${item.organization}`,
-                detail: t("quantity", { quantity: format.number(item.quantity), calculated: format.number(item.calculated) }),
+                detail: t("repairNeeded", { missing: item.missing, sync: item.syncMovements }),
             })),
         },
     ];

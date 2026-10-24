@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import AuditTable from "@/components/superadmin/AuditTable";
-import { hrefWith, PageHeader, Pagination } from "@/components/superadmin/ui";
+import { ExportLink, hrefWith, PageHeader, Pagination } from "@/components/superadmin/ui";
 import { AUDIT_ACTIONS } from "@/lib/audit";
 import { listAudit, pageOf, requireSuperadmin } from "@/lib/superadmin";
 
@@ -19,7 +19,9 @@ export default async function SuperadminAuditPage({ searchParams }: { searchPara
 
     return (
         <>
-            <PageHeader title={t("title")} subtitle={t("subtitle")} />
+            <PageHeader title={t("title")} subtitle={t("subtitle")}>
+                <ExportLink kind="audit" params={{ q: params.q, action }} />
+            </PageHeader>
 
             {/* A GET form: the filtered log is a shareable URL */}
             <form action="/superadmin/audit" method="get" className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
