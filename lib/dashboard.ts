@@ -63,6 +63,38 @@ async function dashboardScope(session: Session) {
     return { scope: "assigned" as const, departmentIds };
 }
 
+/** The products at or below their minimum in these departments, most urgent first: how many, and the first `limit`. */
+async function lowStockIn(departmentIds: ObjectId[], limit: number): Promise<DashboardData["lowStock"]> {
+    if (departmentIds.length === 0) return { total: 0, items: [] };
+    const db = await getDb();
+    const [low] = await db.collection<StockItem>("department_stock").aggregate<{ total: { count: number }[]; items: StockItem[] }>([
+        { $match: { departmentId: { $in: departmentIds }, isDeleted: { $ne: true }, $expr: { $lte: ["$quantity", "$minStock"] } } },
+        // Most urgent first: the least stock for its minimum (empty products first)
+        { $addFields: { ratio: { $cond: [{ $gt: ["$minStock", 0] }, { $divide: ["$quantity", "$minStock"] }, 0] } } },
+        { $sort: { ratio: 1, quantity: 1, productName: 1 } },
+        { $facet: { total: [{ $count: "count" }], items: [{ $limit: limit }] } },
+    ]).toArray();
+    return {
+        total: low?.total[0]?.count ?? 0,
+        items: (low?.items ?? []).map(item => ({
+            _id: item._id.toString(),
+            productName: item.productName,
+            sku: item.sku,
+            quantity: item.quantity,
+            minStock: item.minStock,
+            unit: item.unit,
+            departmentId: item.departmentId.toString(),
+            departmentName: item.departmentName,
+        })),
+    };
+}
+
+/** The low stock the user sees on the dashboard (same departments), for the navbar's notifications. */
+export async function getLowStock(session: Session, limit: number) {
+    const { departmentIds } = await dashboardScope(session);
+    return lowStockIn(departmentIds, limit);
+}
+
 export async function getDashboardData(session: Session): Promise<DashboardData> {
     // Days of the chart on the viewer's clocks (i18n/request.ts)
     const timeZone = (await getTimeZone()) ?? undefined;
@@ -90,15 +122,9 @@ export async function getDashboardData(session: Session): Promise<DashboardData>
     const between = (start: Date, end: Date) => ({ ...byPeople, createdAt: { $gte: start, $lt: end } });
 
     const showsCosts = scope === "organization";
-    const [productCount, [low], current, previous, people, previousPeople, counts, consumed, value] = await Promise.all([
+    const [productCount, lowStock, current, previous, people, previousPeople, counts, consumed, value] = await Promise.all([
         stock.countDocuments(live),
-        stock.aggregate<{ total: { count: number }[]; items: StockItem[] }>([
-            { $match: { ...live, $expr: { $lte: ["$quantity", "$minStock"] } } },
-            // Most urgent first: the least stock for its minimum (empty products first)
-            { $addFields: { ratio: { $cond: [{ $gt: ["$minStock", 0] }, { $divide: ["$quantity", "$minStock"] }, 0] } } },
-            { $sort: { ratio: 1, quantity: 1, productName: 1 } },
-            { $facet: { total: [{ $count: "count" }], items: [{ $limit: LOW_STOCK_SHOWN }] } },
-        ]).toArray(),
+        lowStockIn(departmentIds, LOW_STOCK_SHOWN),
         movements.countDocuments(between(periodStart, now)),
         comparable ? movements.countDocuments(between(previousStart, periodStart)) : Promise.resolve(undefined),
         countPeople(between(periodStart, now)),
@@ -113,19 +139,7 @@ export async function getDashboardData(session: Session): Promise<DashboardData>
         departmentCount: departmentIds.length,
         productCount,
         inventoryValue: value,
-        lowStock: {
-            total: low?.total[0]?.count ?? 0,
-            items: (low?.items ?? []).map(item => ({
-                _id: item._id.toString(),
-                productName: item.productName,
-                sku: item.sku,
-                quantity: item.quantity,
-                minStock: item.minStock,
-                unit: item.unit,
-                departmentId: item.departmentId.toString(),
-                departmentName: item.departmentName,
-            })),
-        },
+        lowStock,
         movements: { value: current, previous },
         activePeople: { value: people, previous: previousPeople },
         series: fillBuckets(counts, seriesStart, now, "day", timeZone),

@@ -140,7 +140,9 @@
         "joinOrCreate": "+ Unirse o crear nueva",
         "switching": "Cambiando contexto...",
         "account": "Mi cuenta",
-        "plan": "Plan y facturación"
+        "plan": "Plan y facturación",
+        "language": "Idioma",
+        "userMenu": "Menú de la cuenta"
     },
     "theme": {
         "label": "Tema",
@@ -1495,5 +1497,19 @@
         "discard": "Descartar",
         "dashboardTitle": "{count, plural, one {# movimiento retenido} other {# movimientos retenidos}}",
         "dashboardIntro": "Movimientos hechos sin conexión que no se aplicaron solos: los tuyos y, si administras el stock, los que el runner no revisó en 30 minutos."
+    },
+    "notifications": {
+        "label": "Notificaciones",
+        "labelWithCount": "Notificaciones ({count})",
+        "title": "Notificaciones",
+        "empty": "No tienes nada pendiente.",
+        "held": "{count, plural, one {# movimiento retenido por revisar} other {# movimientos retenidos por revisar}}",
+        "heldHint": "Hechos sin conexión y sin aplicar. Aplícalos o descártalos en el panel.",
+        "queued": "{count, plural, one {# movimiento sin enviar} other {# movimientos sin enviar}}",
+        "queuedHint": "Guardados en este dispositivo sin conexión. Abre el runner con conexión para enviarlos.",
+        "lowStock": "Stock bajo ({count})",
+        "outOfStock": "Agotado",
+        "left": "Quedan {amount}, mínimo {minimum}",
+        "more": "{count, plural, one {Ver # producto más} other {Ver # productos más}}"
     }
 }

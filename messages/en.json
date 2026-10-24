@@ -140,7 +140,9 @@
         "joinOrCreate": "+ Join or create new",
         "switching": "Switching context...",
         "account": "My account",
-        "plan": "Plan & billing"
+        "plan": "Plan & billing",
+        "language": "Language",
+        "userMenu": "Account menu"
     },
     "theme": {
         "label": "Theme",
@@ -1495,5 +1497,19 @@
         "discard": "Discard",
         "dashboardTitle": "{count, plural, one {# held move} other {# held moves}}",
         "dashboardIntro": "Moves made offline that didn't apply by themselves: yours and, if you manage stock, the ones their runner didn't review within 30 minutes."
+    },
+    "notifications": {
+        "label": "Notifications",
+        "labelWithCount": "Notifications ({count})",
+        "title": "Notifications",
+        "empty": "You're all caught up.",
+        "held": "{count, plural, one {# held move to review} other {# held moves to review}}",
+        "heldHint": "Made offline and not applied. Apply or discard them on the dashboard.",
+        "queued": "{count, plural, one {# move not sent yet} other {# moves not sent yet}}",
+        "queuedHint": "Saved on this device while offline. Open the runner with a connection to send them.",
+        "lowStock": "Low stock ({count})",
+        "outOfStock": "Out of stock",
+        "left": "{amount} left, minimum {minimum}",
+        "more": "{count, plural, one {See # more product} other {See # more products}}"
     }
 }
