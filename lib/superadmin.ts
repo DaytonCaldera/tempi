@@ -352,6 +352,8 @@ export async function getOrganizationDetail(id: string) {
             clientCode: organization.clientCode,
             ownerEmail: organization.ownerEmail ?? null,
             planName: (plan?.name as string | undefined) ?? null,
+            /** The assigned plan (clients.planId). A trial or subscription may give another one: see getPlanUsage */
+            planId: organization.planId?.toString() ?? null,
             createdAt: organization.createdAt ?? organization._id.getTimestamp(),
             status: organization.status === "closed" ? "closed" as const : "open" as const,
             closedAt: organization.closedAt ?? null,

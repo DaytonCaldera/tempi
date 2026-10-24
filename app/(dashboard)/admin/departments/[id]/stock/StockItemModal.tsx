@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Package, Hash, Ruler, RefreshCw } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { usePlanLimitDialog } from "@/components/admin/PlanLimitDialog";
 import { STOCK_UNITS } from "@/lib/constants";
 import type { StockRow } from "./useDepartmentStock";
 
@@ -36,6 +37,7 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
     const tUnits = useTranslations("units");
     const isEditing = !!editingItem;
     const [isSaving, setIsSaving] = useState(false);
+    const { handlePlanError, planDialog } = usePlanLimitDialog();
     const [formData, setFormData] = useState<StockItemForm>(() => editingItem
         ? { name: editingItem.productName, sku: editingItem.sku, unit: editingItem.unit, quantity: editingItem.quantity, minStock: editingItem.minStock }
         : { name: "", sku: generateSKU(departmentName), unit: STOCK_UNITS[0], quantity: 0, minStock: 5 });
@@ -62,7 +64,10 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                 }
             );
             if (res.ok) onSaved();
-            else alert((await res.json()).error || tErrors("saveFailed"));
+            else {
+                const data = await res.json().catch(() => ({}));
+                if (!handlePlanError(data)) alert(data.error || tErrors("saveFailed"));
+            }
         } catch (error) {
             console.error("Error saving stock:", error);
         } finally {
@@ -170,6 +175,7 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                     {isSaving ? tCommon("saving") : isEditing ? tCommon("saveChanges") : t("register")}
                 </button>
             </div>
+            {planDialog}
         </Modal>
     );
 }

@@ -52,17 +52,62 @@ export interface Organization {
     closedMemberships?: { userId: ObjectId; membership: Membership }[];
     reopenedAt?: Date;
     reopenedBy?: string;
+    /** Paid subscription, written only by the billing webhook (app/api/billing/webhook) */
+    subscription?: Subscription;
+    /** Free time on another plan (e.g. Pro for the organizations that existed before paid plans). See lib/plans.ts */
+    trial?: { planId: ObjectId; endsAt: Date };
 }
+
+/** Lemon Squeezy subscription statuses (https://docs.lemonsqueezy.com/api/subscriptions). */
+export type SubscriptionStatus = "on_trial" | "active" | "paused" | "past_due" | "unpaid" | "cancelled" | "expired";
+
+export interface Subscription {
+    provider: "lemonsqueezy";
+    id: string;
+    status: SubscriptionStatus;
+    planId: ObjectId;
+    variantId?: string;
+    /** Next charge. Missing once it is cancelled */
+    renewsAt?: Date | null;
+    /** When a cancelled subscription stops giving access */
+    endsAt?: Date | null;
+    /** When it went past_due, for the grace period */
+    pastDueSince?: Date | null;
+    portalUrl?: string;
+    updatedAt: Date;
+}
+
+/** Plans of the public catalog. Custom plans (isCustom) have no key. */
+export type PlanKey = "free" | "pro" | "business";
 
 export interface Plan {
     _id: ObjectId;
+    /** Stable id of a catalog plan; name is only what is shown */
+    key?: PlanKey;
     name: string;
+    /** USD per month */
     price: number;
+    /** USD per year (0 or missing: no yearly billing) */
+    priceYearly?: number;
+    // 0 or missing means unlimited (see lib/plans.ts)
     maxDepartments: number;
     maxUsers: number;
     maxItems: number;
+    /** How many days back reports and movement details can look. 0 or missing: all of it */
+    historyDays?: number;
+    /** Keys of PLAN_FEATURES */
     features: string[];
     isActive: boolean;
+    /** A plan made by the superadmin for one organization (clientId). Never listed publicly */
+    isCustom?: boolean;
+    clientId?: ObjectId;
+    notes?: string;
+    /** How the plan is paid. "manual": invoiced by Vitalliz, the superadmin assigns it */
+    billingMode?: "lemonsqueezy" | "manual";
+    /** Lemon Squeezy variants of a catalog plan */
+    billing?: { monthlyVariantId?: string; yearlyVariantId?: string };
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export interface Department<Id = ObjectId> {

@@ -1,13 +1,26 @@
-import type { Document } from 'mongodb';
+import type { Document, ObjectId } from 'mongodb';
 import { getTranslations } from 'next-intl/server';
 import { getDb } from '@/lib/api';
 import { MOVEMENT_REASONS } from '@/lib/constants';
+import { clampToHistory, getOrganizationPlan } from '@/lib/plans';
 import type { ConsumptionReportDepartment, MovementType } from '@/types/models';
 
 /**
  * Server only: the consumption report. Used by GET /api/admin/reports/consumption (scoped to the session's
  * organization) and by the superadmin's read-only view of an organization.
  */
+
+/** Response header that tells the client the report was cut to the plan's history (lib/plans.ts clampToHistory). */
+export const HISTORY_LIMITED_HEADER = "X-History-Limited-From";
+
+/** The start date the organization's plan allows for a report that starts at `start`. */
+export async function reportRange(clientId: ObjectId | null, start: Date) {
+    if (!clientId) return { start, limitedFrom: null };
+    return clampToHistory(await getOrganizationPlan(clientId), start);
+}
+
+export const historyHeaders = (limitedFrom: Date | null): Record<string, string> =>
+    limitedFrom ? { [HISTORY_LIMITED_HEADER]: limitedFrom.toISOString() } : {};
 
 /** Amount of a movement of `type`, and minus the amount of a correction that reverses one (so an undone OUT isn't consumption). */
 const signedAmount = (type: MovementType) => {

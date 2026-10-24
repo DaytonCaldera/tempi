@@ -1,12 +1,12 @@
-# 📦 TEMPI | Real-Time Inventory & Logistics
+# 📦 Vitalliz | Real-Time Inventory & Logistics
 
-**TEMPI** is a high-performance, real-time inventory management ecosystem designed for fast-paced environments like events, warehouses, and department-based logistics. Built with **Next.js 15**, it balances administrative control with "on-the-ground" agility.
+**Vitalliz** is a high-performance, real-time inventory management ecosystem designed for fast-paced environments like events, warehouses, and department-based logistics. Built with **Next.js 15**, it balances administrative control with "on-the-ground" agility.
 
 ---
 
 ## 🚀 The Core Philosophy
 
-Unlike traditional inventory systems that only track "current numbers," TEMPI is built on a **Double-Entry Audit System**. Every single change—no matter how small—is logged with a user ID, timestamp, and reason, ensuring total transparency and historical accountability.
+Unlike traditional inventory systems that only track "current numbers," Vitalliz is built on a **Double-Entry Audit System**. Every single change—no matter how small—is logged with a user ID, timestamp, and reason, ensuring total transparency and historical accountability.
 
 ### Key Features
 
@@ -34,7 +34,7 @@ Unlike traditional inventory systems that only track "current numbers," TEMPI is
 
 ## 📈 Data Architecture
 
-TEMPI utilizes a **Denormalized Audit Pattern**. When a movement occurs, we capture the department and product metadata at that exact moment. This ensures that historical reports remain accurate even if products are renamed or departments are deleted in the future.
+Vitalliz utilizes a **Denormalized Audit Pattern**. When a movement occurs, we capture the department and product metadata at that exact moment. This ensures that historical reports remain accurate even if products are renamed or departments are deleted in the future.
 
 ### Movement Log Structure
 ```json
@@ -45,7 +45,7 @@ TEMPI utilizes a **Denormalized Audit Pattern**. When a movement occurs, we capt
   "productName": "Water Bottles 500ml",
   "type": "OUT",
   "amount": 24,
-  "user": { "name": "John Doe", "email": "john@tempi.com" },
+  "user": { "name": "John Doe", "email": "john@example.com" },
   "createdAt": "2026-04-06T15:00:00Z"
 }
 ```

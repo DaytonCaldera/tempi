@@ -66,7 +66,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                             <LayoutGrid className="text-on-accent" size={20} />
                         </div>
                         <span className={`text-xl font-semibold tracking-tight transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>
-                            TEMPI
+                            VITALLIZ
                         </span>
                     </div>
                     

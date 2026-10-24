@@ -30,6 +30,12 @@
             "labelKey": "staff",
             "icon": "Users",
             "permission": "manage_users"
+        },
+        {
+            "href": "/admin/plan",
+            "labelKey": "plan",
+            "icon": "CreditCard",
+            "permission": "manage_users"
         }
     ]
 }

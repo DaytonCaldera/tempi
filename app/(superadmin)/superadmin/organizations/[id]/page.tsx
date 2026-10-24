@@ -19,7 +19,7 @@ export default async function SuperadminOrganizationPage({ params }: { params: P
     const { id } = await params;
     const clientId = toObjectId(id);
     const [detail, usage, plans] = await Promise.all([
-        getOrganizationDetail(id), clientId ? getPlanUsage(clientId) : null, listActivePlans(),
+        getOrganizationDetail(id), clientId ? getPlanUsage(clientId) : null, listActivePlans(clientId),
     ]);
     if (!detail || !usage) notFound();
 
@@ -61,7 +61,7 @@ export default async function SuperadminOrganizationPage({ params }: { params: P
             </dl>
 
             <div className="mb-8">
-                <PlanUsageCard usage={usage} title={t("detail.plan")} />
+                <PlanUsageCard usage={usage} title={t("detail.plan")} upgradeLink={false} />
             </div>
 
             <div className="mb-8">
@@ -112,7 +112,7 @@ export default async function SuperadminOrganizationPage({ params }: { params: P
                         clientId={org._id}
                         name={org.name}
                         plans={plans}
-                        currentPlanId={usage.plan?._id ?? null}
+                        currentPlanId={org.planId}
                         candidates={members
                             .filter(m => !m.isOwner && m.status === "active" && m.role !== ROLES.PENDING_USER)
                             .map(m => ({ _id: m._id, name: m.name, email: m.email }))}

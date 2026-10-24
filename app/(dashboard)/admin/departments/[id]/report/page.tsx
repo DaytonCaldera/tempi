@@ -4,8 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { toObjectId } from '@/lib/api';
-import { PERMISSIONS } from '@/lib/constants';
+import { PERMISSIONS, PLAN_FEATURES } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
+import { hasPlanFeature } from '@/lib/plans';
 import { hasPermission } from '@/lib/permissions';
 import ConsumptionReport from '@/components/admin/consumption/ConsumptionReport';
 
@@ -31,7 +32,11 @@ export default async function DepartmentReportPage({ params }: { params: Promise
                     <ArrowLeft size={14} /> {t('backToDepartment')}
                 </Link>
             </div>
-            <ConsumptionReport deptId={id} title={t('departmentTitle', { name: department.name })} />
+            <ConsumptionReport
+                deptId={id}
+                title={t('departmentTitle', { name: department.name })}
+                canExport={await hasPlanFeature(department.clientId, PLAN_FEATURES.EXPORT_CSV)}
+            />
         </div>
     );
 }

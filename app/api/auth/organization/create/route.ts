@@ -23,7 +23,8 @@ export async function POST(req: Request) {
 
         const db = await getDb();
 
-        const defaultPlan = await db.collection("plans").findOne({ name: DEFAULT_PLAN_NAME });
+        const defaultPlan = await db.collection("plans").findOne({ key: "free" })
+            ?? await db.collection("plans").findOne({ name: DEFAULT_PLAN_NAME });
         if (!defaultPlan) return apiError("defaultPlanNotFound", 500);
 
         const t = await getTranslations("api");

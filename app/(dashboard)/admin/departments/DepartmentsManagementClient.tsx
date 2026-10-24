@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import { Modal } from "@/components/ui/Modal";
+import { usePlanLimitDialog } from "@/components/admin/PlanLimitDialog";
 import { labelOf } from "@/i18n/labels";
 import { Users, Package, Edit3, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,7 @@ export default function DepartmentsManagementClient({
     const tRoles = useTranslations("roles");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDept, setEditingDept] = useState<DepartmentRow | null>(null);
+    const { handlePlanError, planDialog } = usePlanLimitDialog();
 
     const [viewingPersonnel, setViewingPersonnel] = useState<Personnel[] | null>(null);
     const [activeDeptName, setActiveDeptName] = useState("");
@@ -104,7 +106,7 @@ export default function DepartmentsManagementClient({
                 router.refresh();
             } else {
                 const data = await res.json();
-                alert(data.error || tErrors("saveFailed"));
+                if (!handlePlanError(data)) alert(data.error || tErrors("saveFailed"));
             }
         } catch {
             alert(tErrors("connection"));
@@ -239,6 +241,7 @@ export default function DepartmentsManagementClient({
                     ))}
                 </div>
             </Modal>
+            {planDialog}
         </div>
     );
 }

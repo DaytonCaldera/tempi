@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
-import { assignedDepartmentIds, assignedStock } from "@/lib/departments";
+import { assignedStock, runnerDepartmentIds } from "@/lib/departments";
 import RunnerInventory from "@/components/main/RunnerInventory";
 import { SignOut } from "@/components/AuthButtons";
 
@@ -26,14 +26,14 @@ export default async function RunnerPage() {
     const session = await auth();
     if (!session?.user) redirect("/");
 
-    const departmentIds = assignedDepartmentIds(session);
+    const departmentIds = await runnerDepartmentIds(session);
     if (departmentIds.length === 0) return <NoAssignedAreas />;
 
     // A <div>: the (main) layout already renders the page's <main>
     return (
         <div className="min-h-screen bg-canvas">
             <RunnerInventory
-                initialItems={await assignedStock(session)}
+                initialItems={await assignedStock(session, departmentIds)}
                 assignedAreaCount={departmentIds.length}
             />
         </div>

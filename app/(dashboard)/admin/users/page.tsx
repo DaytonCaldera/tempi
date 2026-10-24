@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getDb, toObjectId } from '@/lib/api';
-import { LEGAL, ROLES } from '@/lib/constants';
-import { getPlanUsage } from '@/lib/plans';
+import { PLAN_FEATURES, ROLES } from '@/lib/constants';
+import { getPlanUsage, planHasFeature } from '@/lib/plans';
 import PlanUsageCard from '@/components/admin/PlanUsageCard';
 import { hasPermission } from '@/lib/permissions';
 import { getClientTenantQuery, getTenantQuery, getUserTenantQuery } from '@/lib/tenant-guard';
@@ -45,13 +45,14 @@ export default async function UserManagementPage() {
 
     return (
         <div className="p-6 lg:p-10">
-            {usage && <div className="mb-8"><PlanUsageCard usage={usage} contactEmail={LEGAL.contactEmail} /></div>}
+            {usage && <div className="mb-8"><PlanUsageCard usage={usage} /></div>}
             <UserManagementClient
                 users={users}
                 departments={departments}
                 client={organization ? { _id: organization._id.toString(), code: organization.clientCode, name: organization.name } : null}
                 canCloseOrganization={!!organization && !!session.user.clientId && canCloseOrganization(session, organization)}
                 isLastOrganization={otherActiveMemberships(session.user.organizations, session.user.clientId ?? "").length === 0}
+                canAssignDepartments={planHasFeature(usage?.plan ?? null, PLAN_FEATURES.DEPARTMENT_ASSIGNMENT)}
             />
         </div>
     );

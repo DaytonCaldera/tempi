@@ -42,7 +42,7 @@ export const getSuperAdminEmail = (): string | null => {
 
 /** Details shown on the privacy policy and terms pages (app/(main)/privacy, app/(main)/terms). */
 export const LEGAL = {
-    contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@tempi.pro",
+    contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@vitalliz.com",
     // Bump when the text in the "legal" messages changes
     effectiveDate: "2026-10-23",
 };
@@ -79,5 +79,21 @@ export const STOCK_UNITS = ["unidades", "kg", "cajas", "litros"] as const;
 /** Minimum length of the reason the superadmin types for a support tool, so every audit entry says something useful. */
 export const SUPPORT_REASON_MIN_LENGTH = 10;
 
-/** Name of the plan new organizations start on ("plans" collection). */
+/** Name of the plan new organizations start on ("plans" collection). Only a fallback: it is found by key "free" */
 export const DEFAULT_PLAN_NAME = "Plan Gratuito";
+
+/** Catalog plans, cheapest first. scripts/seed-plans.js creates them; their limits are edited from /superadmin/plans */
+export const PLAN_KEYS = ["free", "pro", "business"] as const;
+
+/** Features a plan can include (plans.features). Checked with hasPlanFeature / planFeatureError (lib/plans.ts) */
+export const PLAN_FEATURES = {
+    // Runners only see the departments they are assigned to. Without it, they see all of them
+    DEPARTMENT_ASSIGNMENT: "department_assignment",
+    EXPORT_CSV: "export_csv",
+    PRIORITY_SUPPORT: "priority_support",
+} as const;
+
+export type PlanFeature = typeof PLAN_FEATURES[keyof typeof PLAN_FEATURES];
+
+/** Days a past_due subscription keeps its plan while the payment is retried */
+export const BILLING_GRACE_DAYS = 7;

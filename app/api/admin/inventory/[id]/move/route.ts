@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
 import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
-import { assignedDepartmentIds, findOwnDepartment } from "@/lib/departments";
+import { findOwnDepartment, runnerDepartmentIds } from "@/lib/departments";
 import type { MovementType, StockItem } from "@/types/models";
 
 const MANAGEMENT_ROLES = [ROLES.ADMIN];
@@ -36,7 +36,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const role = session.user.role;
         const isManagement = MANAGEMENT_ROLES.includes(role);
         const isAssignedUser = role === ROLES.USER &&
-            assignedDepartmentIds(session).some(id => id.equals(item.departmentId));
+            (await runnerDepartmentIds(session)).some(id => id.equals(item.departmentId));
 
         if (!isManagement && !isAssignedUser) {
             return forbidden("moveNotAllowed");

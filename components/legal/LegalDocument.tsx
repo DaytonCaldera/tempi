@@ -30,7 +30,7 @@ export default async function LegalDocument({ document, sections }: Props) {
     return (
         <div className="relative z-10 max-w-3xl mx-auto px-6 py-12">
             <Link href="/" className="text-sm text-ink-muted hover:text-ink">
-                ← TEMPI
+                ← Vitalliz
             </Link>
 
             <h1 className="mt-6 text-4xl font-semibold tracking-tight">{t("title")}</h1>

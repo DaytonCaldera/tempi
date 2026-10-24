@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "title": "Tempi | Todo cuadra",
+        "title": "Vitalliz | Todo cuadra",
         "description": "Cierra cada evento sabiendo a dónde fue cada unidad. Sin conteos a medianoche ni pérdidas que descubres tarde. Tu negocio bajo control, tu mente en paz."
     },
     "common": {
@@ -67,7 +67,16 @@
             "users": "Tu plan ({plan}) permite hasta {limit} miembros activos. Mejora el plan para añadir más.",
             "departments": "Tu plan ({plan}) permite hasta {limit} departamentos. Mejora el plan para añadir más.",
             "items": "Tu plan ({plan}) permite hasta {limit} productos. Mejora el plan para añadir más."
-        }
+        },
+        "planFeature": {
+            "department_assignment": "Tu plan ({plan}) no incluye asignar personal a departamentos. Mejora el plan para usarlo.",
+            "export_csv": "Tu plan ({plan}) no incluye exportar reportes. Mejora el plan para descargarlos.",
+            "priority_support": "Tu plan ({plan}) no incluye soporte prioritario."
+        },
+        "billingNotConfigured": "Los pagos en línea aún no están disponibles. Escríbenos para cambiar tu plan.",
+        "planNotPurchasable": "Este plan no se puede comprar en línea. Escríbenos para contratarlo.",
+        "checkoutFailed": "No se pudo iniciar el pago. Inténtalo de nuevo en unos minutos.",
+        "ownerOnly": "Solo el propietario de la organización puede gestionar la suscripción."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -113,7 +122,8 @@
         "unnamedOrganization": "Organización sin nombre",
         "joinOrCreate": "+ Unirse o crear nueva",
         "switching": "Cambiando contexto...",
-        "account": "Mi cuenta"
+        "account": "Mi cuenta",
+        "plan": "Plan y facturación"
     },
     "theme": {
         "label": "Tema",
@@ -122,7 +132,7 @@
         "system": "Sistema"
     },
     "landing": {
-        "cta": "Empieza con Google",
+        "cta": "Empieza ahora",
         "hero": {
             "eyebrow": "Para equipos que viven de su inventario",
             "title": "Cierra cada evento sabiendo que todo cuadra.",
@@ -193,7 +203,9 @@
             "title": "Tu negocio bajo control. Tu mente en paz.",
             "subtitle": "Una herramienta para la mente y para el negocio."
         },
-        "legalNotice": "Al iniciar sesión aceptas los <terms>Términos de Servicio</terms> y la <privacy>Política de Privacidad</privacy>."
+        "legalNotice": "Al iniciar sesión aceptas los <terms>Términos de Servicio</terms> y la <privacy>Política de Privacidad</privacy>.",
+        "signIn": "Iniciar sesión",
+        "pricingDetails": "Ver todos los detalles de los planes"
     },
     "pending": {
         "title": "Acceso pendiente",
@@ -204,6 +216,37 @@
         "loading": "Cargando contexto...",
         "title": "No estás autorizado para acceder a esta página",
         "deactivated": "Tu cuenta ha sido desactivada. Por favor, contacta al administrador para más información."
+    },
+    "login": {
+        "title": "Inicia sesión en Vitalliz",
+        "subtitle": "¿Eres nuevo? Al iniciar sesión se crea tu cuenta.",
+        "google": "Continuar con Google",
+        "microsoft": "Continuar con Microsoft",
+        "or": "o",
+        "emailLabel": "Correo electrónico",
+        "emailPlaceholder": "tu@empresa.com",
+        "emailButton": "Enviarme un enlace de acceso",
+        "sending": "Enviando...",
+        "legalNotice": "Al iniciar sesión aceptas los <terms>Términos de Servicio</terms> y la <privacy>Política de Privacidad</privacy>.",
+        "errors": {
+            "OAuthAccountNotLinked": "Este correo ya tiene una cuenta. Inicia sesión como lo hiciste la primera vez, o con un enlace por correo.",
+            "EmailSignin": "No pudimos enviar el correo. Espera unos minutos y vuelve a intentarlo.",
+            "Verification": "Ese enlace expiró o ya se usó. Pide uno nuevo.",
+            "AccessDenied": "Esta cuenta no puede iniciar sesión. Prueba otro método.",
+            "default": "Algo salió mal al iniciar sesión. Vuelve a intentarlo."
+        },
+        "checkEmail": {
+            "title": "Revisa tu correo",
+            "description": "Te enviamos un enlace de acceso. Funciona una sola vez y expira en 15 minutos. Si no lo ves, revisa la carpeta de spam.",
+            "retry": "Usar otro correo o método"
+        }
+    },
+    "magicLink": {
+        "subject": "Tu enlace de acceso a {host}",
+        "title": "Inicia sesión en Vitalliz",
+        "button": "Iniciar sesión",
+        "expires": "Este enlace funciona una sola vez y expira en {minutes} minutos.",
+        "ignore": "Si no lo pediste, puedes ignorar este correo."
     },
     "lobby": {
         "invalidCode": "Código inválido",
@@ -220,8 +263,11 @@
             "modalDescription": "Define el nombre comercial de tu empresa. Podrás editarlo después.",
             "nameLabel": "Nombre de la empresa",
             "namePlaceholder": "Ej: Eventos del Pacífico",
-            "confirm": "Confirmar y crear"
-        }
+            "confirm": "Confirmar y crear",
+            "modalDescriptionCheckout": "Define el nombre comercial de tu empresa. Después irás al pago seguro de tu plan.",
+            "confirmCheckout": "Crear y continuar al pago"
+        },
+        "checkoutIntent": "Crea tu empresa para continuar con el pago de tu plan."
     },
     "runner": {
         "title": "Monitoreo de inventario",
@@ -333,7 +379,7 @@
         "areaAssignment": "Asignación de áreas",
         "closeOrganization": {
             "title": "Cerrar organización",
-            "description": "Quita a todos los miembros de la organización y desactiva su código de invitación. Úsalo si ya no usas Tempi o creaste esta empresa por error.",
+            "description": "Quita a todos los miembros de la organización y desactiva su código de invitación. Úsalo si ya no usas Vitalliz o creaste esta empresa por error.",
             "button": "Cerrar organización",
             "warning": "Todos los miembros perderán el acceso a {name} de inmediato. Esto no se puede deshacer desde la aplicación.",
             "confirmLabel": "Escribe {name} para confirmar",
@@ -372,7 +418,8 @@
             "out": "Salidas",
             "balance": "Balance",
             "currentFinal": "Inv. actual (final)",
-            "final": "Inv. final"
+            "final": "Inv. final",
+            "department": "Departamento"
         },
         "movements": {
             "title": "Historial de movimientos recientes",
@@ -401,7 +448,7 @@
         "contactBody": "Si tiene preguntas sobre este documento o desea ejercer sus derechos, escriba a <email></email>.",
         "privacy": {
             "title": "Política de Privacidad",
-            "intro": "Esta política explica qué información recopila TEMPI (\"nosotros\", \"el servicio\") cuando usa la aplicación de gestión de inventario, cómo la usamos y qué opciones tiene. Al iniciar sesión en TEMPI acepta las prácticas aquí descritas.",
+            "intro": "Esta política explica qué información recopila Vitalliz (\"nosotros\", \"el servicio\") cuando usa la aplicación de gestión de inventario, cómo la usamos y qué opciones tiene. Al iniciar sesión en Vitalliz acepta las prácticas aquí descritas.",
             "sections": {
                 "collect": {
                     "title": "Información que recopilamos",
@@ -418,9 +465,9 @@
                 "google": {
                     "title": "Datos de usuario de Google",
                     "paragraphs": [
-                        "TEMPI usa el inicio de sesión de Google únicamente para autenticarlo. Solicitamos solo los permisos básicos \"openid\", \"email\" y \"profile\": no accedemos a su Gmail, Google Drive, Calendar, contactos ni a ningún otro servicio de Google.",
-                        "Su nombre, correo y foto de perfil de Google se usan exclusivamente para crear e identificar su cuenta de TEMPI, mostrar quién es dentro de su organización y atribuirle los movimientos de inventario en el registro de auditoría. No usamos los datos de usuario de Google para publicidad, no los vendemos y no los transferimos a terceros, salvo cuando sea necesario para prestar el servicio o lo exija la ley.",
-                        "El uso y la transferencia que TEMPI hace de la información recibida de las API de Google se ajustan a la Política de Datos de Usuario de los Servicios de API de Google (Google API Services User Data Policy), incluidos los requisitos de Uso Limitado."
+                        "Vitalliz usa el inicio de sesión de Google únicamente para autenticarlo. Solicitamos solo los permisos básicos \"openid\", \"email\" y \"profile\": no accedemos a su Gmail, Google Drive, Calendar, contactos ni a ningún otro servicio de Google.",
+                        "Su nombre, correo y foto de perfil de Google se usan exclusivamente para crear e identificar su cuenta de Vitalliz, mostrar quién es dentro de su organización y atribuirle los movimientos de inventario en el registro de auditoría. No usamos los datos de usuario de Google para publicidad, no los vendemos y no los transferimos a terceros, salvo cuando sea necesario para prestar el servicio o lo exija la ley.",
+                        "El uso y la transferencia que Vitalliz hace de la información recibida de las API de Google se ajustan a la Política de Datos de Usuario de los Servicios de API de Google (Google API Services User Data Policy), incluidos los requisitos de Uso Limitado."
                     ]
                 },
                 "use": {
@@ -440,7 +487,7 @@
                     "title": "Quién puede ver su información",
                     "paragraphs": [
                         "Dentro de la aplicación, los administradores y miembros de una organización a la que pertenece pueden ver su nombre, correo, foto de perfil y rol en esa organización, así como los movimientos de stock que realizó en ella. Las organizaciones no pueden ver su actividad en otras organizaciones.",
-                        "No vendemos ni alquilamos información personal. Solo la compartimos con los proveedores que alojan la aplicación y su base de datos, que la procesan en nuestro nombre y únicamente para operar TEMPI, o cuando lo exija la ley."
+                        "No vendemos ni alquilamos información personal. Solo la compartimos con los proveedores que alojan la aplicación y su base de datos, que la procesan en nuestro nombre y únicamente para operar Vitalliz, o cuando lo exija la ley."
                     ]
                 },
                 "storage": {
@@ -461,19 +508,19 @@
                     "title": "Sus derechos",
                     "paragraphs": [
                         "Puede solicitarnos el acceso, la rectificación o la supresión de su información personal, u oponerse a su tratamiento, escribiendo a la dirección indicada abajo. Estos derechos incluyen los reconocidos por la Ley 8968 de Protección de la Persona frente al Tratamiento de sus Datos Personales de Costa Rica y leyes similares del lugar donde vive.",
-                        "También puede revocar en cualquier momento el acceso de TEMPI a su cuenta de Google desde la configuración de su Cuenta de Google (Seguridad → Aplicaciones de terceros con acceso a la cuenta)."
+                        "También puede revocar en cualquier momento el acceso de Vitalliz a su cuenta de Google desde la configuración de su Cuenta de Google (Seguridad → Aplicaciones de terceros con acceso a la cuenta)."
                     ]
                 },
                 "cookies": {
                     "title": "Cookies",
                     "paragraphs": [
-                        "TEMPI usa solo cookies esenciales: cookies de autenticación que mantienen su sesión y protegen el inicio de sesión, y una cookie que recuerda su idioma. No usamos cookies publicitarias ni de seguimiento de terceros."
+                        "Vitalliz usa solo cookies esenciales: cookies de autenticación que mantienen su sesión y protegen el inicio de sesión, y una cookie que recuerda su idioma. No usamos cookies publicitarias ni de seguimiento de terceros."
                     ]
                 },
                 "children": {
                     "title": "Menores de edad",
                     "paragraphs": [
-                        "TEMPI es una herramienta empresarial y no está dirigida a menores de 13 años. No recopilamos a sabiendas información de menores."
+                        "Vitalliz es una herramienta empresarial y no está dirigida a menores de 13 años. No recopilamos a sabiendas información de menores."
                     ]
                 },
                 "changes": {
@@ -486,7 +533,7 @@
         },
         "terms": {
             "title": "Términos de Servicio",
-            "intro": "Estos términos regulan el uso de TEMPI, una aplicación de gestión de inventario y logística. Al iniciar sesión o usar el servicio acepta estos términos. Si usa TEMPI en nombre de una empresa, confirma que está autorizado para aceptarlos en su nombre.",
+            "intro": "Estos términos regulan el uso de Vitalliz, una aplicación de gestión de inventario y logística. Al iniciar sesión o usar el servicio acepta estos términos. Si usa Vitalliz en nombre de una empresa, confirma que está autorizado para aceptarlos en su nombre.",
             "sections": {
                 "acceptance": {
                     "title": "Aceptación",
@@ -497,7 +544,7 @@
                 "service": {
                     "title": "El servicio",
                     "paragraphs": [
-                        "TEMPI permite a las organizaciones gestionar departamentos, productos y niveles de stock, registrar movimientos de inventario y generar reportes de consumo. Las funciones y los límites pueden depender del plan que use su organización."
+                        "Vitalliz permite a las organizaciones gestionar departamentos, productos y niveles de stock, registrar movimientos de inventario y generar reportes de consumo. Las funciones y los límites pueden depender del plan que use su organización."
                     ]
                 },
                 "accounts": {
@@ -509,13 +556,13 @@
                 "organizations": {
                     "title": "Organizaciones y roles",
                     "paragraphs": [
-                        "Quien crea una organización se convierte en su administrador. Los administradores deciden quién puede unirse, qué rol y departamentos tiene cada miembro, y pueden desactivar miembros. Cada organización es responsable de la información que ingresan sus miembros y de cómo usa TEMPI con su personal."
+                        "Quien crea una organización se convierte en su administrador. Los administradores deciden quién puede unirse, qué rol y departamentos tiene cada miembro, y pueden desactivar miembros. Cada organización es responsable de la información que ingresan sus miembros y de cómo usa Vitalliz con su personal."
                     ]
                 },
                 "acceptableUse": {
                     "title": "Uso aceptable",
                     "paragraphs": [
-                        "Al usar TEMPI se compromete a no:"
+                        "Al usar Vitalliz se compromete a no:"
                     ],
                     "bullets": [
                         "Acceder a organizaciones, datos o funciones a los que no se le ha dado acceso, ni intentar evadir los permisos.",
@@ -533,19 +580,19 @@
                 "availability": {
                     "title": "Disponibilidad y cambios",
                     "paragraphs": [
-                        "Trabajamos para que TEMPI esté disponible y sea preciso, pero el servicio se ofrece \"tal cual\" y \"según disponibilidad\", sin garantía de que funcione sin interrupciones ni errores. Podemos cambiar, agregar o quitar funciones, y procuraremos avisar de los cambios que le afecten de forma importante. Guarde sus propias copias de los registros que esté obligado a conservar."
+                        "Trabajamos para que Vitalliz esté disponible y sea preciso, pero el servicio se ofrece \"tal cual\" y \"según disponibilidad\", sin garantía de que funcione sin interrupciones ni errores. Podemos cambiar, agregar o quitar funciones, y procuraremos avisar de los cambios que le afecten de forma importante. Guarde sus propias copias de los registros que esté obligado a conservar."
                     ]
                 },
                 "termination": {
                     "title": "Suspensión y terminación",
                     "paragraphs": [
-                        "Puede dejar de usar TEMPI en cualquier momento y pedirnos que eliminemos su cuenta. Podemos suspender o terminar el acceso de cuentas u organizaciones que incumplan estos términos o pongan en riesgo el servicio o a otros usuarios."
+                        "Puede dejar de usar Vitalliz en cualquier momento y pedirnos que eliminemos su cuenta. Podemos suspender o terminar el acceso de cuentas u organizaciones que incumplan estos términos o pongan en riesgo el servicio o a otros usuarios."
                     ]
                 },
                 "liability": {
                     "title": "Limitación de responsabilidad",
                     "paragraphs": [
-                        "En la medida en que la ley lo permita, TEMPI y sus operadores no son responsables por daños indirectos, incidentales o consecuentes, ni por pérdida de ganancias, datos o negocios, derivados del uso o la imposibilidad de usar el servicio. Las cifras de inventario y los reportes dependen de los datos ingresados por los usuarios y deben verificarse antes de usarlos para decisiones importantes."
+                        "En la medida en que la ley lo permita, Vitalliz y sus operadores no son responsables por daños indirectos, incidentales o consecuentes, ni por pérdida de ganancias, datos o negocios, derivados del uso o la imposibilidad de usar el servicio. Las cifras de inventario y los reportes dependen de los datos ingresados por los usuarios y deben verificarse antes de usarlos para decisiones importantes."
                     ]
                 },
                 "law": {
@@ -557,7 +604,7 @@
                 "changes": {
                     "title": "Cambios a estos términos",
                     "paragraphs": [
-                        "Podemos actualizar estos términos. La fecha de \"última actualización\" indicada arriba muestra cuándo cambiaron por última vez. Si sigue usando TEMPI después de un cambio, acepta los términos actualizados."
+                        "Podemos actualizar estos términos. La fecha de \"última actualización\" indicada arriba muestra cuándo cambiaron por última vez. Si sigue usando Vitalliz después de un cambio, acepta los términos actualizados."
                     ]
                 }
             }
@@ -618,7 +665,8 @@
             "signOut": "Cerrar sesión",
             "menu": "Menú del superadmin",
             "health": "Salud",
-            "support": "Soporte"
+            "support": "Soporte",
+            "plans": "Planes"
         },
         "periods": {
             "1d": "24 h",
@@ -694,7 +742,7 @@
         },
         "organizations": {
             "title": "Organizaciones",
-            "subtitle": "Todas las organizaciones creadas en Tempi",
+            "subtitle": "Todas las organizaciones creadas en Vitalliz",
             "searchPlaceholder": "Nombre, propietario o código",
             "count": "{count, plural, one {# organización} other {# organizaciones}}",
             "empty": "Ninguna organización coincide.",
@@ -747,7 +795,7 @@
         },
         "users": {
             "title": "Usuarios",
-            "subtitle": "Todas las personas que entraron a Tempi",
+            "subtitle": "Todas las personas que entraron a Vitalliz",
             "searchPlaceholder": "Nombre o email",
             "count": "{count, plural, one {# usuario} other {# usuarios}}",
             "empty": "Ningún usuario coincide.",
@@ -814,7 +862,10 @@
                 "restore": "Restauró una organización",
                 "export": "Exportó datos",
                 "viewAs": "Vio una organización (solo lectura)",
-                "changePlan": "Cambió el plan"
+                "changePlan": "Cambió el plan",
+                "createPlan": "Creó un plan",
+                "updatePlan": "Editó un plan",
+                "subscription": "Cambió la suscripción"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -964,7 +1015,8 @@
                 "pick": "Elige un plan…",
                 "limits": "{users} miembros · {departments} departamentos · {items} productos",
                 "button": "Cambiar plan",
-                "done": "La organización ahora está en {name}."
+                "done": "La organización ahora está en {name}.",
+                "custom": "Crear un plan personalizado"
             }
         },
         "exportCsv": "Exportar CSV",
@@ -1011,6 +1063,78 @@
                 "out": "salida",
                 "system": "Sistema"
             }
+        },
+        "plans": {
+            "title": "Planes",
+            "subtitle": "El catálogo público y los planes hechos a medida",
+            "newCustom": "Nuevo plan personalizado",
+            "newHint": "Un plan privado para una sola organización. Parte de los valores de Business.",
+            "catalogHint": "Plan del catálogo público. Los cambios se aplican a todas las organizaciones que lo usan.",
+            "back": "Volver a los planes",
+            "catalog": "Catálogo",
+            "customFor": "Personalizado para",
+            "manual": "Facturación manual",
+            "limits": "{users} usuarios · {departments} deptos. · {items} productos",
+            "days": "{days} días",
+            "fullHistory": "Completo",
+            "active": "Activo",
+            "inactive": "Inactivo",
+            "hint": "Los límites en 0 significan sin límite. Bajar un límite nunca quita nada: la organización solo no puede crecer.",
+            "columns": {
+                "plan": "Plan",
+                "price": "Precio",
+                "limits": "Límites",
+                "history": "Historial",
+                "features": "Funciones",
+                "organizations": "Organizaciones",
+                "status": "Estado"
+            },
+            "fields": {
+                "organization": "Organización",
+                "assign": "Asignarle este plan al guardarlo",
+                "name": "Nombre",
+                "price": "Precio mensual (USD)",
+                "priceYearly": "Precio anual (USD)",
+                "maxUsers": "Usuarios aprobados",
+                "maxDepartments": "Departamentos",
+                "maxItems": "Productos",
+                "historyDays": "Días de historial",
+                "features": "Funciones incluidas",
+                "billingMode": "Cobro",
+                "status": "Estado",
+                "monthlyVariantId": "Variante mensual de Lemon Squeezy",
+                "yearlyVariantId": "Variante anual de Lemon Squeezy",
+                "notes": "Notas internas"
+            },
+            "pickOrganization": "Elige una organización…",
+            "namePlaceholder": "Ej. Business Hotel Pacífico",
+            "catalogNameHint": "En la app se muestra el nombre traducido del catálogo; este nombre aparece en los mensajes de límite.",
+            "priceHint": "0 para un plan gratis",
+            "priceYearlyHint": "0 si no se vende por año",
+            "unlimitedHint": "0 = sin límite",
+            "historyHint": "Cuántos días atrás pueden mirar los reportes. 0 = todo",
+            "limitsTitle": "Límites",
+            "billing": {
+                "lemonsqueezy": "En línea (Lemon Squeezy)",
+                "manual": "Manual (factura de Vitalliz)"
+            },
+            "notesPlaceholder": "Lo acordado con el cliente, quién lo pidió…",
+            "preview": "Ver impacto",
+            "save": "Guardar cambios",
+            "create": "Crear plan",
+            "saved": "Plan guardado.",
+            "impact": {
+                "organizations": "{count, plural, =0 {Ninguna organización usa este plan} one {# organización usa este plan} other {# organizaciones usan este plan}}.",
+                "noneOver": "Ninguna quedaría por encima de los nuevos límites.",
+                "over": "{count, plural, one {# quedaría} other {# quedarían}} por encima de un límite: conservan todo, pero no pueden crecer."
+            },
+            "errors": {
+                "invalid": "Revisa los campos: nombre de 1 a 60 caracteres y números desde 0.",
+                "notFound": "El plan ya no existe.",
+                "pickOrganization": "Elige la organización abierta para la que es este plan.",
+                "inUse": "No se puede desactivar: hay organizaciones usándolo. Muévelas a otro plan primero.",
+                "defaultPlan": "El plan gratis no se puede desactivar: es el que reciben las organizaciones nuevas."
+            }
         }
     },
     "plan": {
@@ -1026,7 +1150,47 @@
         "usageUnlimited": "{used}",
         "full": "Límite alcanzado",
         "over": "Por encima del límite: no se quita nada, pero no puedes añadir más",
-        "contact": "Para cambiar tu plan, escribe a {email}."
+        "contact": "Para cambiar tu plan, escribe a {email}.",
+        "names": {
+            "free": "Gratis",
+            "pro": "Pro",
+            "business": "Business"
+        },
+        "trialUntil": "Prueba hasta el {date}",
+        "upgradeHint": "Ver planes con más capacidad",
+        "upgradeShort": "Ver planes",
+        "historyLimited": "Tu plan muestra el historial desde el {date}. Los movimientos anteriores siguen guardados.",
+        "locked": {
+            "export": "Exportar a CSV está disponible en Pro",
+            "assignment": "En tu plan, todo el personal ve todos los departamentos. La asignación se guarda y se aplicará cuando tu plan la incluya."
+        },
+        "limitDialog": {
+            "title": "Llegaste al límite de tu plan",
+            "seePlans": "Ver planes"
+        },
+        "trialBanner": "Te quedan {days, plural, one {# día} other {# días}} de {plan} gratis.",
+        "page": {
+            "title": "Plan y facturación",
+            "checkoutSuccess": "¡Gracias! Tu pago se está procesando y el plan se activará en unos segundos.",
+            "subscription": {
+                "on_trial": "Suscripción en periodo de prueba",
+                "active": "Suscripción activa",
+                "paused": "Suscripción en pausa",
+                "past_due": "Pago pendiente: estamos reintentando el cobro",
+                "unpaid": "Pago fallido: actualiza tu método de pago",
+                "cancelled": "Suscripción cancelada",
+                "expired": "Suscripción vencida"
+            },
+            "renewsOn": "Se renueva el {date}.",
+            "endsOn": "Mantienes el plan hasta el {date}. Después pasas a Gratis sin perder datos.",
+            "trialTitle": "Estás probando un plan de pago",
+            "trialBody": "Hasta el {date}. Después pasas a Gratis sin perder nada: solo no podrás crecer por encima de sus límites.",
+            "manualTitle": "Facturación gestionada por Vitalliz",
+            "manualBody": "Tu plan es personalizado. Para cambios o facturas escribe a {email}.",
+            "manage": "Gestionar suscripción",
+            "comparePlans": "Planes",
+            "fairUse": "\"Sin límite\" está sujeto a uso razonable. Si tu equipo supera los 150 usuarios activos, escríbenos a {email} y armamos un plan a tu medida."
+        }
     },
     "startPage": {
         "title": "¿Empezar en la página de runner?",
@@ -1035,5 +1199,64 @@
         "yes": "Sí, runner",
         "no": "No, panel de control",
         "saving": "Guardando..."
+    },
+    "pricing": {
+        "title": "Precios",
+        "subtitle": "Un precio por organización, no por usuario. Empieza gratis y crece cuando lo necesites.",
+        "interval": {
+            "label": "Periodo de facturación",
+            "monthly": "Mensual",
+            "yearly": "Anual",
+            "saving": "2 meses gratis"
+        },
+        "popular": "Más elegido",
+        "taglines": {
+            "free": "Para empezar con un equipo pequeño.",
+            "pro": "Para negocios con varias áreas y personal.",
+            "business": "Para operaciones grandes sin límite de personal."
+        },
+        "free": "Gratis",
+        "perMonth": "/mes",
+        "perYear": "/año",
+        "yearlyEquivalent": "Equivale a {price} al mes",
+        "rows": {
+            "users": "Usuarios: {value}",
+            "departments": "Departamentos: {value}",
+            "items": "Productos: {value}",
+            "history": "Historial de reportes: {days} días",
+            "historyFull": "Historial de reportes completo",
+            "runner": "Runner, movimientos y deshacer"
+        },
+        "features": {
+            "department_assignment": "Asignar personal a departamentos",
+            "export_csv": "Exportar reportes a CSV",
+            "priority_support": "Soporte prioritario y puesta en marcha"
+        },
+        "notIncluded": "no incluido",
+        "start": "Empezar",
+        "startFree": "Empezar gratis",
+        "current": "Tu plan actual",
+        "upgrade": "Cambiar a {plan}",
+        "contactToBuy": "Escríbenos para contratar este plan.",
+        "checkoutFailed": "No se pudo iniciar el pago. Inténtalo de nuevo.",
+        "faq": {
+            "flat": {
+                "title": "Sin cobro por usuario",
+                "body": "Pagas por organización. Suma a todo tu personal sin compartir cuentas: cada movimiento queda a nombre de quien lo hizo."
+            },
+            "noLoss": {
+                "title": "Nunca pierdes datos",
+                "body": "Si bajas de plan, todo se conserva. Solo no podrás añadir más por encima de los límites del nuevo plan."
+            },
+            "custom": {
+                "title": "¿Necesitas más?",
+                "body": "Armamos planes a medida para operaciones grandes. Escríbenos a {email}."
+            }
+        }
+    },
+    "checkout": {
+        "title": "No pudimos iniciar el pago",
+        "toPlan": "Ver mi plan",
+        "toHome": "Volver al inicio"
     }
 }

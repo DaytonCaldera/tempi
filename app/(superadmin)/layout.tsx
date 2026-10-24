@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("superadmin");
-    return { title: `${t("panel")} · Tempi`, robots: { index: false, follow: false } };
+    return { title: `${t("panel")} · Vitalliz`, robots: { index: false, follow: false } };
 }
 
 /**

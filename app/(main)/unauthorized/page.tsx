@@ -14,7 +14,7 @@ export default function UnauthorizedPage() {
     }
 
     if (status === "unauthenticated") {
-        return <div className="p-6"><Button onClick={() => signIn("google")}>{tCommon("login")}</Button></div>
+        return <div className="p-6"><Button onClick={() => signIn()}>{tCommon("login")}</Button></div>
     }
 
     const isDeactivated = session?.user?.isActive === false;
