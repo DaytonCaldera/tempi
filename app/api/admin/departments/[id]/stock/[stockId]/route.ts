@@ -4,13 +4,15 @@ import { PERMISSIONS } from "@/lib/constants";
 import { apiError, badRequest, getDb, isDuplicateKeyError, notFound, serverError, toObjectId } from "@/lib/api";
 import { findOwnDepartment } from "@/lib/departments";
 import { normalizeBarcode } from "@/lib/sku";
+import { normalizeCost } from "@/lib/currency";
 import { afterStockChange } from "@/lib/stock-alerts";
 
 type Params = { params: Promise<{ id: string; stockId: string }> };
 
 /**
  * PUT /api/admin/departments/[id]/stock/[stockId]
- * Updates a stock item's descriptive fields (name, SKU, barcode, unit, minStock). An empty barcode removes it.
+ * Updates a stock item's descriptive fields (name, SKU, barcode, unit, minStock, unitCost). An empty barcode or
+ * cost removes it. A new cost applies from now on: past movements keep the cost they had.
  * Quantity is NOT changed here: quantity changes go through /api/admin/inventory/[id]/move
  * so they are recorded in stock_movements.
  */
@@ -22,11 +24,14 @@ export async function PUT(req: Request, { params }: Params) {
         const { id, stockId } = await params;
         const departmentId = toObjectId(id);
         const itemId = toObjectId(stockId);
-        const { name, sku, unit, minStock, barcode: rawBarcode } = await req.json();
+        const { name, sku, unit, minStock, barcode: rawBarcode, unitCost: rawCost } = await req.json();
 
         if (!name || !sku) return badRequest("nameAndSkuRequired");
         const barcode = normalizeBarcode(rawBarcode);
         if (barcode === false) return badRequest("invalidBarcode");
+        // Left as it is when the request doesn't mention it
+        const unitCost = rawCost === undefined ? undefined : normalizeCost(rawCost);
+        if (unitCost === false) return badRequest("invalidCost");
         if (!departmentId || !itemId) return notFound("productNotFoundOrDenied");
 
         const db = await getDb();
@@ -49,9 +54,9 @@ export async function PUT(req: Request, { params }: Params) {
             await stock.updateOne(
                 { _id: itemId },
                 {
-                    $set: { productName: name, sku, unit, minStock, updatedAt: new Date(), ...(barcode && { barcode }) },
+                    $set: { productName: name, sku, unit, minStock, updatedAt: new Date(), ...(barcode && { barcode }), ...(typeof unitCost === "number" && { unitCost }) },
                     // Unset rather than "": the unique barcode index only covers products that have one
-                    ...(!barcode && { $unset: { barcode: "" } }),
+                    ...((!barcode || unitCost === null) && { $unset: { ...(!barcode && { barcode: "" }), ...(unitCost === null && { unitCost: "" }) } }),
                 }
             );
         } catch (error) {

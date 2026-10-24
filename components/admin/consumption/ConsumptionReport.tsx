@@ -12,6 +12,8 @@ export interface ReportProps {
     title?: string;
     /** Whether the organization's plan includes the CSV export (PLAN_FEATURES.EXPORT_CSV) */
     canExport?: boolean;
+    /** The organization's currency, for the value of what was consumed */
+    currency: string;
 }
 
 function DateInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
@@ -29,7 +31,7 @@ function DateInput({ value, onChange }: { value: string; onChange: (value: strin
 }
 
 /** Consumption report: stock at the start of a date range, ins and outs during it, and stock at the end. */
-export default function ConsumptionReport({ deptId, title: titleProp, canExport = false }: ReportProps) {
+export default function ConsumptionReport({ deptId, title: titleProp, canExport = false, currency }: ReportProps) {
     const t = useTranslations("reports");
     const tPlan = useTranslations("plan");
     const format = useFormatter();
@@ -129,9 +131,20 @@ export default function ConsumptionReport({ deptId, title: titleProp, canExport 
                             </div>
                         </div>
 
+                        {/* What everything consumed in the range cost, all departments together */}
+                        {data.length > 1 && (
+                            <p className="px-4 text-sm text-ink-muted">
+                                {t.rich("totalConsumedValue", {
+                                    value: format.number(data.reduce((sum, d) => sum + d.items.reduce((s, i) => s + i.consumedValue, 0), 0), { style: "currency", currency, currencyDisplay: "narrowSymbol" }),
+                                    b: (chunks) => <span className="text-lg font-semibold text-ink">{chunks}</span>,
+                                })}
+                            </p>
+                        )}
+
                         {data.map(department => (
                             <DepartmentReportTable
                                 key={department._id}
+                                currency={currency}
                                 department={department}
                                 showDepartmentName={!deptId}
                                 expandedId={expandedId}
@@ -149,7 +162,7 @@ export default function ConsumptionReport({ deptId, title: titleProp, canExport 
             </div>
 
             {/* PRINT VIEW (hidden on screen) */}
-            <PrintableReport title={title} range={range} data={data} showDepartmentNames={!deptId} />
+            <PrintableReport title={title} range={range} data={data} showDepartmentNames={!deptId} currency={currency} />
         </div>
     );
 }

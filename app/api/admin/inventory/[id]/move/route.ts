@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
 import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
+import { costSnapshot } from "@/lib/currency";
 import { findOwnDepartment, runnerDepartmentIds } from "@/lib/departments";
 import { afterStockChange } from "@/lib/stock-alerts";
 import type { MovementType, StockItem } from "@/types/models";
@@ -69,6 +70,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 previousBalance,
                 newBalance,
                 reason: reason || MOVEMENT_REASONS.MANUAL_ADJUSTMENT,
+                ...costSnapshot(item.unitCost),
                 user: { id: toObjectId(session.user.id), name: session.user.name, email: session.user.email },
                 createdAt: new Date()
             });

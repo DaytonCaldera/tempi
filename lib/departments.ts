@@ -63,6 +63,8 @@ export async function assignedStock(session: Session, runnerIds?: ObjectId[]): P
 
     return items.map(item => ({
         ...item,
+        // Costs stay with the people who manage stock and reports: the runner view doesn't show them
+        unitCost: undefined,
         _id: item._id.toString(),
         departmentId: item.departmentId.toString(),
         clientId: item.clientId?.toString(),

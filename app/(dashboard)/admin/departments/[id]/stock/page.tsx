@@ -6,6 +6,7 @@ import { PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { hasPermission } from '@/lib/permissions';
 import { normalizeBarcode } from '@/lib/sku';
+import { getOrganizationCurrency } from '@/lib/organizations';
 import type { Department, StockItem } from '@/types/models';
 import StockManagementClient from './StockManagementClient';
 
@@ -56,6 +57,7 @@ export default async function DepartmentStockPage({ params, searchParams }: {
                 departmentId={department._id.toString()}
                 departmentName={department.name}
                 otherDepartments={otherDepartments.map(d => ({ _id: d._id.toString(), name: d.name }))}
+                currency={await getOrganizationCurrency(department.clientId)}
                 newBarcode={normalizeBarcode((await searchParams).barcode) || undefined}
             />
         </div>

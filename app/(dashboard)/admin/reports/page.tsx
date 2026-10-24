@@ -8,6 +8,7 @@ import { toObjectId } from '@/lib/api';
 import { PERMISSIONS, PLAN_FEATURES } from '@/lib/constants';
 import { hasPermission } from '@/lib/permissions';
 import { hasPlanFeature } from '@/lib/plans';
+import { getOrganizationCurrency } from '@/lib/organizations';
 
 export default async function GeneralReportPage() {
     const session = await auth();
@@ -26,7 +27,11 @@ export default async function GeneralReportPage() {
                     <ArrowLeft size={14} /> {t('backToDashboard')}
                 </Link>
             </div>
-            <ConsumptionReport title={t('generalTitle')} canExport={!!clientId && await hasPlanFeature(clientId, PLAN_FEATURES.EXPORT_CSV)} />
+            <ConsumptionReport
+                title={t('generalTitle')}
+                canExport={!!clientId && await hasPlanFeature(clientId, PLAN_FEATURES.EXPORT_CSV)}
+                currency={await getOrganizationCurrency(clientId)}
+            />
         </div>
     );
 }

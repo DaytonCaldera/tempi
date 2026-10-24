@@ -7,6 +7,7 @@ import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
 import { findOwnDepartment, runnerDepartmentIds } from "@/lib/departments";
 import { planLimitError } from "@/lib/plans";
 import { generateUniqueSKU } from "@/lib/sku";
+import { costSnapshot } from "@/lib/currency";
 import { afterStockChange } from "@/lib/stock-alerts";
 import type { Department, StockItem, TransferPreview } from "@/types/models";
 
@@ -143,12 +144,14 @@ async function transfer({ item, source, target, counterpart, candidates, amount,
             let targetAfter: number;
             let targetSku: string;
             let targetName: string;
+            let targetCost: number | undefined;
             if (counterpart && amount === 0) {
                 // An empty product moved to one that exists: nothing to add
                 targetId = counterpart._id;
                 targetAfter = counterpart.quantity;
                 targetSku = counterpart.sku;
                 targetName = counterpart.productName;
+                targetCost = counterpart.unitCost;
             } else if (counterpart) {
                 const updated = await stock.findOneAndUpdate(
                     { _id: counterpart._id, isDeleted: { $ne: true } },
@@ -164,6 +167,7 @@ async function transfer({ item, source, target, counterpart, candidates, amount,
                 targetAfter = updated.quantity;
                 targetSku = updated.sku;
                 targetName = updated.productName;
+                targetCost = updated.unitCost;
             } else {
                 // Keeps the SKU when the destination doesn't use it, like the barcode (it didn't match any product)
                 const taken = new Set(candidates.map(c => c.sku));
@@ -180,12 +184,14 @@ async function transfer({ item, source, target, counterpart, candidates, amount,
                     ...(item.category && { category: item.category }),
                     quantity: amount,
                     minStock: item.minStock,
+                    ...(item.unitCost !== undefined && { unitCost: item.unitCost }),
                     isDeleted: false,
                     createdAt: now,
                     updatedAt: now,
                 } as StockItem, { session });
                 targetId = insertedId;
                 targetAfter = amount;
+                targetCost = item.unitCost;
             }
 
             const base = { clientId: source.clientId, amount, reason: MOVEMENT_REASONS.TRANSFER, user: movementUser, createdAt: now };
@@ -193,13 +199,13 @@ async function transfer({ item, source, target, counterpart, candidates, amount,
             if (amount > 0) await movements.insertMany([
                 {
                     ...base, inventoryId: item._id, departmentId: source._id, departmentName: source.name,
-                    productName: item.productName, sku: item.sku, type: "OUT",
+                    productName: item.productName, sku: item.sku, type: "OUT", ...costSnapshot(item.unitCost),
                     previousBalance: after.quantity + amount, newBalance: after.quantity,
                     transfer: { id: transferId, departmentId: target._id, departmentName: target.name },
                 },
                 {
                     ...base, inventoryId: targetId, departmentId: target._id, departmentName: target.name,
-                    productName: targetName, sku: targetSku, type: "IN",
+                    productName: targetName, sku: targetSku, type: "IN", ...costSnapshot(targetCost),
                     previousBalance: targetAfter - amount, newBalance: targetAfter,
                     transfer: { id: transferId, departmentId: source._id, departmentName: source.name },
                 },

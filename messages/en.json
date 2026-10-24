@@ -87,7 +87,9 @@
         "duplicateBarcode": "A product with that barcode already exists in this department",
         "transferSameDepartment": "Pick another department: the product is already in this one.",
         "transferUnitMismatch": "The destination's product is counted in another unit. Change it in one of them to transfer.",
-        "transferConflict": "The stock changed during the transfer. Check the quantities and try again."
+        "transferConflict": "The stock changed during the transfer. Check the quantities and try again.",
+        "invalidCost": "The cost must be a number from 0.",
+        "invalidCurrency": "That currency isn't available."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -340,7 +342,9 @@
         "outOfStock": "Out of stock",
         "minimum": "min. {amount}",
         "topConsumed": "Most used (7 days)",
-        "topConsumedNone": "Nothing was used in the last 7 days."
+        "topConsumedNone": "Nothing was used in the last 7 days.",
+        "inventoryValue": "Inventory value",
+        "inventoryValueMissing": "{count, plural, one {# product without cost} other {# products without cost}}"
     },
     "departments": {
         "title": "Departments",
@@ -380,7 +384,8 @@
                 "transfer": "Transfer {product} to another department",
                 "edit": "Edit {product}",
                 "delete": "Delete {product}"
-            }
+            },
+            "costLine": "{cost} each · {value}"
         },
         "form": {
             "editTitle": "Edit product",
@@ -397,7 +402,10 @@
             "register": "Add to inventory",
             "barcode": "Barcode (optional)",
             "barcodePlaceholder": "Scan or type it",
-            "scanBarcode": "Scan with the camera"
+            "scanBarcode": "Scan with the camera",
+            "unitCost": "Cost per unit ({currency}, optional)",
+            "unitCostPlaceholder": "E.g. 1500",
+            "unitCostHint": "A new cost applies from now on: past movements keep the cost they had."
         },
         "delete": {
             "title": "Delete product",
@@ -460,7 +468,8 @@
                 "duplicateSku": "SKU repeated in the file",
                 "invalidBarcode": "Invalid barcode",
                 "duplicateBarcode": "Barcode repeated in the file",
-                "barcodeTaken": "Another product of the department already has that barcode"
+                "barcodeTaken": "Another product of the department already has that barcode",
+                "invalidCost": "Invalid cost"
             },
             "invalidNote": "Rows with errors aren't imported. Fix them in the file and upload it again if you need them.",
             "confirm": "{count, plural, =0 {Nothing to import} one {Import # product} other {Import # products}}",
@@ -489,7 +498,8 @@
             "moveAllDescription": "Moves all its stock ({quantity} {unit}) to {department} and removes it from this department. Its history is kept.",
             "previewRemoved": "“{product}” will be removed from this department.",
             "confirmMoveAll": "Move product"
-        }
+        },
+        "withoutCost": "{count, plural, one {# product without cost} other {# products without cost}}"
     },
     "users": {
         "inviteCode": "Invite code",
@@ -531,6 +541,11 @@
             "extraPlaceholder": "purchasing@company.com and Enter",
             "remove": "Remove {email}",
             "saved": "Saved"
+        },
+        "currency": {
+            "title": "Currency",
+            "description": "The currency product costs are in. Changing it doesn't convert amounts: it only changes how they show.",
+            "saved": "Saved"
         }
     },
     "reports": {
@@ -564,7 +579,9 @@
             "department": "Department",
             "transfers": "Transfers",
             "transferIn": "Transferred in",
-            "transferOut": "Transferred out"
+            "transferOut": "Transferred out",
+            "consumedValue": "Consumed value",
+            "unitCost": "Unit cost"
         },
         "movements": {
             "title": "Recent movement history",
@@ -578,7 +595,11 @@
             "generated": "Generated on: {date}",
             "empty": "No data available to print in this range.",
             "department": "Department: {name}"
-        }
+        },
+        "totalConsumedValue": "Total consumed value: <b>{value}</b>",
+        "departmentConsumedValue": "Consumed value: <b>{value}</b>",
+        "valueIncomplete": "Some outs have no cost to value them",
+        "valueIncompleteNote": "* Some products have no cost: their outs don't add to the value."
     },
     "api": {
         "defaultDepartmentDescription": "Default initial department",
@@ -1005,7 +1026,8 @@
                 "updatePlan": "Edited a plan",
                 "subscription": "Subscription changed",
                 "import": "Imported products",
-                "updateAlerts": "Changed the email alerts"
+                "updateAlerts": "Changed the email alerts",
+                "updateCurrency": "Changed the currency"
             },
             "change": "{field}: {before} → {after}",
             "fields": {

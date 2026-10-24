@@ -45,9 +45,13 @@ const signedAmount = (type: MovementType) => {
 /** Amount of a transfer movement of `type` (stock that came from or went to another department). */
 const transferAmount = (type: MovementType) => ({ $cond: [{ $and: [{ $eq: ["$type", type] }, isTransfer] }, "$amount", 0] });
 
+const hasCost = { $ne: [{ $type: "$unitCost" }, "missing"] };
+
 /**
  * Sums IN and OUT amounts, and transfers in and out, of the movements that match `createdAt`.
  * Corrections move between the columns, so `in - out` (and the balances built from it) is unchanged.
+ * The OUTs are also valued: at the cost each movement kept (outValue), and the amount of the ones that kept none
+ * (outWithoutCost: from before costs, valued later at the product's current cost).
  */
 const sumMovements = (createdAt: Document) => [
     { $match: { createdAt } },
@@ -58,6 +62,8 @@ const sumMovements = (createdAt: Document) => [
             out: { $sum: signedAmount("OUT") },
             transferIn: { $sum: transferAmount("IN") },
             transferOut: { $sum: transferAmount("OUT") },
+            outValue: { $sum: { $cond: [hasCost, { $multiply: [signedAmount("OUT"), "$unitCost"] }, 0] } },
+            outWithoutCost: { $sum: { $cond: [hasCost, 0, signedAmount("OUT")] } },
         }
     }
 ];
@@ -116,7 +122,7 @@ export async function buildConsumptionReport(departmentFilter: Document, startDa
             _id: department._id.toString(),
             departmentName: department.name,
             items: items.map(item => {
-                const none = { in: 0, out: 0, transferIn: 0, transferOut: 0 };
+                const none = { in: 0, out: 0, transferIn: 0, transferOut: 0, outValue: 0, outWithoutCost: 0 };
                 const range = item.movements[0]?.inRange[0] || none;
                 const after = item.movements[0]?.afterEnd[0] || none;
                 const net = (sums: typeof none) => sums.in - sums.out + sums.transferIn - sums.transferOut;
@@ -134,6 +140,10 @@ export async function buildConsumptionReport(departmentFilter: Document, startDa
                     totalOut: range.out,
                     transferIn: range.transferIn,
                     transferOut: range.transferOut,
+                    unitCost: typeof item.unitCost === "number" ? item.unitCost : null,
+                    // OUTs that kept no cost use the current one; without a current one either, part of it can't be valued
+                    consumedValue: range.outValue + range.outWithoutCost * (item.unitCost ?? 0),
+                    consumedValueIncomplete: range.outWithoutCost > 0 && typeof item.unitCost !== "number",
                     finalBalance,
                     finalQuantity: initialQuantity + finalBalance,
                 };

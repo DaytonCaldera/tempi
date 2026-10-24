@@ -5,13 +5,14 @@ import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { planLimitError } from '@/lib/plans';
 import { normalizeBarcode } from '@/lib/sku';
+import { costSnapshot, normalizeCost } from '@/lib/currency';
 
 type Params = { params: Promise<{ id: string }> };
 
 /**
  * POST /api/admin/departments/[id]/stock
  * Adds a product to a department's inventory, if the organization's plan allows another.
- * Body: { name, sku, barcode?, unit, quantity, minStock }
+ * Body: { name, sku, barcode?, unit, quantity, minStock, unitCost? }
  */
 export async function POST(req: Request, { params }: Params) {
     const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
@@ -28,6 +29,8 @@ export async function POST(req: Request, { params }: Params) {
         if (!body.name || !body.sku) return badRequest("nameAndSkuRequired");
         const barcode = normalizeBarcode(body.barcode);
         if (barcode === false) return badRequest("invalidBarcode");
+        const unitCost = normalizeCost(body.unitCost);
+        if (unitCost === false) return badRequest("invalidCost");
         const db = await getDb();
         const stock = db.collection('department_stock');
         const quantity = Number(body.quantity) || 0;
@@ -53,6 +56,7 @@ export async function POST(req: Request, { params }: Params) {
                 unit: body.unit,
                 quantity,
                 minStock: Number(body.minStock),
+                ...(unitCost !== null && { unitCost }),
                 // Set explicitly: the unique SKU index only covers documents with isDeleted: false
                 isDeleted: false,
                 updatedAt: now,
@@ -79,6 +83,7 @@ export async function POST(req: Request, { params }: Params) {
                 previousBalance: 0,
                 newBalance: quantity,
                 reason: MOVEMENT_REASONS.INITIAL_STOCK,
+                ...costSnapshot(unitCost),
                 user: { id: session.user.id, name: session.user.name, email: session.user.email },
                 createdAt: now
             });

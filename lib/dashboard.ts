@@ -33,12 +33,15 @@ export type LowStockItem = {
     departmentName: string;
 };
 
-export type ConsumedItem = { inventoryId: string; productName: string; departmentName: string; unit: string; amount: number };
+/** value: what it cost (at each movement's cost, or the current one for older movements); null for runners, who don't see costs */
+export type ConsumedItem = { inventoryId: string; productName: string; departmentName: string; unit: string; amount: number; value: number | null };
 
 export type DashboardData = {
     scope: "organization" | "assigned";
     departmentCount: number;
     productCount: number;
+    /** Stock value (quantity × cost) and how many products have no cost. null for runners, who don't see costs */
+    inventoryValue: { value: number; withoutCost: number } | null;
     lowStock: { total: number; items: LowStockItem[] };
     movements: Metric;
     activePeople: Metric;
@@ -65,7 +68,7 @@ export async function getDashboardData(session: Session): Promise<DashboardData>
     const periodStart = new Date(now.getTime() - PERIOD_DAYS * DAY_MS);
     const previousStart = new Date(now.getTime() - 2 * PERIOD_DAYS * DAY_MS);
     const empty: DashboardData = {
-        scope, departmentCount: 0, productCount: 0, lowStock: { total: 0, items: [] },
+        scope, departmentCount: 0, productCount: 0, inventoryValue: null, lowStock: { total: 0, items: [] },
         movements: { value: 0 }, activePeople: { value: 0 }, series: fillBuckets(new Map(), new Date(now.getTime() - (SERIES_DAYS - 1) * DAY_MS), now, "day"), topConsumed: [],
     };
     if (departmentIds.length === 0) return empty;
@@ -83,7 +86,8 @@ export async function getDashboardData(session: Session): Promise<DashboardData>
     const byPeople = { departmentId: { $in: departmentIds }, reason: { $nin: SYSTEM_REASONS } };
     const between = (start: Date, end: Date) => ({ ...byPeople, createdAt: { $gte: start, $lt: end } });
 
-    const [productCount, [low], current, previous, people, previousPeople, counts, consumed] = await Promise.all([
+    const showsCosts = scope === "organization";
+    const [productCount, [low], current, previous, people, previousPeople, counts, consumed, value] = await Promise.all([
         stock.countDocuments(live),
         stock.aggregate<{ total: { count: number }[]; items: StockItem[] }>([
             { $match: { ...live, $expr: { $lte: ["$quantity", "$minStock"] } } },
@@ -97,13 +101,15 @@ export async function getDashboardData(session: Session): Promise<DashboardData>
         countPeople(between(periodStart, now)),
         comparable ? countPeople(between(previousStart, periodStart)) : Promise.resolve(undefined),
         bucketCounts(movements, "$createdAt", between(seriesStart, now), "day"),
-        consumedProducts(departmentIds, periodStart, now),
+        consumedProducts(departmentIds, periodStart, now, showsCosts),
+        showsCosts ? stockValue(departmentIds) : Promise.resolve(null),
     ]);
 
     return {
         scope,
         departmentCount: departmentIds.length,
         productCount,
+        inventoryValue: value,
         lowStock: {
             total: low?.total[0]?.count ?? 0,
             items: (low?.items ?? []).map(item => ({
@@ -140,24 +146,27 @@ async function countPeople(match: Document) {
  * Import and reconciliation adjustments are stock counts, and transfers only move stock between departments:
  * neither is use, so they don't count.
  */
-async function consumedProducts(departmentIds: ObjectId[], start: Date, end: Date): Promise<ConsumedItem[]> {
+async function consumedProducts(departmentIds: ObjectId[], start: Date, end: Date, withValue: boolean): Promise<ConsumedItem[]> {
     const db = await getDb();
-    const rows = await db.collection("stock_movements").aggregate<{ _id: ObjectId; amount: number; productName: string; departmentName: string }>([
+    const used = {
+        $switch: {
+            branches: [
+                { case: { $and: [{ $eq: ["$type", "OUT"] }, { $ne: ["$reason", MOVEMENT_REASONS.CORRECTION] }] }, then: "$amount" },
+                { case: { $and: [{ $eq: ["$type", "IN"] }, { $eq: ["$reason", MOVEMENT_REASONS.CORRECTION] }] }, then: { $multiply: ["$amount", -1] } },
+            ],
+            default: 0,
+        },
+    };
+    const hasCost = { $ne: [{ $type: "$unitCost" }, "missing"] };
+    const rows = await db.collection("stock_movements").aggregate<{ _id: ObjectId; amount: number; valueWithCost: number; amountWithoutCost: number; productName: string; departmentName: string }>([
         { $match: { departmentId: { $in: departmentIds }, createdAt: { $gte: start, $lt: end }, reason: { $nin: [...SYSTEM_REASONS, MOVEMENT_REASONS.IMPORT, MOVEMENT_REASONS.TRANSFER] } } },
         {
             $group: {
                 _id: "$inventoryId",
-                amount: {
-                    $sum: {
-                        $switch: {
-                            branches: [
-                                { case: { $and: [{ $eq: ["$type", "OUT"] }, { $ne: ["$reason", MOVEMENT_REASONS.CORRECTION] }] }, then: "$amount" },
-                                { case: { $and: [{ $eq: ["$type", "IN"] }, { $eq: ["$reason", MOVEMENT_REASONS.CORRECTION] }] }, then: { $multiply: ["$amount", -1] } },
-                            ],
-                            default: 0,
-                        },
-                    },
-                },
+                amount: { $sum: used },
+                // Valued at the cost each movement kept; the ones that kept none, later at the current cost
+                valueWithCost: { $sum: { $cond: [hasCost, { $multiply: [used, "$unitCost"] }, 0] } },
+                amountWithoutCost: { $sum: { $cond: [hasCost, 0, used] } },
                 productName: { $last: "$productName" },
                 departmentName: { $last: "$departmentName" },
             },
@@ -169,7 +178,7 @@ async function consumedProducts(departmentIds: ObjectId[], start: Date, end: Dat
     if (rows.length === 0) return [];
 
     const units = new Map((await db.collection<StockItem>("department_stock")
-        .find({ _id: { $in: rows.map(r => r._id) } }, { projection: { unit: 1, productName: 1 } })
+        .find({ _id: { $in: rows.map(r => r._id) } }, { projection: { unit: 1, productName: 1, unitCost: 1 } })
         .toArray()).map(item => [item._id.toString(), item]));
     return rows.map(row => {
         const item = units.get(row._id.toString());
@@ -179,6 +188,23 @@ async function consumedProducts(departmentIds: ObjectId[], start: Date, end: Dat
             departmentName: row.departmentName,
             unit: item?.unit ?? "",
             amount: row.amount,
+            value: withValue ? row.valueWithCost + row.amountWithoutCost * (item?.unitCost ?? 0) : null,
         };
     });
+}
+
+/** Quantity × cost of the departments' products that have a cost, and how many have none. */
+async function stockValue(departmentIds: ObjectId[]) {
+    const db = await getDb();
+    const [row] = await db.collection("department_stock").aggregate<{ value: number; withoutCost: number }>([
+        { $match: { departmentId: { $in: departmentIds }, isDeleted: { $ne: true } } },
+        {
+            $group: {
+                _id: null,
+                value: { $sum: { $multiply: ["$quantity", { $ifNull: ["$unitCost", 0] }] } },
+                withoutCost: { $sum: { $cond: [{ $eq: [{ $type: "$unitCost" }, "missing"] }, 1, 0] } },
+            },
+        },
+    ]).toArray();
+    return { value: row?.value ?? 0, withoutCost: row?.withoutCost ?? 0 };
 }

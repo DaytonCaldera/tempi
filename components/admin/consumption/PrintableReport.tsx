@@ -23,13 +23,15 @@ interface PrintableReportProps {
     range: DateRange;
     data: ConsumptionReportDepartment[];
     showDepartmentNames: boolean;
+    currency: string;
 }
 
 /** Plain-table version of the report, hidden on screen and shown only when printing. */
-export function PrintableReport({ title, range, data, showDepartmentNames }: PrintableReportProps) {
+export function PrintableReport({ title, range, data, showDepartmentNames, currency }: PrintableReportProps) {
     const t = useTranslations("reports");
     const format = useFormatter();
     const formatDate = (date: Date) => format.dateTime(date, { dateStyle: "medium", timeStyle: "short" });
+    const money = (value: number) => format.number(value, { style: "currency", currency, currencyDisplay: "narrowSymbol" });
 
     return (
         <>
@@ -67,6 +69,7 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                     <th className="py-3 px-2 font-black text-center">{t("columns.in")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.out")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.transfers")}</th>
+                                    <th className="py-3 px-2 font-black text-right">{t("columns.consumedValue")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.balance")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.final")}</th>
                                 </tr>
@@ -82,6 +85,9 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                         <td className="py-3 px-2 text-center text-gray-600 whitespace-nowrap">
                                             {item.transferIn || item.transferOut ? `+${item.transferIn} / −${item.transferOut}` : "—"}
                                         </td>
+                                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                                            {item.consumedValue || !item.consumedValueIncomplete ? money(item.consumedValue) : "—"}
+                                        </td>
                                         <td className="py-3 px-2 text-center font-bold">
                                             {item.finalBalance > 0 ? `+${item.finalBalance}` : item.finalBalance}
                                         </td>
@@ -90,6 +96,9 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                 ))}
                             </tbody>
                         </table>
+                        <p className="mt-2 text-right font-bold">
+                            {t.rich("departmentConsumedValue", { value: money(department.items.reduce((sum, item) => sum + item.consumedValue, 0)), b: (chunks) => <span>{chunks}</span> })}
+                        </p>
                     </div>
                 ))}
             </div>

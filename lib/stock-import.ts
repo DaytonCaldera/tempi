@@ -1,5 +1,6 @@
 import { STOCK_UNITS } from "@/lib/constants";
 import { normalizeBarcode } from "@/lib/sku";
+import { normalizeCost } from "@/lib/currency";
 
 /**
  * Bulk import of a department's products from a CSV or Excel file. Shared by the import dialog (browser), which
@@ -10,7 +11,7 @@ import { normalizeBarcode } from "@/lib/sku";
 /** Rows one import can have: bigger files are split by the admin. */
 export const MAX_IMPORT_ROWS = 1000;
 
-export const IMPORT_FIELDS = ["name", "sku", "barcode", "unit", "quantity", "minStock", "category"] as const;
+export const IMPORT_FIELDS = ["name", "sku", "barcode", "unit", "quantity", "minStock", "unitCost", "category"] as const;
 export type ImportField = typeof IMPORT_FIELDS[number];
 
 export type ImportCell = string | number | null;
@@ -22,7 +23,7 @@ export type RawImportRow = { line: number } & Partial<Record<ImportField, Import
 export type ImportRowError =
     | "nameRequired" | "nameTooLong" | "skuTooLong" | "categoryTooLong"
     | "invalidUnit" | "invalidQuantity" | "invalidMinStock" | "duplicateSku"
-    | "invalidBarcode" | "duplicateBarcode" | "barcodeTaken";
+    | "invalidBarcode" | "duplicateBarcode" | "barcodeTaken" | "invalidCost";
 
 /** A valid row. null means the cell was empty: a new product gets the default, an existing one keeps its value. */
 export type ImportRow = {
@@ -33,6 +34,7 @@ export type ImportRow = {
     unit: StockUnit | null;
     quantity: number | null;
     minStock: number | null;
+    unitCost: number | null;
     category: string | null;
 };
 
@@ -77,6 +79,8 @@ const HEADER_ALIASES: Record<ImportField, string[]> = {
     unit: ["unidad", "unit", "unidaddemedida", "medida", "um", "uom"],
     quantity: ["cantidad", "quantity", "qty", "stock", "existencias", "stockinicial", "initialstock", "stockactual", "currentstock"],
     minStock: ["stockminimo", "minimumstock", "minstock", "minimo", "minimum", "min", "minimoalerta", "alerta"],
+    // Not "precio"/"price": that is usually the selling price, not what a unit costs
+    unitCost: ["costounitario", "costo", "coste", "unitcost", "cost", "costperunit", "costoporunidad"],
     category: ["categoria", "category", "familia", "grupo", "group"],
 };
 
@@ -153,6 +157,7 @@ export function validateImportRow(raw: RawImportRow): { row: ImportRow; errors: 
     const name = text(raw.name);
     const sku = text(raw.sku);
     const category = text(raw.category);
+    const unitCost = normalizeCost(raw.unitCost);
     const barcode = normalizeBarcode(typeof raw.barcode === "number" ? String(raw.barcode) : raw.barcode);
     const unit = parseUnit(raw.unit);
     const quantity = parseAmount(raw.quantity);
@@ -163,6 +168,7 @@ export function validateImportRow(raw: RawImportRow): { row: ImportRow; errors: 
     if (sku.length > MAX_SKU) errors.push("skuTooLong");
     if (category.length > MAX_CATEGORY) errors.push("categoryTooLong");
     if (barcode === false) errors.push("invalidBarcode");
+    if (unitCost === false) errors.push("invalidCost");
     if (unit === undefined) errors.push("invalidUnit");
     if (Number.isNaN(quantity)) errors.push("invalidQuantity");
     if (Number.isNaN(minStock)) errors.push("invalidMinStock");
@@ -176,6 +182,7 @@ export function validateImportRow(raw: RawImportRow): { row: ImportRow; errors: 
             unit: unit ?? null,
             quantity,
             minStock,
+            unitCost: unitCost === false ? null : unitCost,
             category: category || null,
         },
         errors,
@@ -184,6 +191,6 @@ export function validateImportRow(raw: RawImportRow): { row: ImportRow; errors: 
 
 /** Column titles of the template, in the order of IMPORT_FIELDS (the first aliases, as typed). */
 export const TEMPLATE_HEADERS: Record<"es" | "en", Record<ImportField, string>> = {
-    es: { name: "Nombre", sku: "SKU", barcode: "Código de barras", unit: "Unidad", quantity: "Cantidad", minStock: "Stock mínimo", category: "Categoría" },
-    en: { name: "Name", sku: "SKU", barcode: "Barcode", unit: "Unit", quantity: "Quantity", minStock: "Minimum stock", category: "Category" },
+    es: { name: "Nombre", sku: "SKU", barcode: "Código de barras", unit: "Unidad", quantity: "Cantidad", minStock: "Stock mínimo", unitCost: "Costo unitario", category: "Categoría" },
+    en: { name: "Name", sku: "SKU", barcode: "Barcode", unit: "Unit", quantity: "Quantity", minStock: "Minimum stock", unitCost: "Unit cost", category: "Category" },
 };

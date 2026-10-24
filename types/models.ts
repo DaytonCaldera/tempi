@@ -56,6 +56,8 @@ export interface Organization {
     subscription?: Subscription;
     /** Free time on another plan (e.g. Pro for the organizations that existed before paid plans). See lib/plans.ts */
     trial?: { planId: ObjectId; endsAt: Date };
+    /** ISO code its costs are in (lib/currency.ts). Missing: USD */
+    currency?: string;
     /** Emails the organization gets. Missing: the defaults of alertSettingsOf (lib/stock-alerts.ts) */
     alerts?: { lowStockEmail?: boolean; extraEmails?: string[] };
 }
@@ -136,6 +138,8 @@ export interface StockItem<Id = ObjectId> {
     category?: string;
     quantity: number;
     minStock: number;
+    /** What one unit costs, in the organization's currency. Missing: not set (the product isn't valued) */
+    unitCost?: number;
     /** Set when the low stock email went out, cleared when the quantity is back above minStock (lib/stock-alerts.ts) */
     lowStockAlertedAt?: Date;
     isDeleted?: boolean;
@@ -158,6 +162,9 @@ export interface StockMovement<Id = ObjectId> {
     newBalance?: number;
     reason: string;
     user: { id?: Id; name?: string | null; email?: string | null };
+    /** The product's unit cost when it moved, so later cost changes don't rewrite past consumption. Missing on
+     *  movements of products without a cost, and on movements from before costs existed */
+    unitCost?: number;
     /** On the two movements of a transfer: the same id, and the other department (where it went or came from) */
     transfer?: { id: Id; departmentId: Id; departmentName: string };
     createdAt: Date;
@@ -184,6 +191,12 @@ export interface ConsumptionReportItem {
     /** Stock that came from / went to another department */
     transferIn: number;
     transferOut: number;
+    /** The product's current cost per unit, null when it has none */
+    unitCost: number | null;
+    /** What the outs cost, at the cost each movement had (or the current one, for older movements) */
+    consumedValue: number;
+    /** Some outs have no cost to value them with: consumedValue leaves them out */
+    consumedValueIncomplete: boolean;
     /** totalIn - totalOut + transferIn - transferOut */
     finalBalance: number;
     finalQuantity: number;

@@ -87,7 +87,9 @@
         "duplicateBarcode": "Ya existe un producto con ese código de barras en este departamento",
         "transferSameDepartment": "Elige otro departamento: el producto ya está en este.",
         "transferUnitMismatch": "El producto del destino se cuenta en otra unidad. Cámbiala en uno de los dos para poder transferir.",
-        "transferConflict": "El stock cambió mientras se transfería. Revisa las cantidades e inténtalo de nuevo."
+        "transferConflict": "El stock cambió mientras se transfería. Revisa las cantidades e inténtalo de nuevo.",
+        "invalidCost": "El costo debe ser un número desde 0.",
+        "invalidCurrency": "Esa moneda no está disponible."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -340,7 +342,9 @@
         "outOfStock": "Agotado",
         "minimum": "mín. {amount}",
         "topConsumed": "Más consumidos (7 días)",
-        "topConsumedNone": "No hubo consumo en los últimos 7 días."
+        "topConsumedNone": "No hubo consumo en los últimos 7 días.",
+        "inventoryValue": "Valor del inventario",
+        "inventoryValueMissing": "{count, plural, one {# producto sin costo} other {# productos sin costo}}"
     },
     "departments": {
         "title": "Departamentos",
@@ -380,7 +384,8 @@
                 "transfer": "Transferir {product} a otro departamento",
                 "edit": "Editar {product}",
                 "delete": "Eliminar {product}"
-            }
+            },
+            "costLine": "{cost} c/u · {value}"
         },
         "form": {
             "editTitle": "Editar producto",
@@ -397,7 +402,10 @@
             "register": "Registrar en inventario",
             "barcode": "Código de barras (opcional)",
             "barcodePlaceholder": "Escanéalo o escríbelo",
-            "scanBarcode": "Escanear con la cámara"
+            "scanBarcode": "Escanear con la cámara",
+            "unitCost": "Costo por unidad ({currency}, opcional)",
+            "unitCostPlaceholder": "Ej. 1500",
+            "unitCostHint": "Un costo nuevo vale desde ahora: los movimientos pasados conservan el costo que tenían."
         },
         "delete": {
             "title": "Eliminar producto",
@@ -460,7 +468,8 @@
                 "duplicateSku": "SKU repetido en el archivo",
                 "invalidBarcode": "Código de barras no válido",
                 "duplicateBarcode": "Código de barras repetido en el archivo",
-                "barcodeTaken": "Otro producto del departamento ya tiene ese código de barras"
+                "barcodeTaken": "Otro producto del departamento ya tiene ese código de barras",
+                "invalidCost": "Costo no válido"
             },
             "invalidNote": "Las filas con errores no se importan. Corrígelas en el archivo y vuelve a subirlo si las necesitas.",
             "confirm": "{count, plural, =0 {Nada que importar} one {Importar # producto} other {Importar # productos}}",
@@ -489,7 +498,8 @@
             "moveAllDescription": "Pasa todo su stock ({quantity} {unit}) a {department} y lo quita de este departamento. Su historial se conserva.",
             "previewRemoved": "«{product}» se quitará de este departamento.",
             "confirmMoveAll": "Mover producto"
-        }
+        },
+        "withoutCost": "{count, plural, one {# producto sin costo} other {# productos sin costo}}"
     },
     "users": {
         "inviteCode": "Código de invitación",
@@ -531,6 +541,11 @@
             "extraPlaceholder": "compras@empresa.com y Enter",
             "remove": "Quitar {email}",
             "saved": "Guardado"
+        },
+        "currency": {
+            "title": "Moneda",
+            "description": "En qué moneda están los costos de los productos. Cambiarla no convierte los montos: solo cambia cómo se muestran.",
+            "saved": "Guardado"
         }
     },
     "reports": {
@@ -564,7 +579,9 @@
             "department": "Departamento",
             "transfers": "Transferencias",
             "transferIn": "Transferido (entrada)",
-            "transferOut": "Transferido (salida)"
+            "transferOut": "Transferido (salida)",
+            "consumedValue": "Valor consumido",
+            "unitCost": "Costo unitario"
         },
         "movements": {
             "title": "Historial de movimientos recientes",
@@ -578,7 +595,11 @@
             "generated": "Generado el: {date}",
             "empty": "No hay datos disponibles para imprimir en este rango.",
             "department": "Departamento: {name}"
-        }
+        },
+        "totalConsumedValue": "Valor consumido en total: <b>{value}</b>",
+        "departmentConsumedValue": "Valor consumido: <b>{value}</b>",
+        "valueIncomplete": "Algunas salidas no tienen costo para valorarlas",
+        "valueIncompleteNote": "* Hay productos sin costo: sus salidas no suman al valor."
     },
     "api": {
         "defaultDepartmentDescription": "Departamento inicial predeterminado",
@@ -1005,7 +1026,8 @@
                 "updatePlan": "Editó un plan",
                 "subscription": "Cambió la suscripción",
                 "import": "Importó productos",
-                "updateAlerts": "Cambió los avisos por correo"
+                "updateAlerts": "Cambió los avisos por correo",
+                "updateCurrency": "Cambió la moneda"
             },
             "change": "{field}: {before} → {after}",
             "fields": {

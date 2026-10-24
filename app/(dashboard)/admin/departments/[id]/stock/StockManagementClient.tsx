@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Search, Plus, AlertTriangle, History, ArrowLeft, Upload } from "lucide-react";
 import { useDepartmentStock, type StockRow } from "./useDepartmentStock";
 import { StockItemModal } from "./StockItemModal";
@@ -19,11 +19,14 @@ interface StockManagementClientProps {
     newBarcode?: string;
     /** The organization's other departments, the ones products can be transferred to */
     otherDepartments: { _id: string; name: string }[];
+    /** The organization's currency */
+    currency: string;
 }
 
 /** Admin view of a department's inventory: stats, search, quick +/- moves, create, edit and delete. */
-export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode, otherDepartments }: StockManagementClientProps) {
+export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode, otherDepartments, currency }: StockManagementClientProps) {
     const t = useTranslations("stock");
+    const format = useFormatter();
     const router = useRouter();
     const { inventory, quickMove, remove, refresh } = useDepartmentStock(departmentId, initialInventory);
 
@@ -44,6 +47,9 @@ export default function StockManagementClient({ initialInventory, departmentId, 
         !!item.barcode?.toLowerCase().includes(search)
     );
     const lowStockCount = inventory.filter(item => item.quantity <= item.minStock).length;
+    // Stock value: quantity × cost of the products that have a cost
+    const stockValue = inventory.reduce((sum, item) => sum + (item.unitCost !== undefined ? item.quantity * item.unitCost : 0), 0);
+    const withoutCost = inventory.filter(item => item.unitCost === undefined).length;
 
     const openForm = (item: StockRow | null) => {
         setEditingItem(item);
@@ -59,6 +65,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 editingItem={editingItem}
                 departmentId={departmentId}
                 departmentName={departmentName}
+                currency={currency}
                 initialBarcode={formKey === 0 && !editingItem ? newBarcode : undefined}
                 onClose={() => setIsFormOpen(false)}
                 onSaved={() => {
@@ -139,7 +146,8 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     </div>
                     <div className="bg-card p-5 rounded-3xl border border-line">
                         <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest">{t("estimatedValue")}</p>
-                        <p className="text-2xl font-semibold text-accent">$---</p>
+                        <p className="text-2xl font-semibold text-accent">{format.number(stockValue, { style: "currency", currency, currencyDisplay: "narrowSymbol" })}</p>
+                        {withoutCost > 0 && <p className="text-[11px] text-ink-subtle">{t("withoutCost", { count: withoutCost })}</p>}
                     </div>
                 </div>
 
@@ -160,6 +168,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     onQuickMove={quickMove}
                     onEdit={openForm}
                     onDelete={setDeletingItem}
+                    currency={currency}
                     onTransfer={otherDepartments.length > 0 ? (item) => { setTransferKey(key => key + 1); setTransferringItem(item); } : undefined}
                 />
             </div>

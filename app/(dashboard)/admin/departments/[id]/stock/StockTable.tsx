@@ -1,6 +1,6 @@
 "use client";
 import { Plus, Minus, Edit, Trash2, ArrowLeftRight } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import type { MovementType } from "@/types/models";
 import { labelOf } from "@/i18n/labels";
@@ -11,14 +11,18 @@ interface StockTableProps {
     onQuickMove: (item: StockRow, type: MovementType) => void;
     onEdit: (item: StockRow) => void;
     onDelete: (item: StockRow) => void;
+    /** The organization's currency, for each product's cost and value */
+    currency: string;
     /** Missing when the organization has no other department to transfer to */
     onTransfer?: (item: StockRow) => void;
 }
 
-export function StockTable({ items, onQuickMove, onEdit, onDelete, onTransfer }: StockTableProps) {
+export function StockTable({ items, onQuickMove, onEdit, onDelete, onTransfer, currency }: StockTableProps) {
     const t = useTranslations("stock.table");
     const tCommon = useTranslations("common");
     const tUnits = useTranslations("units");
+    const format = useFormatter();
+    const money = (value: number) => format.number(value, { style: "currency", currency, currencyDisplay: "narrowSymbol" });
     const headers = [{ title: t("product") }, { title: t("category") }, { title: t("quantity") }, { title: t("quickActions") }];
 
     return (
@@ -48,6 +52,11 @@ export function StockTable({ items, onQuickMove, onEdit, onDelete, onTransfer }:
                                 <span className="text-[10px] font-bold text-ink-subtle uppercase tracking-tight">{labelOf(tUnits, item.unit)}</span>
                                 {isLow && <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />}
                             </div>
+                            {item.unitCost !== undefined && (
+                                <p className="text-[11px] text-ink-subtle tabular-nums">
+                                    {t("costLine", { cost: money(item.unitCost), value: money(item.quantity * item.unitCost) })}
+                                </p>
+                            )}
                         </DataTableCell>
 
                         <DataTableCell>

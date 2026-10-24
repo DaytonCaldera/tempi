@@ -7,6 +7,7 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { labelOf, planLabel } from '@/i18n/labels';
 import { toObjectId } from '@/lib/api';
 import { getDashboardData } from '@/lib/dashboard';
+import { getOrganizationCurrency } from '@/lib/organizations';
 import { assignedDepartmentIds } from '@/lib/departments';
 import { hasPermission } from '@/lib/permissions';
 import { daysUntil, getEffectivePlan } from '@/lib/plans';
@@ -37,9 +38,10 @@ export default async function Dashboard() {
     // Admins see how long a free trial of a plan has left (lib/plans.ts), so its end isn't a surprise
     const clientId = toObjectId(session.user.clientId);
     const isAdmin = hasPermission(session, PERMISSIONS.MANAGE_USERS);
-    const [effective, data] = await Promise.all([
+    const [effective, data, currency] = await Promise.all([
         clientId && isAdmin ? getEffectivePlan(clientId) : null,
         getDashboardData(session),
+        getOrganizationCurrency(clientId),
     ]);
     const trialDaysLeft = effective?.source === "trial" && effective.trialEndsAt ? daysUntil(effective.trialEndsAt) : null;
 
@@ -82,7 +84,18 @@ export default async function Dashboard() {
                         <StatTile label={t('lowStock')} metric={{ value: data.lowStock.total }} hint={t('lowStockHint', { count: data.productCount })} />
                         <StatTile label={t('movements')} metric={data.movements} />
                         <StatTile label={t('activePeople')} metric={data.activePeople} />
-                        <StatTile label={t('products')} metric={{ value: data.productCount }} hint={t('productsHint', { count: data.departmentCount })} />
+                        {data.inventoryValue ? (
+                            <StatTile
+                                label={t('inventoryValue')}
+                                metric={{ value: data.inventoryValue.value }}
+                                display={format.number(data.inventoryValue.value, { style: 'currency', currency, currencyDisplay: 'narrowSymbol' })}
+                                hint={data.inventoryValue.withoutCost > 0
+                                    ? t('inventoryValueMissing', { count: data.inventoryValue.withoutCost })
+                                    : t('productsHint', { count: data.departmentCount })}
+                            />
+                        ) : (
+                            <StatTile label={t('products')} metric={{ value: data.productCount }} hint={t('productsHint', { count: data.departmentCount })} />
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -137,7 +150,12 @@ export default async function Dashboard() {
                                                     <span className="block truncate text-xs text-ink-subtle">{item.departmentName}</span>
                                                 </span>
                                             </span>
-                                            <span className="shrink-0 text-sm font-semibold tabular-nums text-ink">{amount(item.amount, item.unit)}</span>
+                                            <span className="shrink-0 text-right">
+                                                <span className="block text-sm font-semibold tabular-nums text-ink">{amount(item.amount, item.unit)}</span>
+                                                {item.value !== null && item.value > 0 && (
+                                                    <span className="block text-xs tabular-nums text-ink-subtle">{format.number(item.value, { style: 'currency', currency, currencyDisplay: 'narrowSymbol' })}</span>
+                                                )}
+                                            </span>
                                         </li>
                                     ))}
                                 </ol>

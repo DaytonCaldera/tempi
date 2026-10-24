@@ -9,6 +9,7 @@ import { planLimitError } from '@/lib/plans';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { afterStockChange } from '@/lib/stock-alerts';
 import { generateUniqueSKU } from '@/lib/sku';
+import { costSnapshot } from '@/lib/currency';
 import {
     MAX_IMPORT_ROWS, validateImportRow,
     type ImportMode, type ImportResponse, type ImportRow, type ImportRowResult, type ImportRowStatus, type RawImportRow,
@@ -108,6 +109,7 @@ export async function POST(req: Request, { params }: Params) {
             if (row.minStock !== null && row.minStock !== item.minStock) set.minStock = row.minStock;
             if (row.category && row.category !== item.category) set.category = row.category;
             if (row.barcode && row.barcode !== item.barcode) set.barcode = row.barcode;
+            if (row.unitCost !== null && row.unitCost !== item.unitCost) set.unitCost = row.unitCost;
             const delta = row.quantity === null ? 0 : row.quantity - item.quantity;
             const status: ImportRowStatus = Object.keys(set).length === 0 && delta === 0 ? "unchanged" : "update";
             const result: ImportRowResult = { ...base, status, quantityBefore: item.quantity, quantityAfter: item.quantity + delta };
@@ -124,7 +126,7 @@ export async function POST(req: Request, { params }: Params) {
         if (!dryRun && planned.length > 0) {
             const now = new Date();
             const user = { id: toObjectId(session.user.id), name: session.user.name, email: session.user.email };
-            const movementOf = (item: Pick<StockItem, "_id" | "productName" | "sku">, delta: number, previousBalance: number, reason: string) => ({
+            const movementOf = (item: Pick<StockItem, "_id" | "productName" | "sku" | "unitCost">, delta: number, previousBalance: number, reason: string) => ({
                 inventoryId: item._id,
                 departmentId: department._id,
                 departmentName: department.name,
@@ -136,6 +138,7 @@ export async function POST(req: Request, { params }: Params) {
                 previousBalance,
                 newBalance: previousBalance + delta,
                 reason,
+                ...costSnapshot(item.unitCost),
                 user,
                 createdAt: now,
             });
@@ -151,6 +154,7 @@ export async function POST(req: Request, { params }: Params) {
                     unit: row.unit ?? STOCK_UNITS[0],
                     ...(row.category && { category: row.category }),
                     ...(row.barcode && { barcode: row.barcode }),
+                    ...(row.unitCost !== null && { unitCost: row.unitCost }),
                     quantity: row.quantity ?? 0,
                     minStock: row.minStock ?? 0,
                     isDeleted: false,

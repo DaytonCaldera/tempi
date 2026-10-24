@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { ChevronDown, ChevronUp, MapPin } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import type { ConsumptionReportDepartment } from "@/types/models";
 import { MovementDetails } from "./MovementDetails";
@@ -8,6 +8,8 @@ import type { MovementLog } from "./useConsumptionReport";
 
 interface DepartmentReportTableProps {
     department: ConsumptionReportDepartment;
+    /** The organization's currency */
+    currency: string;
     /** Show the department name above the table (global report) */
     showDepartmentName: boolean;
     expandedId: string | null;
@@ -16,14 +18,18 @@ interface DepartmentReportTableProps {
 }
 
 /** On-screen report table of one department; clicking a row shows its movements. */
-export function DepartmentReportTable({ department, showDepartmentName, expandedId, details, onToggleDetails }: DepartmentReportTableProps) {
+export function DepartmentReportTable({ department, currency, showDepartmentName, expandedId, details, onToggleDetails }: DepartmentReportTableProps) {
     const t = useTranslations("reports");
+    const format = useFormatter();
+    const money = (value: number) => format.number(value, { style: "currency", currency, currencyDisplay: "narrowSymbol" });
+    const totalValue = department.items.reduce((sum, item) => sum + item.consumedValue, 0);
     const headers = [
         { title: t("columns.product") },
         { title: t("columns.initialRange") },
         { title: t("columns.in") },
         { title: t("columns.out") },
         { title: t("columns.transfers") },
+        { title: t("columns.consumedValue") },
         { title: t("columns.balance") },
         { title: t("columns.currentFinal") }
     ];
@@ -79,6 +85,14 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
                                         </span>
                                     </DataTableCell>
 
+                                    {/* What the outs cost; "—" when the product has no cost to value them with */}
+                                    <DataTableCell>
+                                        <span className="text-sm font-semibold text-ink tabular-nums whitespace-nowrap" title={item.consumedValueIncomplete ? t("valueIncomplete") : undefined}>
+                                            {item.consumedValue || !item.consumedValueIncomplete ? money(item.consumedValue) : "—"}
+                                            {item.consumedValueIncomplete && item.consumedValue > 0 && " *"}
+                                        </span>
+                                    </DataTableCell>
+
                                     <DataTableCell>
                                         <span className={`text-lg font-semibold ${item.finalBalance < 0 ? 'text-danger' : 'text-ink'}`}>
                                             {item.finalBalance > 0 ? `+${item.finalBalance}` : item.finalBalance}
@@ -99,7 +113,7 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
 
                                 {isExpanded && (
                                     <tr>
-                                        <td colSpan={6} className="p-8 bg-subtle/60">
+                                        <td colSpan={headers.length} className="p-8 bg-subtle/60">
                                             <MovementDetails details={details} />
                                         </td>
                                     </tr>
@@ -108,6 +122,10 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
                         );
                     })}
                 </DataTable>
+                <p className="mt-3 px-4 text-right text-sm text-ink-muted">
+                    {t.rich("departmentConsumedValue", { value: money(totalValue), b: (chunks) => <span className="font-semibold text-ink">{chunks}</span> })}
+                    {department.items.some(item => item.consumedValueIncomplete) && <span className="block text-xs text-ink-subtle">{t("valueIncompleteNote")}</span>}
+                </p>
             </div>
         </section>
     );

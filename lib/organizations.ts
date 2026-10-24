@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 import type { Session } from "next-auth";
 import { getDb, toObjectId } from "@/lib/api";
 import { isPlaceholderOrg, ROLES } from "@/lib/constants";
+import { currencyOf, type Currency } from "@/lib/currency";
 import { forgetCachedUsers } from "@/lib/users";
 import type { ObjectId } from "mongodb";
 import type { Membership, Organization, User } from "@/types/models";
@@ -44,6 +45,14 @@ export function joinCodeCandidates(code: unknown): string[] {
 
 /** Filter for organizations that haven't been closed (older documents have no status). */
 export const OPEN_ORGANIZATION = { status: { $ne: "closed" } } as const;
+
+/** The currency an organization's costs are in (lib/currency.ts), USD when it has none or doesn't exist. */
+export async function getOrganizationCurrency(clientId: ObjectId | string | null | undefined): Promise<Currency> {
+    const id = toObjectId(clientId);
+    if (!id) return currencyOf(null);
+    const db = await getDb();
+    return currencyOf(await db.collection<Organization>("clients").findOne({ _id: id }, { projection: { currency: 1 } }));
+}
 
 /** Name of an organization ("clients" collection), or "" if it doesn't exist. */
 export async function getOrganizationName(clientId: string): Promise<string> {
