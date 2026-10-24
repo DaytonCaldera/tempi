@@ -33,9 +33,9 @@ export async function GET(req: Request) {
     const report = await buildConsumptionReport({ ...getTenantQuery(session), ...(departmentId && { _id: departmentId }) }, startDate, new Date(end));
 
     const t = await getTranslations('reports');
-    const header = ["department", "sku", "product", "initial", "in", "out", "balance", "final"].map(key => t(`columns.${key}`));
+    const header = ["department", "sku", "product", "initial", "in", "out", "transferIn", "transferOut", "balance", "final"].map(key => t(`columns.${key}`));
     const rows = report.flatMap(department => department.items.map(item => [
-        department.departmentName, item.sku, item.productName, item.initialQuantity, item.totalIn, item.totalOut, item.finalBalance, item.finalQuantity,
+        department.departmentName, item.sku, item.productName, item.initialQuantity, item.totalIn, item.totalOut, item.transferIn, item.transferOut, item.finalBalance, item.finalQuantity,
     ]));
     return csvResponse("consumo", header, rows);
 }

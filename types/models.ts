@@ -166,8 +166,10 @@ export interface StockMovement<Id = ObjectId> {
 /** What a transfer will do in the destination (POST /api/admin/inventory/[id]/transfer with dryRun). */
 export type TransferPreview = {
     /** The destination product it adds to, or null when one is created */
-    target: { _id: string; productName: string; sku: string; quantity: number; unit: string } | null;
+    target: { _id: string; productName: string; sku: string; quantity: number; unit: string; minStock: number } | null;
     targetDepartmentName: string;
+    /** The minimum a created product gets: the source product's */
+    newMinStock: number;
 };
 
 /** One product row of the consumption report. */
@@ -176,8 +178,13 @@ export interface ConsumptionReportItem {
     productName: string;
     sku: string;
     initialQuantity: number;
+    /** Ins and outs, transfers between departments aside */
     totalIn: number;
     totalOut: number;
+    /** Stock that came from / went to another department */
+    transferIn: number;
+    transferOut: number;
+    /** totalIn - totalOut + transferIn - transferOut */
     finalBalance: number;
     finalQuantity: number;
 }

@@ -18,6 +18,12 @@ import type { Organization, StockItem, User } from "@/types/models";
 
 export const MAX_EXTRA_EMAILS = 5;
 
+/**
+ * Whether alerts go out by email. In `next dev` they are only logged, so testing stock moves against a database
+ * with real admins can't email them; SEND_ALERT_EMAILS=true sends them anyway (to try the email itself).
+ */
+const sendsAlertEmails = () => process.env.NODE_ENV === "production" || process.env.SEND_ALERT_EMAILS === "true";
+
 /** An organization's alert settings, with the defaults for organizations that never changed them. */
 export type AlertSettings = { lowStockEmail: boolean; extraEmails: string[] };
 
@@ -132,6 +138,10 @@ async function emailOrganization(clientId: ObjectId, items: StockItem[], { origi
 <td style="padding:8px 0;border-top:1px solid #e4e4e7;font-size:13px;text-align:right;color:#b45309;white-space:nowrap">${escapeHtml(status(item))}<br><span style="font-size:12px;color:#71717a">${escapeHtml(t("minimum", { amount: amount(item.minStock, item.unit) }))}</span></td>
 </tr>`).join("");
 
+    if (!sendsAlertEmails()) {
+        console.info(`[stock-alerts] Not sent in development (SEND_ALERT_EMAILS=true sends it): "${subject}" to ${to.length} recipient(s)`);
+        return;
+    }
     await sendEmail({
         to,
         subject,

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowRight, AlertCircle } from "lucide-react";
+import { ArrowRight, AlertCircle, AlertTriangle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { usePlanLimitDialog } from "@/components/admin/PlanLimitDialog";
 import { labelOf } from "@/i18n/labels";
@@ -32,6 +32,8 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
     const { handlePlanError, planDialog } = usePlanLimitDialog();
     const [toDepartmentId, setToDepartmentId] = useState(departments[0]?._id ?? "");
     const [amount, setAmount] = useState(1);
+    // The whole product: all its stock, and it leaves this department
+    const [moveAll, setMoveAll] = useState(false);
     const [preview, setPreview] = useState<TransferPreview | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
@@ -40,7 +42,7 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
         const res = await fetch(`/api/admin/inventory/${item!._id}/transfer`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ toDepartmentId, amount, dryRun }),
+            body: JSON.stringify({ toDepartmentId, amount, moveAll, dryRun }),
         }).catch(() => null);
         const data = await res?.json().catch(() => null);
         if (!res?.ok) {
@@ -52,7 +54,7 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
 
     // The preview follows the chosen department and amount
     useEffect(() => {
-        if (!item || !toDepartmentId || !(amount > 0)) return;
+        if (!item || !toDepartmentId || !(moveAll || amount > 0)) return;
         let cancelled = false;
         const timer = setTimeout(async () => {
             setError(null);
@@ -61,7 +63,7 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
         }, PREVIEW_DELAY_MS);
         return () => { cancelled = true; clearTimeout(timer); };
         // eslint-disable-next-line react-hooks/exhaustive-deps -- send only reads the values listed
-    }, [item, toDepartmentId, amount]);
+    }, [item, toDepartmentId, amount, moveAll]);
 
     const confirm = async () => {
         setBusy(true);
@@ -75,7 +77,20 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
 
     if (!item) return null;
     const unit = labelOf(tUnits, item.unit).toLowerCase();
-    const tooMuch = amount > item.quantity;
+    // What actually moves: everything when moving the whole product
+    const moved = moveAll ? item.quantity : amount;
+    const tooMuch = !moveAll && amount > item.quantity;
+    const departmentName = departments.find(d => d._id === toDepartmentId)?.name ?? "";
+
+    const lowWarnings = (p: TransferPreview) => {
+        const warnings: string[] = [];
+        // Moving it all removes it from here: no low stock left behind
+        if (!moveAll && item.quantity - amount <= item.minStock) warnings.push(t("lowSource", { min: item.minStock, unit }));
+        const targetMin = p.target ? p.target.minStock : p.newMinStock;
+        const targetAfter = (p.target?.quantity ?? 0) + moved;
+        if (targetAfter <= targetMin) warnings.push(t("lowTarget", { department: p.targetDepartmentName, min: targetMin, unit }));
+        return warnings;
+    };
 
     return (
         <Modal isOpen onClose={onClose} title={t("title")}>
@@ -104,12 +119,26 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
                         inputMode="decimal"
                         min={0}
                         step="any"
-                        value={amount || ""}
+                        value={moveAll ? item.quantity : amount || ""}
+                        disabled={moveAll}
                         onChange={(e) => { setAmount(Number(e.target.value)); setPreview(null); }}
-                        className="w-full bg-subtle border border-line rounded-xl px-4 py-3 text-2xl font-semibold text-ink outline-none focus:border-accent"
+                        className="w-full bg-subtle border border-line rounded-xl px-4 py-3 text-2xl font-semibold text-ink outline-none focus:border-accent disabled:opacity-60"
                     />
                     {tooMuch && <p className="mt-1 ml-1 text-xs font-semibold text-warning">{t("tooMuch", { quantity: item.quantity, unit })}</p>}
                 </div>
+
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line px-4 py-3 text-sm has-[:checked]:border-accent">
+                    <input
+                        type="checkbox"
+                        className="mt-1 h-4 w-4 shrink-0 accent-accent"
+                        checked={moveAll}
+                        onChange={(e) => { setMoveAll(e.target.checked); setPreview(null); }}
+                    />
+                    <span>
+                        <span className="block font-semibold text-ink">{t("moveAllLabel")}</span>
+                        <span className="block text-xs text-ink-muted">{t("moveAllDescription", { quantity: item.quantity, unit, department: departmentName })}</span>
+                    </span>
+                </label>
 
                 {preview && !error && (
                     <div className="flex items-start gap-3 rounded-2xl bg-accent/10 p-4 text-sm text-ink">
@@ -118,12 +147,20 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
                             {preview.target
                                 ? t("previewExisting", {
                                     department: preview.targetDepartmentName, product: preview.target.productName, sku: preview.target.sku,
-                                    before: preview.target.quantity, after: preview.target.quantity + amount, unit,
+                                    before: preview.target.quantity, after: preview.target.quantity + moved, unit,
                                 })
-                                : t("previewNew", { department: preview.targetDepartmentName, amount, unit })}
+                                : t("previewNew", { department: preview.targetDepartmentName, amount: moved, unit, min: preview.newMinStock })}
+                            {moveAll && <> {t("previewRemoved", { product: item.productName })}</>}
                         </p>
                     </div>
                 )}
+
+                {/* Either side ending at or below its minimum shows as low stock, and can email the admins */}
+                {preview && !error && lowWarnings(preview).map(warning => (
+                    <p key={warning} className="flex items-start gap-2 rounded-xl bg-warning/10 px-4 py-3 text-sm text-warning">
+                        <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden /> {warning}
+                    </p>
+                ))}
 
                 {error && (
                     <p role="alert" className="flex items-start gap-2 rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
@@ -133,10 +170,10 @@ export function TransferStockModal({ item, departments, onClose, onTransferred }
 
                 <button
                     onClick={confirm}
-                    disabled={busy || !preview || !!error || tooMuch || !(amount > 0)}
+                    disabled={busy || !preview || !!error || tooMuch || !(moveAll || amount > 0)}
                     className="w-full bg-inverse text-on-inverse py-4 rounded-2xl font-semibold hover:bg-accent hover:text-on-accent transition-all disabled:opacity-40 disabled:hover:bg-inverse disabled:hover:text-on-inverse"
                 >
-                    {busy ? t("transferring") : t("confirm")}
+                    {busy ? t("transferring") : moveAll ? t("confirmMoveAll") : t("confirm")}
                 </button>
             </div>
             {planDialog}

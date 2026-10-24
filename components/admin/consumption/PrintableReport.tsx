@@ -66,6 +66,7 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                     <th className="py-3 px-2 font-black text-center">{t("columns.initial")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.in")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.out")}</th>
+                                    <th className="py-3 px-2 font-black text-center">{t("columns.transfers")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.balance")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.final")}</th>
                                 </tr>
@@ -78,6 +79,9 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                         <td className="py-3 px-2 text-center text-gray-600">{item.initialQuantity}</td>
                                         <td className="py-3 px-2 text-center font-bold text-green-700">+{item.totalIn}</td>
                                         <td className="py-3 px-2 text-center font-bold text-red-700">-{item.totalOut}</td>
+                                        <td className="py-3 px-2 text-center text-gray-600 whitespace-nowrap">
+                                            {item.transferIn || item.transferOut ? `+${item.transferIn} / −${item.transferOut}` : "—"}
+                                        </td>
                                         <td className="py-3 px-2 text-center font-bold">
                                             {item.finalBalance > 0 ? `+${item.finalBalance}` : item.finalBalance}
                                         </td>

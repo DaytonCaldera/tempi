@@ -23,6 +23,7 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
         { title: t("columns.initialRange") },
         { title: t("columns.in") },
         { title: t("columns.out") },
+        { title: t("columns.transfers") },
         { title: t("columns.balance") },
         { title: t("columns.currentFinal") }
     ];
@@ -69,6 +70,13 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
 
                                     <DataTableCell>
                                         <span className="px-3 py-1 bg-danger/10 text-danger text-base font-semibold rounded-lg">-{item.totalOut}</span>
+                                    </DataTableCell>
+
+                                    {/* Stock moved from/to other departments: not consumption, but part of the balance */}
+                                    <DataTableCell>
+                                        <span className="text-sm font-semibold text-ink-muted tabular-nums whitespace-nowrap">
+                                            {item.transferIn || item.transferOut ? `+${item.transferIn} / −${item.transferOut}` : "—"}
+                                        </span>
                                     </DataTableCell>
 
                                     <DataTableCell>

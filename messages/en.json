@@ -480,9 +480,15 @@
             "amountLabel": "Amount ({unit})",
             "tooMuch": "There are only {quantity} {unit}.",
             "previewExisting": "Adds to “{product}” ({sku}) in {department}: {before} → {after} {unit}.",
-            "previewNew": "{department} doesn't have this product: it will be created with {amount} {unit}.",
+            "previewNew": "{department} doesn't have this product: it will be created with {amount} {unit} and the same minimum ({min}).",
             "confirm": "Transfer",
-            "transferring": "Transferring…"
+            "transferring": "Transferring…",
+            "lowSource": "Here it will end at or below its minimum ({min} {unit}): it shows as low stock and the admins are emailed.",
+            "lowTarget": "In {department} it will end at or below its minimum ({min} {unit}): it shows as low stock and the admins are emailed.",
+            "moveAllLabel": "Move the whole product",
+            "moveAllDescription": "Moves all its stock ({quantity} {unit}) to {department} and removes it from this department. Its history is kept.",
+            "previewRemoved": "“{product}” will be removed from this department.",
+            "confirmMoveAll": "Move product"
         }
     },
     "users": {
@@ -555,7 +561,10 @@
             "balance": "Balance",
             "currentFinal": "Current inv. (final)",
             "final": "Final inv.",
-            "department": "Department"
+            "department": "Department",
+            "transfers": "Transfers",
+            "transferIn": "Transferred in",
+            "transferOut": "Transferred out"
         },
         "movements": {
             "title": "Recent movement history",

@@ -120,13 +120,14 @@ async function Report({ clientId, base, query }: { clientId: NonNullable<ReturnT
                     {report.filter(d => d.items.length > 0).map(dept => (
                         <section key={dept._id}>
                             <h2 className="mb-3 text-sm font-semibold text-ink">{dept.departmentName}</h2>
-                            <DataTable headers={["product", "initialRange", "in", "out", "balance", "currentFinal"].map(key => ({ title: tReports(`columns.${key}`) }))}>
+                            <DataTable headers={["product", "initialRange", "in", "out", "transfers", "balance", "currentFinal"].map(key => ({ title: tReports(`columns.${key}`) }))}>
                                 {dept.items.map(item => (
                                     <DataTableRow key={item.inventoryId}>
                                         <DataTableCell><p className="font-semibold">{item.productName}</p><p className="text-[11px] text-ink-subtle">{item.sku}</p></DataTableCell>
                                         <DataTableCell className="tabular-nums">{format.number(item.initialQuantity)}</DataTableCell>
                                         <DataTableCell className="tabular-nums text-success">+{format.number(item.totalIn)}</DataTableCell>
                                         <DataTableCell className="tabular-nums text-danger">−{format.number(item.totalOut)}</DataTableCell>
+                                        <DataTableCell className="tabular-nums text-ink-muted">{item.transferIn || item.transferOut ? `+${format.number(item.transferIn)} / −${format.number(item.transferOut)}` : "—"}</DataTableCell>
                                         <DataTableCell className="tabular-nums">{item.finalBalance > 0 ? "+" : ""}{format.number(item.finalBalance)}</DataTableCell>
                                         <DataTableCell className="tabular-nums font-semibold">{format.number(item.finalQuantity)}</DataTableCell>
                                     </DataTableRow>

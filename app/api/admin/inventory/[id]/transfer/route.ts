@@ -28,12 +28,14 @@ function findCounterpart(item: StockItem, candidates: StockItem[]) {
 /**
  * POST /api/admin/inventory/[id]/transfer
  * Moves stock of a product to another department of the organization, in one step.
- * Body: { toDepartmentId, amount, dryRun?: boolean }
+ * Body: { toDepartmentId, amount, moveAll?: boolean, dryRun?: boolean }
  * - The destination product is the one with the same barcode, SKU or name. Without one it is created there
  *   (same name, unit, category, minimum and codes), if the plan allows another product.
  * - Units must match: kilos never add to boxes.
  * - Both changes, and their two movements (reason "Transferencia entre departamentos", each pointing at the
  *   other department), happen in one transaction: all or nothing.
+ * - moveAll moves the whole product: all of its stock (amount is ignored) and the product itself, which is removed
+ *   from the source like a delete (soft: its history stays). Works with no stock too, to move an empty product.
  * - Admins can transfer between any departments; runners only between departments they work in.
  * dryRun returns the TransferPreview without changing anything. Otherwise: { sourceQuantity, targetQuantity }.
  */
@@ -45,9 +47,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const itemId = toObjectId((await params).id);
         const body = await req.json().catch(() => null);
         const toDepartmentId = toObjectId(body?.toDepartmentId);
-        const amount = Number(body?.amount);
+        const moveAll = body?.moveAll === true;
+        const requested = Number(body?.amount);
         const dryRun = body?.dryRun === true;
-        if (!itemId || !toDepartmentId || !(amount > 0) || !Number.isFinite(amount)) return badRequest("missingData");
+        if (!itemId || !toDepartmentId || (!moveAll && !(requested > 0 && Number.isFinite(requested)))) return badRequest("missingData");
 
         const db = await getDb();
         const stock = db.collection<StockItem>("department_stock");
@@ -64,6 +67,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             if (![source._id, target._id].every(id => allowed.some(a => a.equals(id)))) return forbidden("moveNotAllowed");
         }
 
+        const amount = moveAll ? item.quantity : requested;
         const candidates = await stock.find({ departmentId: target._id, isDeleted: { $ne: true } }).toArray();
         const counterpart = findCounterpart(item, candidates);
         if (counterpart && counterpart.unit !== item.unit) return badRequest("transferUnitMismatch");
@@ -77,13 +81,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({
                 target: counterpart && {
                     _id: counterpart._id.toString(), productName: counterpart.productName, sku: counterpart.sku,
-                    quantity: counterpart.quantity, unit: counterpart.unit,
+                    quantity: counterpart.quantity, unit: counterpart.unit, minStock: counterpart.minStock,
                 },
                 targetDepartmentName: target.name,
+                newMinStock: item.minStock,
             } satisfies TransferPreview);
         }
 
-        const result = await transfer({ item, source, target, counterpart, candidates, amount, user: session.user });
+        const result = await transfer({ item, source, target, counterpart, candidates, amount, moveAll, user: session.user });
         if ("error" in result) return result.error;
 
         // Either side can cross its minimum: the source drops, the destination may come back above it
@@ -95,9 +100,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 }
 
-async function transfer({ item, source, target, counterpart, candidates, amount, user }: {
+async function transfer({ item, source, target, counterpart, candidates, amount, moveAll, user }: {
     item: StockItem; source: Department; target: Department; counterpart: StockItem | null; candidates: StockItem[];
-    amount: number; user: { id?: string; name?: string | null; email?: string | null };
+    amount: number; moveAll: boolean; user: { id?: string; name?: string | null; email?: string | null };
 }): Promise<{ sourceQuantity: number; targetQuantity: number; targetId: ObjectId } | { error: Promise<NextResponse> }> {
     const client = await mongo;
     const db = await getDb();
@@ -114,14 +119,22 @@ async function transfer({ item, source, target, counterpart, candidates, amount,
         await session.withTransaction(async () => {
             outcome = null;
             failure = null;
-            // The same atomic check as a move: only while there is enough stock
+            // The same atomic check as a move: only while there is enough stock. Moving it all needs exactly the
+            // quantity that was read (a move in between would leave some behind), and removes it like a delete
             const after = await stock.findOneAndUpdate(
-                { _id: item._id, isDeleted: { $ne: true }, quantity: { $gte: amount } },
-                { $inc: { quantity: -amount }, $set: { updatedAt: now } },
+                { _id: item._id, isDeleted: { $ne: true }, quantity: moveAll ? amount : { $gte: amount } },
+                {
+                    $inc: { quantity: -amount },
+                    $set: {
+                        updatedAt: now,
+                        ...(moveAll && { isDeleted: true, active: false, deletedAt: now, deletedBy: { name: user.name ?? null, email: user.email } }),
+                    },
+                },
                 { returnDocument: "after", session }
             );
             if (!after) {
-                failure = "insufficientStock";
+                // Moving it all fails when the quantity changed since it was read: try again with the new one
+                failure = moveAll ? "conflict" : "insufficientStock";
                 await session.abortTransaction();
                 return;
             }
@@ -130,7 +143,13 @@ async function transfer({ item, source, target, counterpart, candidates, amount,
             let targetAfter: number;
             let targetSku: string;
             let targetName: string;
-            if (counterpart) {
+            if (counterpart && amount === 0) {
+                // An empty product moved to one that exists: nothing to add
+                targetId = counterpart._id;
+                targetAfter = counterpart.quantity;
+                targetSku = counterpart.sku;
+                targetName = counterpart.productName;
+            } else if (counterpart) {
                 const updated = await stock.findOneAndUpdate(
                     { _id: counterpart._id, isDeleted: { $ne: true } },
                     { $inc: { quantity: amount }, $set: { updatedAt: now } },
@@ -170,7 +189,8 @@ async function transfer({ item, source, target, counterpart, candidates, amount,
             }
 
             const base = { clientId: source.clientId, amount, reason: MOVEMENT_REASONS.TRANSFER, user: movementUser, createdAt: now };
-            await movements.insertMany([
+            // Moving an empty product changes no quantity: no movements
+            if (amount > 0) await movements.insertMany([
                 {
                     ...base, inventoryId: item._id, departmentId: source._id, departmentName: source.name,
                     productName: item.productName, sku: item.sku, type: "OUT",
