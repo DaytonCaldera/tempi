@@ -4,13 +4,14 @@ import { apiError, badRequest, getDb, isDuplicateKeyError, notFound, serverError
 import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { planLimitError } from '@/lib/plans';
+import { normalizeBarcode } from '@/lib/sku';
 
 type Params = { params: Promise<{ id: string }> };
 
 /**
  * POST /api/admin/departments/[id]/stock
  * Adds a product to a department's inventory, if the organization's plan allows another.
- * Body: { name, sku, unit, quantity, minStock }
+ * Body: { name, sku, barcode?, unit, quantity, minStock }
  */
 export async function POST(req: Request, { params }: Params) {
     const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
@@ -25,6 +26,8 @@ export async function POST(req: Request, { params }: Params) {
 
         const body = await req.json();
         if (!body.name || !body.sku) return badRequest("nameAndSkuRequired");
+        const barcode = normalizeBarcode(body.barcode);
+        if (barcode === false) return badRequest("invalidBarcode");
         const db = await getDb();
         const stock = db.collection('department_stock');
         const quantity = Number(body.quantity) || 0;
@@ -32,6 +35,9 @@ export async function POST(req: Request, { params }: Params) {
 
         if (await stock.findOne({ departmentId: department._id, sku: body.sku, isDeleted: { $ne: true } })) {
             return apiError("duplicateSku", 409);
+        }
+        if (barcode && await stock.findOne({ departmentId: department._id, barcode, isDeleted: { $ne: true } })) {
+            return apiError("duplicateBarcode", 409);
         }
 
         let result;
@@ -42,6 +48,8 @@ export async function POST(req: Request, { params }: Params) {
                 clientId: department.clientId,
                 productName: body.name,
                 sku: body.sku,
+                // Left out when empty: the unique barcode index only covers products that have one
+                ...(barcode && { barcode }),
                 unit: body.unit,
                 quantity,
                 minStock: Number(body.minStock),
@@ -51,7 +59,8 @@ export async function POST(req: Request, { params }: Params) {
                 createdAt: now
             });
         } catch (error) {
-            // Two saves of the same SKU at once: the index catches the one the check above missed
+            // Two saves of the same code at once: the index catches the one the check above missed
+            if (isDuplicateKeyError(error, "barcode")) return apiError("duplicateBarcode", 409);
             if (isDuplicateKeyError(error)) return apiError("duplicateSku", 409);
             throw error;
         }

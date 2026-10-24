@@ -5,10 +5,15 @@ import { getDb, toObjectId } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { hasPermission } from '@/lib/permissions';
+import { normalizeBarcode } from '@/lib/sku';
 import type { StockItem } from '@/types/models';
 import StockManagementClient from './StockManagementClient';
 
-export default async function DepartmentStockPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DepartmentStockPage({ params, searchParams }: {
+    params: Promise<{ id: string }>;
+    /** barcode: a code the runner scanned and didn't find, to create the product with it */
+    searchParams: Promise<{ barcode?: string }>;
+}) {
     const session = await auth();
     if (!session) redirect("/");
     if (!hasPermission(session, PERMISSIONS.EDIT_STOCK)) redirect("/unauthorized");
@@ -43,6 +48,7 @@ export default async function DepartmentStockPage({ params }: { params: Promise<
                 }))}
                 departmentId={department._id.toString()}
                 departmentName={department.name}
+                newBarcode={normalizeBarcode((await searchParams).barcode) || undefined}
             />
         </div>
     );

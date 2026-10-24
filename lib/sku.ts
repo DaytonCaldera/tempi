@@ -1,7 +1,21 @@
 /**
- * Product SKUs. Shared by the product form (browser) and the stock import (server).
- * A SKU is unique among a department's products that aren't deleted (index in scripts/create-indexes.js).
+ * Product codes: SKUs and barcodes. Shared by the product form and the runner (browser) and the routes (server).
+ * Each is unique among a department's products that aren't deleted (indexes in scripts/create-indexes.js).
  */
+
+const MAX_BARCODE = 64;
+
+/**
+ * A barcode as stored: what the scanner or the person typed, without spaces (EAN/UPC digits, Code 128 text, a QR
+ * with a short code). null when empty, false when it can't be one (too long, or characters scanners don't send).
+ */
+export function normalizeBarcode(value: unknown): string | null | false {
+    if (value === null || value === undefined) return null;
+    if (typeof value !== "string" && typeof value !== "number") return false;
+    const code = String(value).replace(/\s/g, "");
+    if (!code) return null;
+    return code.length <= MAX_BARCODE && /^[\x21-\x7E]+$/.test(code) ? code : false;
+}
 
 /** Random SKU with the department prefix, e.g. "LOG-4832". */
 export const generateSKU = (departmentName: string, digits = 4) => {

@@ -37,6 +37,8 @@ const INDEXES = [
     // One SKU per department among products that aren't deleted (the routes also check it first, for a clear error).
     // Run scripts/backfill-stock-fields.js before: it sets isDeleted: false and fixes repeated SKUs
     ['department_stock', { departmentId: 1, sku: 1 }, 'unique SKU in a department', { unique: true, partialFilterExpression: { isDeleted: false } }],
+    // Same for barcodes, among the products that have one (the runner finds a scanned product by it)
+    ['department_stock', { departmentId: 1, barcode: 1 }, 'unique barcode in a department', { unique: true, partialFilterExpression: { isDeleted: false, barcode: { $exists: true } } }],
     // Consumption report and movement drill-down
     ['stock_movements', { inventoryId: 1, createdAt: 1 }, 'movements of an item by date'],
     ['stock_movements', { clientId: 1, createdAt: -1 }, 'movements of an organization'],

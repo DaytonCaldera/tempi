@@ -62,11 +62,13 @@ export async function POST(req: Request, { params }: Params) {
         const stock = db.collection<StockItem>('department_stock');
         const existing = await stock.find({ departmentId: department._id, isDeleted: { $ne: true } }).toArray();
         const bySku = new Map(existing.map(item => [item.sku, item]));
+        const byBarcode = new Map(existing.flatMap(item => item.barcode ? [[item.barcode, item] as const] : []));
 
         const validated = rawRows.map(validateImportRow);
         // SKUs in use or in the file: generated ones must not match any
         const taken = new Set([...bySku.keys(), ...validated.flatMap(v => v.row.sku ? [v.row.sku] : [])]);
         const seen = new Set<string>();
+        const seenBarcodes = new Set<string>();
         const results: ImportRowResult[] = [];
         const planned: Planned[] = [];
 
@@ -75,13 +77,20 @@ export async function POST(req: Request, { params }: Params) {
                 if (seen.has(row.sku)) errors.push("duplicateSku");
                 seen.add(row.sku);
             }
+            const item = row.sku ? bySku.get(row.sku) : undefined;
+            if (row.barcode) {
+                // Another product of the department already has it; else, an earlier row of the file does
+                const owner = byBarcode.get(row.barcode);
+                if (owner && (!item || !owner._id.equals(item._id))) errors.push("barcodeTaken");
+                else if (seenBarcodes.has(row.barcode)) errors.push("duplicateBarcode");
+                seenBarcodes.add(row.barcode);
+            }
             const base = { line: row.line, name: row.name, sku: row.sku };
             if (errors.length > 0) {
                 results.push({ ...base, status: "invalid", errors });
                 continue;
             }
 
-            const item = row.sku ? bySku.get(row.sku) : undefined;
             if (!item) {
                 const sku = row.sku ?? generateUniqueSKU(department.name, taken);
                 planned.push({ status: "create", row, sku });
@@ -98,6 +107,7 @@ export async function POST(req: Request, { params }: Params) {
             if (row.unit && row.unit !== item.unit) set.unit = row.unit;
             if (row.minStock !== null && row.minStock !== item.minStock) set.minStock = row.minStock;
             if (row.category && row.category !== item.category) set.category = row.category;
+            if (row.barcode && row.barcode !== item.barcode) set.barcode = row.barcode;
             const delta = row.quantity === null ? 0 : row.quantity - item.quantity;
             const status: ImportRowStatus = Object.keys(set).length === 0 && delta === 0 ? "unchanged" : "update";
             const result: ImportRowResult = { ...base, status, quantityBefore: item.quantity, quantityAfter: item.quantity + delta };
@@ -140,6 +150,7 @@ export async function POST(req: Request, { params }: Params) {
                     sku,
                     unit: row.unit ?? STOCK_UNITS[0],
                     ...(row.category && { category: row.category }),
+                    ...(row.barcode && { barcode: row.barcode }),
                     quantity: row.quantity ?? 0,
                     minStock: row.minStock ?? 0,
                     isDeleted: false,

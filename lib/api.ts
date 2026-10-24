@@ -21,8 +21,11 @@ export function toObjectId(id: unknown): ObjectId | null {
     return typeof id === "string" && ObjectId.isValid(id) ? new ObjectId(id) : null;
 }
 
-/** Whether a MongoDB write failed on a unique index (e.g. a SKU already used in the department). */
-export const isDuplicateKeyError = (error: unknown) => (error as { code?: number } | null)?.code === 11000;
+/** Whether a MongoDB write failed on a unique index (e.g. a SKU already used in the department), or on the one with `field`. */
+export const isDuplicateKeyError = (error: unknown, field?: string) => {
+    const e = error as { code?: number; keyPattern?: Record<string, unknown> } | null;
+    return e?.code === 11000 && (!field || !!e.keyPattern?.[field]);
+};
 
 /** Key of a message in the "errors" namespace of messages/*.json. */
 export type ErrorKey = keyof typeof en.errors;

@@ -130,6 +130,8 @@ export interface StockItem<Id = ObjectId> {
     productName: string;
     /** Unique among the department's products that aren't deleted */
     sku: string;
+    /** The manufacturer's EAN/UPC or any code the runner scans. Optional; unique like the SKU */
+    barcode?: string;
     unit: string;
     category?: string;
     quantity: number;

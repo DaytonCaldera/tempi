@@ -127,9 +127,10 @@ export function StockImportModal({ isOpen, departmentId, onClose, onImported }: 
         const headers = TEMPLATE_HEADERS[locale];
         await writeXlsxFile([
             IMPORT_FIELDS.map(field => headers[field]),
-            [t("example.water"), null, tUnits("unidades"), 48, 12, t("example.drinks")],
-            [t("example.rice"), null, tUnits("kg"), 25.5, 5, t("example.pantry")],
-        ], { columns: [{ width: 30 }, { width: 14 }, { width: 14 }, { width: 12 }, { width: 16 }, { width: 18 }] })
+            // Barcodes as text: Excel drops the leading zeros of a number (UPC codes often start with 0)
+            [t("example.water"), null, { value: "7501234567890", type: String }, tUnits("unidades"), 48, 12, t("example.drinks")],
+            [t("example.rice"), null, null, tUnits("kg"), 25.5, 5, t("example.pantry")],
+        ], { columns: [{ width: 30 }, { width: 14 }, { width: 18 }, { width: 14 }, { width: 12 }, { width: 16 }, { width: 18 }] })
             .toFile(t("templateFileName"));
     };
 

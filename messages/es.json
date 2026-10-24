@@ -82,7 +82,9 @@
         "importTooManyRows": "Se pueden importar hasta {max} filas a la vez. Divide el archivo.",
         "importConflict": "Alguien agregó uno de estos SKU mientras se importaba. Revisa la vista previa e inténtalo de nuevo.",
         "tooManyAlertEmails": "Puedes agregar hasta 5 direcciones.",
-        "invalidEmail": "Una de las direcciones no es válida."
+        "invalidEmail": "Una de las direcciones no es válida.",
+        "invalidBarcode": "El código de barras no es válido (hasta 64 caracteres, sin espacios).",
+        "duplicateBarcode": "Ya existe un producto con ese código de barras en este departamento"
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -114,7 +116,6 @@
             "general": "General",
             "admin": "Administración"
         },
-        "home": "Inicio",
         "dashboard": "Panel de control",
         "runner": "Runner",
         "departments": "Departamentos",
@@ -309,7 +310,10 @@
         "noAreas": {
             "title": "Acceso restringido",
             "description": "Tu usuario no tiene áreas asignadas. Contacta a un administrador para habilitar tu inventario."
-        }
+        },
+        "scan": "Escanear código",
+        "codeNotFound": "Ningún producto tiene el código {code}",
+        "createProduct": "Crear"
     },
     "dashboard": {
         "reportsTitle": "Reportes de consumo",
@@ -379,7 +383,10 @@
             "currentQuantity": "Cantidad actual",
             "initialStock": "Stock inicial",
             "minStock": "Mínimo (alerta)",
-            "register": "Registrar en inventario"
+            "register": "Registrar en inventario",
+            "barcode": "Código de barras (opcional)",
+            "barcodePlaceholder": "Escanéalo o escríbelo",
+            "scanBarcode": "Escanear con la cámara"
         },
         "delete": {
             "title": "Eliminar producto",
@@ -439,7 +446,10 @@
                 "invalidUnit": "Unidad desconocida: usa unidades, kg, cajas o litros",
                 "invalidQuantity": "La cantidad debe ser un número desde 0",
                 "invalidMinStock": "El stock mínimo debe ser un número desde 0",
-                "duplicateSku": "SKU repetido en el archivo"
+                "duplicateSku": "SKU repetido en el archivo",
+                "invalidBarcode": "Código de barras no válido",
+                "duplicateBarcode": "Código de barras repetido en el archivo",
+                "barcodeTaken": "Otro producto del departamento ya tiene ese código de barras"
             },
             "invalidNote": "Las filas con errores no se importan. Corrígelas en el archivo y vuelve a subirlo si las necesitas.",
             "confirm": "{count, plural, =0 {Nada que importar} one {Importar # producto} other {Importar # productos}}",
@@ -1375,5 +1385,21 @@
         "minimum": "Mínimo: {amount}",
         "button": "Ver inventario",
         "footer": "Recibes este aviso por la organización {organization}. Los administradores pueden desactivarlo en Personal > Avisos por correo."
+    },
+    "scanner": {
+        "title": "Escanear código",
+        "close": "Cerrar",
+        "starting": "Abriendo la cámara…",
+        "hint": "Apunta al código de barras o QR",
+        "typeInstead": "Escribir el código",
+        "typeLabel": "Código de barras o SKU",
+        "search": "Buscar",
+        "errors": {
+            "insecure": "La cámara necesita una conexión segura (HTTPS). Escribe el código.",
+            "unsupported": "Este navegador no puede usar la cámara. Escribe el código.",
+            "denied": "No hay permiso para usar la cámara. Actívalo en el navegador o escribe el código.",
+            "noCamera": "No se encontró una cámara. Escribe el código.",
+            "failed": "No se pudo abrir la cámara. Escribe el código."
+        }
     }
 }

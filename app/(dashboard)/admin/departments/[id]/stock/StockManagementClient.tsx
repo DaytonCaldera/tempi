@@ -14,16 +14,18 @@ interface StockManagementClientProps {
     initialInventory: StockRow[];
     departmentId: string;
     departmentName: string;
+    /** Opens the new product form with this barcode (from the runner's "create product" for an unknown code) */
+    newBarcode?: string;
 }
 
 /** Admin view of a department's inventory: stats, search, quick +/- moves, create, edit and delete. */
-export default function StockManagementClient({ initialInventory, departmentId, departmentName }: StockManagementClientProps) {
+export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode }: StockManagementClientProps) {
     const t = useTranslations("stock");
     const router = useRouter();
     const { inventory, quickMove, remove, refresh } = useDepartmentStock(departmentId, initialInventory);
 
     const [searchTerm, setSearchTerm] = useState("");
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(!!newBarcode);
     const [formKey, setFormKey] = useState(0);
     const [isImportOpen, setIsImportOpen] = useState(false);
     const [importKey, setImportKey] = useState(0);
@@ -33,7 +35,8 @@ export default function StockManagementClient({ initialInventory, departmentId, 
     const search = searchTerm.toLowerCase();
     const filteredInventory = inventory.filter(item =>
         item.productName.toLowerCase().includes(search) ||
-        item.sku.toLowerCase().includes(search)
+        item.sku.toLowerCase().includes(search) ||
+        !!item.barcode?.toLowerCase().includes(search)
     );
     const lowStockCount = inventory.filter(item => item.quantity <= item.minStock).length;
 
@@ -51,6 +54,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 editingItem={editingItem}
                 departmentId={departmentId}
                 departmentName={departmentName}
+                initialBarcode={formKey === 0 && !editingItem ? newBarcode : undefined}
                 onClose={() => setIsFormOpen(false)}
                 onSaved={() => {
                     setIsFormOpen(false);

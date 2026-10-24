@@ -82,7 +82,9 @@
         "importTooManyRows": "Up to {max} rows can be imported at once. Split the file.",
         "importConflict": "Someone added one of these SKUs during the import. Check the preview and try again.",
         "tooManyAlertEmails": "You can add up to 5 addresses.",
-        "invalidEmail": "One of the addresses isn't valid."
+        "invalidEmail": "One of the addresses isn't valid.",
+        "invalidBarcode": "The barcode isn't valid (up to 64 characters, no spaces).",
+        "duplicateBarcode": "A product with that barcode already exists in this department"
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -114,7 +116,6 @@
             "general": "General",
             "admin": "Admin"
         },
-        "home": "Home",
         "dashboard": "Dashboard",
         "runner": "Runner",
         "departments": "Departments",
@@ -309,7 +310,10 @@
         "noAreas": {
             "title": "Restricted access",
             "description": "Your user has no assigned areas. Contact an administrator to enable your inventory."
-        }
+        },
+        "scan": "Scan code",
+        "codeNotFound": "No product has the code {code}",
+        "createProduct": "Create"
     },
     "dashboard": {
         "reportsTitle": "Consumption reports",
@@ -379,7 +383,10 @@
             "currentQuantity": "Current quantity",
             "initialStock": "Initial stock",
             "minStock": "Minimum (alert)",
-            "register": "Add to inventory"
+            "register": "Add to inventory",
+            "barcode": "Barcode (optional)",
+            "barcodePlaceholder": "Scan or type it",
+            "scanBarcode": "Scan with the camera"
         },
         "delete": {
             "title": "Delete product",
@@ -439,7 +446,10 @@
                 "invalidUnit": "Unknown unit: use units, kg, boxes or liters",
                 "invalidQuantity": "The quantity must be a number from 0",
                 "invalidMinStock": "The minimum stock must be a number from 0",
-                "duplicateSku": "SKU repeated in the file"
+                "duplicateSku": "SKU repeated in the file",
+                "invalidBarcode": "Invalid barcode",
+                "duplicateBarcode": "Barcode repeated in the file",
+                "barcodeTaken": "Another product of the department already has that barcode"
             },
             "invalidNote": "Rows with errors aren't imported. Fix them in the file and upload it again if you need them.",
             "confirm": "{count, plural, =0 {Nothing to import} one {Import # product} other {Import # products}}",
@@ -1375,5 +1385,21 @@
         "minimum": "Minimum: {amount}",
         "button": "View inventory",
         "footer": "You get this alert for the organization {organization}. Admins can turn it off in Staff > Email alerts."
+    },
+    "scanner": {
+        "title": "Scan code",
+        "close": "Close",
+        "starting": "Opening the camera…",
+        "hint": "Point at the barcode or QR code",
+        "typeInstead": "Type the code",
+        "typeLabel": "Barcode or SKU",
+        "search": "Search",
+        "errors": {
+            "insecure": "The camera needs a secure connection (HTTPS). Type the code.",
+            "unsupported": "This browser can't use the camera. Type the code.",
+            "denied": "There's no permission to use the camera. Allow it in the browser or type the code.",
+            "noCamera": "No camera was found. Type the code.",
+            "failed": "The camera couldn't be opened. Type the code."
+        }
     }
 }

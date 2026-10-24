@@ -1,11 +1,6 @@
 {
     "general": [
         {
-            "href": "/",
-            "labelKey": "home",
-            "icon": "Home"
-        },
-        {
             "href": "/dashboard",
             "labelKey": "dashboard",
             "icon": "LayoutDashboard",

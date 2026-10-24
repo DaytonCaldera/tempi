@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
+import { PERMISSIONS } from "@/lib/constants";
 import { assignedStock, runnerDepartmentIds } from "@/lib/departments";
+import { hasPermission } from "@/lib/permissions";
 import RunnerInventory from "@/components/main/RunnerInventory";
 import { SignOut } from "@/components/AuthButtons";
 
@@ -35,6 +37,7 @@ export default async function RunnerPage() {
             <RunnerInventory
                 initialItems={await assignedStock(session, departmentIds)}
                 assignedAreaCount={departmentIds.length}
+                canCreateProducts={hasPermission(session, PERMISSIONS.EDIT_STOCK)}
             />
         </div>
     );

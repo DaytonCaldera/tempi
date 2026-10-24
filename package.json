@@ -11,6 +11,8 @@
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",
     "@auth/unstorage-adapter": "^2.0.0",
+    "@zxing/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
     "chalk": "^4.1.2",
     "dotenv": "^17.4.2",
     "inquirer": "^8.2.7",
