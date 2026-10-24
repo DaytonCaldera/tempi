@@ -1,18 +1,28 @@
 import { NextResponse } from 'next/server';
 import { getTranslations } from 'next-intl/server';
 import { requirePermission } from '@/lib/authorize';
-import { apiError, getDb } from '@/lib/api';
+import { apiError, badRequest, getDb } from '@/lib/api';
 import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
 import { getTenantQuery } from '@/lib/tenant-guard';
 
+/** GET /api/admin/reports/sync - Only explains how to run the sync. It changes data, so it never runs on a GET (a link or an <img> could trigger it). */
+export async function GET() {
+    const { error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
+    if (error) return error;
+
+    const t = await getTranslations('api.sync');
+    return NextResponse.json({ message: t('ready') });
+}
+
 /**
- * GET /api/admin/reports/sync?confirm=true
+ * POST /api/admin/reports/sync?confirm=true
  * Finds stock items whose quantity doesn't match the sum of their movements and inserts
- * compensating movements so reports add up. Without ?confirm=true it only explains how to run it.
+ * compensating movements so reports add up. Runs on one organization only: the superadmin must pick one first.
  */
-export async function GET(req: Request) {
+export async function POST(req: Request) {
     const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
     if (error) return error;
+    if (!session.user.clientId) return badRequest("organizationRequired");
 
     const t = await getTranslations('api.sync');
 

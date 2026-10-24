@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import AuthProvider from "@/components/SessionProvider";
 import { Geist, Geist_Mono } from 'next/font/google';
 import '@/app/globals.css';
+import { THEME_SCRIPT } from '@/lib/theme-script';
 import DashboardClientWrapper from "./DashboardClientWrapper";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -18,8 +19,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     const locale = await getLocale();
 
     return (
-        <html lang={locale}>
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-black`}>
+        <html lang={locale} suppressHydrationWarning>
+            <head>
+                {/* Sets the theme before the first paint. A plain <script>: next/script would run it after hydration */}
+                <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+            </head>
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-canvas text-ink selection:bg-accent/30`}>
                 <AuthProvider>
                     {/* Inherits locale, messages and timeZone from i18n/request.ts */}
                     <NextIntlClientProvider>

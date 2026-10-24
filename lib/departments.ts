@@ -27,10 +27,18 @@ export function assignedDepartmentIds(session: Session): ObjectId[] {
  * Shared by the runner page (first render) and GET /api/admin/inventory (its polling), so both return the same shape.
  */
 export async function assignedStock(session: Session): Promise<StockItem<string>[]> {
-    const departmentIds = assignedDepartmentIds(session);
-    if (departmentIds.length === 0) return [];
+    const assignedIds = assignedDepartmentIds(session);
+    if (assignedIds.length === 0) return [];
 
     const db = await getDb();
+    // Only departments that really belong to the organization: a membership pointing at another
+    // organization's department (bad data, or an older toggle-status bug) must not expose its stock
+    const departmentIds = await db.collection<Department>('departments')
+        .find({ _id: { $in: assignedIds }, ...getTenantQuery(session) }, { projection: { _id: 1 } })
+        .map(d => d._id)
+        .toArray();
+    if (departmentIds.length === 0) return [];
+
     const items = await db.collection<StockItem>('department_stock')
         .find({ departmentId: { $in: departmentIds }, isDeleted: { $ne: true } })
         .sort({ productName: 1 })

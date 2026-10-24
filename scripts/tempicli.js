@@ -15,7 +15,8 @@ if (!MONGO_URI) {
     process.exit(1);
 }
 
-const DB_NAME = 'tempi';
+// Same as the app: without MONGODB_DB, the database named in the URI is used
+const DB_NAME = process.env.MONGODB_DB;
 const CLIENTS_COLLECTION = 'clients';
 
 async function startApp() {

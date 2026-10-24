@@ -1,12 +1,6 @@
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
-export default async function Page() {
-    const session = await auth();
-    if (!session) redirect("/");
-    return (
-        <main>
-            <h1>hello from dev</h1>
-        </main>
-    );
+/** /admin has no page of its own: the admin sections live under it (departments, users, reports). */
+export default function Page() {
+    redirect("/dashboard");
 }

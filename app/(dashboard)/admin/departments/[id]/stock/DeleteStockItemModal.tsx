@@ -30,24 +30,24 @@ export function DeleteStockItemModal({ item, onCancel, onConfirm }: DeleteStockI
     return (
         <Modal isOpen={!!item} onClose={onCancel} title={t("title")}>
             <div className="space-y-5">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-ink-muted">
                     {t.rich("confirm", {
                         name: item?.productName ?? "",
                         sku: item?.sku ?? "",
-                        b: (chunks) => <span className="font-bold text-[#171717]">{chunks}</span>,
+                        b: (chunks) => <span className="font-bold text-ink">{chunks}</span>,
                     })}
                 </p>
                 <div className="flex gap-3">
                     <button
                         onClick={onCancel}
-                        className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 rounded-2xl font-black hover:bg-gray-50 transition-all"
+                        className="flex-1 bg-card border border-line text-ink-muted py-3 rounded-2xl font-semibold hover:bg-subtle transition-all"
                     >
                         {tCommon("cancel")}
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={isDeleting}
-                        className="flex-1 bg-red-600 text-white py-3 rounded-2xl font-black hover:bg-red-700 transition-all"
+                        className="flex-1 bg-danger text-canvas py-3 rounded-2xl font-semibold hover:brightness-110 transition-all"
                     >
                         {isDeleting ? tCommon("deleting") : tCommon("delete")}
                     </button>

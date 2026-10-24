@@ -1,7 +1,7 @@
 {
     "metadata": {
-        "title": "Tempi | Gestión de Inventario",
-        "description": "Sistema inteligente de logística y suministros"
+        "title": "Tempi | Todo cuadra",
+        "description": "Cierra cada evento sabiendo a dónde fue cada unidad. Sin conteos a medianoche ni pérdidas que descubres tarde. Tu negocio bajo control, tu mente en paz."
     },
     "common": {
         "login": "Iniciar sesión",
@@ -21,7 +21,8 @@
         "general": "General",
         "system": "Sistema",
         "user": "Usuario",
-        "backToHome": "Regresar al inicio"
+        "backToHome": "Regresar al inicio",
+        "back": "Volver"
     },
     "errors": {
         "unauthorized": "No autorizado",
@@ -53,7 +54,15 @@
         "defaultPlanNotFound": "Plan predeterminado no encontrado",
         "createCompanyFailed": "Error al crear la empresa",
         "syncFailed": "Fallo al ejecutar la sincronización masiva",
-        "organizationNameMismatch": "El nombre no coincide con el de la organización"
+        "organizationNameMismatch": "El nombre no coincide con el de la organización",
+        "lastOrganizationNotAcknowledged": "Confirma que quieres quedarte sin organización",
+        "ownerCannotLeave": "Eres el propietario: cierra la organización en lugar de salir",
+        "ownsOrganizations": "Primero cierra las organizaciones de las que eres propietario",
+        "cannotEditSelf": "No puedes cambiar tu propio rol o acceso",
+        "ownerLocked": "El propietario de la organización debe seguir siendo administrador activo",
+        "invalidRole": "Rol no válido",
+        "organizationRequired": "Primero elige una organización",
+        "tooManyAttempts": "Demasiados intentos. Vuelve a intentarlo en unos minutos"
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -97,12 +106,88 @@
         "selectOrganization": "Seleccionar...",
         "unnamedOrganization": "Organización sin nombre",
         "joinOrCreate": "+ Unirse o crear nueva",
-        "switching": "Cambiando contexto..."
+        "switching": "Cambiando contexto...",
+        "account": "Mi cuenta"
+    },
+    "theme": {
+        "label": "Tema",
+        "light": "Claro",
+        "dark": "Oscuro",
+        "system": "Sistema"
     },
     "landing": {
-        "badge": "Sistema v1.2 listo",
-        "tagline": "El espacio de trabajo de alto rendimiento para tu próxima evolución. Seguro, rápido y hecho para la vanguardia digital.",
-        "legalNotice": "Al iniciar sesión acepta los <terms>Términos de Servicio</terms> y la <privacy>Política de Privacidad</privacy>."
+        "cta": "Empieza con Google",
+        "hero": {
+            "eyebrow": "Para equipos que viven de su inventario",
+            "title": "Cierra cada evento sabiendo que todo cuadra.",
+            "subtitle": "Se acabaron los conteos a medianoche, las cajas perdidas y los números a ojo. Ten la tranquilidad de saber a dónde fue cada unidad, y deja tu mente libre para hacer crecer el negocio."
+        },
+        "moment": {
+            "when": "Domingo, 9:12 a. m. La mañana siguiente.",
+            "report": "Cierre · Evento del sábado",
+            "rows": {
+                "out": {
+                    "label": "Despachado",
+                    "value": "1.240"
+                },
+                "used": {
+                    "label": "Consumido",
+                    "value": "1.198"
+                },
+                "returned": {
+                    "label": "Devuelto",
+                    "value": "42"
+                },
+                "missing": {
+                    "label": "Sin justificar",
+                    "value": "0"
+                }
+            },
+            "verdict": "Todo cuadra.",
+            "caption": "Sin recontar. Sin adivinar. Solo un café y un número en el que confías."
+        },
+        "overcome": {
+            "title": "Lo que dejas atrás",
+            "subtitle": "Lo que hoy te quita el sueño se vuelve algo en lo que ya no piensas.",
+            "items": {
+                "recount": {
+                    "before": "Recontar cajas a medianoche",
+                    "after": "Cerrar el día con números que ya cuadran"
+                },
+                "messages": {
+                    "before": "Mensajes de \"¿todavía queda?\" toda la noche",
+                    "after": "Un equipo que ve lo que hay y simplemente se mueve"
+                },
+                "losses": {
+                    "before": "Pérdidas que descubres a fin de mes",
+                    "after": "Fugas que detectas el mismo día que empiezan"
+                },
+                "buying": {
+                    "before": "Comprar al ojo",
+                    "after": "Comprar exactamente lo que realmente consumes"
+                }
+            }
+        },
+        "gains": {
+            "title": "Lo que ganas",
+            "peace": {
+                "title": "Tranquilidad",
+                "description": "Cada unidad tiene un quién, un cuándo y un porqué. Dejas de cargar el inventario en la cabeza."
+            },
+            "team": {
+                "title": "Un equipo que se hace cargo",
+                "description": "Cada quien sabe qué le toca mover. Responsabilidad sin tener que perseguir a nadie."
+            },
+            "growth": {
+                "title": "Espacio para crecer",
+                "description": "Más eventos, más áreas, más personas, con el mismo control que tienes hoy. Decide con datos, no de memoria."
+            }
+        },
+        "closing": {
+            "title": "Tu negocio bajo control. Tu mente en paz.",
+            "subtitle": "Una herramienta para la mente y para el negocio."
+        },
+        "legalNotice": "Al iniciar sesión aceptas los <terms>Términos de Servicio</terms> y la <privacy>Política de Privacidad</privacy>."
     },
     "pending": {
         "title": "Acceso pendiente",
@@ -247,7 +332,11 @@
             "warning": "Todos los miembros perderán el acceso a {name} de inmediato. Esto no se puede deshacer desde la aplicación.",
             "confirmLabel": "Escribe {name} para confirmar",
             "confirm": "Cerrar definitivamente",
-            "closing": "Cerrando..."
+            "closing": "Cerrando...",
+            "continue": "Continuar",
+            "lastTitle": "Esta es tu única organización",
+            "lastDescription": "Al cerrar {name} te quedarás sin organización. Tu cuenta sigue activa: te llevaremos a tu página de cuenta, desde donde podrás crear o unirte a otra organización, o eliminar tu cuenta.",
+            "confirmLast": "Cerrar y quedarme sin organización"
         }
     },
     "reports": {
@@ -295,7 +384,7 @@
         "defaultDepartmentDescription": "Departamento inicial predeterminado",
         "organizationCreated": "Organización creada",
         "sync": {
-            "ready": "Ruta de sincronización lista. Añade '?confirm=true' a la URL para ejecutar las correcciones.",
+            "ready": "Ruta de sincronización lista. Envía un POST a esta URL con '?confirm=true' para aplicar las correcciones.",
             "alreadySynced": "La base de datos ya está 100% sincronizada. No se requiere acción.",
             "done": "{count, plural, one {¡Sincronización exitosa! Se corrigió # artículo.} other {¡Sincronización exitosa! Se corrigieron # artículos.}}"
         }
@@ -466,6 +555,368 @@
                     ]
                 }
             }
+        }
+    },
+    "account": {
+        "title": "Mi cuenta",
+        "closedBanner": {
+            "title": "Organización cerrada",
+            "description": "Tu cuenta sigue activa. Crea una organización nueva o únete a una con su código.",
+            "cta": "Crear o unirme"
+        },
+        "profile": {
+            "title": "Perfil",
+            "google": "Tu nombre, foto y correo vienen de tu cuenta de Google."
+        },
+        "preferences": {
+            "title": "Preferencias",
+            "language": "Idioma",
+            "theme": "Tema"
+        },
+        "organizations": {
+            "title": "Mis organizaciones",
+            "empty": "No perteneces a ninguna organización.",
+            "current": "Activa",
+            "owner": "Propietario",
+            "switch": "Cambiar",
+            "leave": "Salir",
+            "joinOrCreate": "Unirme o crear nueva",
+            "leaveTitle": "Salir de la organización",
+            "leaveWarning": "Perderás el acceso a {name}. Para volver necesitarás su código y la aprobación de un administrador.",
+            "leaveConfirm": "Salir de {name}",
+            "leaving": "Saliendo..."
+        },
+        "delete": {
+            "title": "Eliminar cuenta",
+            "description": "Borra tu cuenta y tus membresías. El historial de movimientos de las organizaciones se conserva.",
+            "button": "Eliminar cuenta",
+            "blocked": "Eres propietario de: {names}. Ciérralas antes de eliminar tu cuenta.",
+            "warning": "Esto no se puede deshacer. Podrás volver a registrarte con Google, pero empezarás sin organizaciones.",
+            "confirmLabel": "Escribe {email} para confirmar",
+            "confirm": "Eliminar definitivamente",
+            "deleting": "Eliminando..."
+        }
+    },
+    "superadmin": {
+        "title": "Superadmin",
+        "panel": "Panel de control",
+        "search": "Buscar",
+        "never": "Nunca",
+        "nav": {
+            "overview": "Resumen",
+            "organizations": "Organizaciones",
+            "users": "Usuarios",
+            "audit": "Auditoría",
+            "account": "Mi cuenta",
+            "signOut": "Cerrar sesión",
+            "menu": "Menú del superadmin",
+            "health": "Salud",
+            "support": "Soporte"
+        },
+        "periods": {
+            "1d": "24 h",
+            "7d": "7 días",
+            "30d": "30 días",
+            "90d": "90 días"
+        },
+        "periodLabel": "Periodo",
+        "pagination": {
+            "previous": "Anterior",
+            "next": "Siguiente",
+            "page": "Página {page} de {pages}"
+        },
+        "overview": {
+            "title": "Resumen",
+            "subtitle": "Cómo se está usando toda la app",
+            "vsPrevious": "vs periodo anterior",
+            "noChange": "sin cambios",
+            "notComparable": "Sin periodo anterior para comparar",
+            "usage": "Uso",
+            "growth": "Crecimiento",
+            "metrics": {
+                "seenUsers": "Usuarios activos",
+                "seenUsersHint": "Abrieron la app. Se cuenta desde que se instaló este panel",
+                "workingUsers": "Usuarios que registraron stock",
+                "activeOrganizations": "Organizaciones activas",
+                "movements": "Movimientos de stock",
+                "newUsers": "Usuarios nuevos",
+                "newOrganizations": "Organizaciones nuevas",
+                "closedOrganizations": "Organizaciones cerradas",
+                "signIns": "Inicios de sesión",
+                "signInsHint": "Se cuenta desde que se instaló este panel"
+            },
+            "totals": {
+                "title": "Ahora mismo",
+                "totalUsers": "Usuarios",
+                "openOrganizations": "Organizaciones abiertas",
+                "usersWithoutOrganization": "Usuarios sin organización",
+                "pendingMembers": "Esperando aprobación",
+                "oldestPending": "El más antiguo espera desde el {date}"
+            },
+            "charts": {
+                "movements": "Movimientos de stock",
+                "signUps": "Usuarios nuevos",
+                "table": "Ver como tabla",
+                "bucket": "Fecha",
+                "count": "Cantidad",
+                "total": "{count} en el periodo",
+                "byHour": "Por hora",
+                "byDay": "Por día"
+            },
+            "activeUsers": "Usuarios activos",
+            "dau": "Hoy",
+            "wau": "Últimos 7 días",
+            "mau": "Últimos 30 días",
+            "stickiness": "Recurrencia",
+            "stickinessHint": "Usuarios diarios promedio ÷ usuarios del mes. Más alto significa que vuelven más seguido",
+            "trackingSince": "Se cuenta desde el {date}",
+            "notTrackedYet": "Se cuenta a partir de hoy",
+            "dauChart": "Usuarios activos por día, últimos 30 días",
+            "funnel": "Embudo de alta",
+            "funnelHint": "Usuarios que se registraron en el periodo, y hasta dónde llegaron",
+            "funnelSteps": {
+                "registered": "Se registraron",
+                "joined": "Crearon o se unieron a una organización",
+                "approved": "Aprobados (o propietarios)",
+                "working": "Registraron su primer movimiento"
+            },
+            "funnelOf": "{percent} de los registros",
+            "attention": "Necesita atención",
+            "attentionNone": "Nada necesita atención ahora mismo.",
+            "seeHealth": "Ver salud"
+        },
+        "organizations": {
+            "title": "Organizaciones",
+            "subtitle": "Todas las organizaciones creadas en Tempi",
+            "searchPlaceholder": "Nombre, propietario o código",
+            "count": "{count, plural, one {# organización} other {# organizaciones}}",
+            "empty": "Ninguna organización coincide.",
+            "filters": {
+                "all": "Todas",
+                "active": "Activas",
+                "inactive": "Inactivas",
+                "closed": "Cerradas"
+            },
+            "columns": {
+                "organization": "Organización",
+                "owner": "Propietario",
+                "created": "Creada",
+                "members": "Miembros",
+                "pending": "Pendientes",
+                "departments": "Departamentos",
+                "products": "Productos",
+                "lastActivity": "Última actividad",
+                "status": "Estado"
+            },
+            "status": {
+                "active": "Activa",
+                "inactive": "Inactiva",
+                "closed": "Cerrada",
+                "open": "Abierta"
+            },
+            "inactiveHint": "Sin movimientos de stock en {days} días",
+            "detail": {
+                "back": "Todas las organizaciones",
+                "owner": "Propietario",
+                "plan": "Plan",
+                "created": "Creada",
+                "code": "Código de invitación",
+                "status": "Estado",
+                "closedOn": "Cerrada el {date} por {email}",
+                "lastActivity": "Última actividad",
+                "members": "Miembros",
+                "departments": "Departamentos",
+                "activity": "Movimientos de stock, últimos 30 días",
+                "audit": "Historial reciente",
+                "noMembers": "Sin miembros.",
+                "noDepartments": "Sin departamentos.",
+                "products": "{count, plural, one {# producto} other {# productos}}",
+                "ownerBadge": "Propietario",
+                "joined": "Se unió",
+                "lastSeen": "Última vez",
+                "role": "Rol",
+                "noPlan": "Sin plan"
+            }
+        },
+        "users": {
+            "title": "Usuarios",
+            "subtitle": "Todas las personas que entraron a Tempi",
+            "searchPlaceholder": "Nombre o email",
+            "count": "{count, plural, one {# usuario} other {# usuarios}}",
+            "empty": "Ningún usuario coincide.",
+            "filters": {
+                "all": "Todos",
+                "noOrganization": "Sin organización",
+                "pending": "Esperando aprobación",
+                "disabled": "Desactivados"
+            },
+            "columns": {
+                "user": "Usuario",
+                "organizations": "Organizaciones",
+                "registered": "Registro",
+                "lastSeen": "Última vez",
+                "status": "Estado"
+            },
+            "status": {
+                "active": "Activo",
+                "disabled": "Desactivado"
+            },
+            "noOrganization": "Sin organización",
+            "detail": {
+                "back": "Todos los usuarios",
+                "registered": "Registro",
+                "lastLogin": "Último inicio de sesión",
+                "lastSeen": "Última vez",
+                "memberships": "Organizaciones",
+                "movements": "Movimientos de stock, últimos 30 días",
+                "audit": "Historial",
+                "departments": "{count, plural, one {# departamento} other {# departamentos}}",
+                "current": "Actual",
+                "noMemberships": "No pertenece a ninguna organización.",
+                "joined": "Se unió",
+                "role": "Rol",
+                "status": "Estado"
+            }
+        },
+        "audit": {
+            "title": "Auditoría",
+            "subtitle": "Quién hizo qué y cuándo",
+            "searchPlaceholder": "Email, nombre o destino",
+            "allActions": "Todas las acciones",
+            "empty": "Todavía no hay nada registrado.",
+            "columns": {
+                "when": "Cuándo",
+                "action": "Acción",
+                "actor": "Por",
+                "organization": "Organización",
+                "target": "A"
+            },
+            "actions": {
+                "signUp": "Se registró",
+                "signIn": "Inició sesión",
+                "deleteAccount": "Eliminó su cuenta",
+                "create": "Creó una organización",
+                "join": "Se unió a una organización",
+                "leave": "Salió de una organización",
+                "close": "Cerró una organización",
+                "approve": "Aprobó a un miembro",
+                "update": "Cambió una membresía",
+                "regenerateCode": "Creó un código de invitación nuevo",
+                "transferOwnership": "Transfirió la propiedad"
+            },
+            "change": "{field}: {before} → {after}",
+            "fields": {
+                "role": "Rol",
+                "status": "Estado",
+                "departments": "Departamentos"
+            },
+            "reason": "Motivo: {reason}",
+            "owner": "Propietario: {before} → {after}"
+        },
+        "health": {
+            "title": "Salud",
+            "subtitle": "Dónde la gente podría necesitar ayuda",
+            "none": "Nada por aquí.",
+            "inactiveOrganizations": "Organizaciones sin actividad",
+            "inactiveOrganizationsHint": "Abiertas y sin movimientos de stock en {days} días",
+            "longPending": "Esperando aprobación demasiado tiempo",
+            "longPendingHint": "Pendientes desde hace más de {days} días",
+            "lobbyUsers": "Usuarios atascados sin organización",
+            "lobbyUsersHint": "Se registraron hace más de {days} días y no están en ninguna organización",
+            "loneOrganizations": "Organizaciones con un solo miembro",
+            "loneOrganizationsHint": "Con más de {days} días y nadie más se unió",
+            "emptyOrganizations": "Organizaciones sin productos",
+            "emptyOrganizationsHint": "Con más de {days} días y todavía sin productos",
+            "stockMismatches": "Stock que no cuadra con sus movimientos",
+            "stockMismatchesHint": "Los reportes de estos productos están mal hasta que se corrijan",
+            "waitingSince": "Espera desde el {date}",
+            "registeredOn": "Se registró el {date}",
+            "lastActivity": "Última actividad: {date}",
+            "neverActive": "Nunca tuvo actividad",
+            "quantity": "Guardado: {quantity} · según movimientos: {calculated}",
+            "seeAll": "Ver todas"
+        },
+        "support": {
+            "title": "Soporte",
+            "subtitle": "Encuentra un usuario u organización, y las herramientas para ayudarles",
+            "searchPlaceholder": "Email, nombre, organización o código",
+            "noResults": "Nada coincide con “{q}”.",
+            "users": "Usuarios",
+            "organizations": "Organizaciones",
+            "closed": "Cerrada",
+            "toolsTitle": "Herramientas disponibles",
+            "tools": {
+                "diagnosis": "Diagnóstico de acceso",
+                "diagnosisHint": "En la ficha de un usuario: dónde entra al abrir la app, con qué rol y departamentos, y qué parece estar mal.",
+                "regenerate": "Nuevo código de invitación",
+                "regenerateHint": "En la ficha de una organización: reemplaza un código filtrado. El anterior deja de funcionar.",
+                "transfer": "Transferir la propiedad",
+                "transferHint": "En la ficha de una organización: hace propietario a otro miembro, por ejemplo cuando el dueño deja la empresa.",
+                "diagnosisCta": "Elegir un usuario",
+                "regenerateCta": "Elegir una organización",
+                "transferCta": "Elegir una organización"
+            },
+            "openTools": "Herramientas",
+            "openDiagnosis": "Diagnóstico"
+        },
+        "diagnosis": {
+            "title": "Diagnóstico de acceso",
+            "subtitle": "Qué pasa cuando este usuario abre la app, calculado igual que al iniciar sesión",
+            "states": {
+                "accountDisabled": "Cuenta desactivada: ve la página de “sin acceso”.",
+                "lobby": "Sin organización: entra al lobby para crear o unirse a una.",
+                "allInactive": "Desactivado en todas sus organizaciones: ve la página de “sin acceso”.",
+                "pendingApproval": "Esperando aprobación en {organization}: ve la pantalla de espera.",
+                "member": "Trabaja en {organization} como {role}."
+            },
+            "permissions": "Permisos",
+            "noPermissions": "Ninguno",
+            "departments": "Departamentos",
+            "departmentStatus": {
+                "ok": "Correcto",
+                "otherOrganization": "Es de otra organización",
+                "missing": "No existe"
+            },
+            "notes": {
+                "savedOrganizationNotUsed": "Su organización guardada no está activa para él, así que se usa otra.",
+                "departmentOtherOrganization": "Un departamento es de otra organización: su stock queda oculto para este usuario.",
+                "departmentMissing": "Un departamento fue eliminado: se ignora.",
+                "noDepartments": "Como runner sin departamentos, ve el inventario vacío.",
+                "organizationClosed": "Su organización está cerrada.",
+                "placeholderMembership": "Aún tiene la membresía de relleno antigua (no afecta, se ignora).",
+                "superadminRoleIgnored": "Una membresía dice “superadmin”: se trata como usuario normal."
+            },
+            "allGood": "No se ve nada mal."
+        },
+        "tools": {
+            "title": "Herramientas de soporte",
+            "reason": "Motivo (se guarda en la auditoría)",
+            "reasonPlaceholder": "p. ej. El propietario dice que el código se publicó en redes sociales",
+            "reasonTooShort": "Escribe un motivo de al menos {min} caracteres.",
+            "regenerate": {
+                "title": "Nuevo código de invitación",
+                "description": "Crea un código nuevo y desactiva el actual. Los miembros no se ven afectados; comparte el nuevo código con quien aún deba unirse.",
+                "button": "Crear código nuevo",
+                "done": "Código nuevo: {code}"
+            },
+            "transfer": {
+                "title": "Transferir la propiedad",
+                "description": "El nuevo propietario pasa a ser administrador activo. El propietario actual sigue como administrador.",
+                "member": "Nuevo propietario",
+                "pick": "Elige un miembro…",
+                "confirm": "Escribe {name} para confirmar",
+                "button": "Transferir propiedad",
+                "done": "{name} ahora es el propietario.",
+                "noCandidates": "No hay otro miembro activo al que transferirla."
+            },
+            "errors": {
+                "notFound": "La organización o el miembro ya no existe.",
+                "closed": "La organización está cerrada.",
+                "confirmMismatch": "El nombre no coincide.",
+                "invalid": "Revisa el formulario e inténtalo de nuevo.",
+                "pickMember": "Elige al nuevo propietario."
+            },
+            "processing": "Procesando…"
         }
     }
 }

@@ -31,17 +31,17 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {showDepartmentName && (
                 <div className="flex items-center gap-4 mb-6 px-4">
-                    <div className="w-12 h-12 bg-brand text-brand-accent rounded-2xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-accent/10 text-accent rounded-2xl flex items-center justify-center">
                         <MapPin size={24} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-black leading-none uppercase tracking-tighter">{department.departmentName}</h2>
-                        <p className="text-[10px] font-black text-brand/40 uppercase tracking-widest mt-1">{t("locationInventory")}</p>
+                        <h2 className="text-2xl font-semibold text-ink leading-none tracking-tight">{department.departmentName}</h2>
+                        <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest mt-1">{t("locationInventory")}</p>
                     </div>
                 </div>
             )}
 
-            <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+            <div>
                 <DataTable headers={headers}>
                     {department.items.map(item => {
                         const isExpanded = expandedId === item.inventoryId;
@@ -50,39 +50,39 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
                             <Fragment key={item.inventoryId}>
                                 <DataTableRow
                                     onClick={() => onToggleDetails(item.inventoryId)}
-                                    className={`cursor-pointer transition-colors ${isExpanded ? "bg-surface" : "hover:bg-surface/30"}`}
+                                    className={`cursor-pointer transition-colors ${isExpanded ? "bg-subtle" : "hover:bg-subtle/60"}`}
                                 >
                                     <DataTableCell>
                                         <div className="flex flex-col">
-                                            <span className="text-lg font-black text-black tracking-tight">{item.productName}</span>
-                                            <span className="text-[11px] font-black text-brand bg-brand/5 w-fit px-2 py-0.5 rounded-md mt-1 tracking-wider uppercase">{item.sku}</span>
+                                            <span className="text-lg font-semibold text-ink tracking-tight">{item.productName}</span>
+                                            <span className="text-[11px] font-semibold text-ink-muted bg-card border border-line w-fit px-2 py-0.5 rounded-md mt-1 tracking-wider uppercase">{item.sku}</span>
                                         </div>
                                     </DataTableCell>
 
                                     <DataTableCell>
-                                        <span className="text-base font-bold text-gray-500">{item.initialQuantity}</span>
+                                        <span className="text-base font-bold text-ink-muted">{item.initialQuantity}</span>
                                     </DataTableCell>
 
                                     <DataTableCell>
-                                        <span className="px-3 py-1 bg-success-dark/10 text-success-dark text-base font-black rounded-lg">+{item.totalIn}</span>
+                                        <span className="px-3 py-1 bg-success/10 text-success text-base font-semibold rounded-lg">+{item.totalIn}</span>
                                     </DataTableCell>
 
                                     <DataTableCell>
-                                        <span className="px-3 py-1 bg-danger/10 text-danger text-base font-black rounded-lg">-{item.totalOut}</span>
+                                        <span className="px-3 py-1 bg-danger/10 text-danger text-base font-semibold rounded-lg">-{item.totalOut}</span>
                                     </DataTableCell>
 
                                     <DataTableCell>
-                                        <span className={`text-lg font-black ${item.finalBalance < 0 ? 'text-danger' : 'text-black'}`}>
+                                        <span className={`text-lg font-semibold ${item.finalBalance < 0 ? 'text-danger' : 'text-ink'}`}>
                                             {item.finalBalance > 0 ? `+${item.finalBalance}` : item.finalBalance}
                                         </span>
                                     </DataTableCell>
 
                                     <DataTableCell>
                                         <div className="flex items-center justify-between w-full">
-                                            <span className="text-xl font-black text-brand-accent bg-brand px-3 py-1 rounded-lg">
+                                            <span className="text-xl font-semibold text-accent bg-inverse px-3 py-1 rounded-lg">
                                                 {item.finalQuantity}
                                             </span>
-                                            <div className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-brand text-brand-accent' : 'text-brand/20'}`}>
+                                            <div className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-inverse text-on-inverse' : 'text-ink-subtle'}`}>
                                                 {isExpanded ? <ChevronUp size={20} strokeWidth={3} /> : <ChevronDown size={20} strokeWidth={3} />}
                                             </div>
                                         </div>
@@ -91,7 +91,7 @@ export function DepartmentReportTable({ department, showDepartmentName, expanded
 
                                 {isExpanded && (
                                     <tr>
-                                        <td colSpan={6} className="p-8 bg-surface/40">
+                                        <td colSpan={6} className="p-8 bg-subtle/60">
                                             <MovementDetails details={details} />
                                         </td>
                                     </tr>

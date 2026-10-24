@@ -104,7 +104,7 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
         );
         return groupByDepartment(filteredItems, fallbackName);
     }, [items, activeDepartment, deferredSearch, fallbackName]);
-    const canOpenDashboard = userRole === ROLES.ADMIN || userRole === ROLES.SUPERADMIN || permissions.view_dashboard === true;
+    const canOpenDashboard = userRole === ROLES.ADMIN || permissions.view_dashboard === true;
 
     const setPending = (id: string, pending: boolean) => setPendingIds(ids => {
         const next = new Set(ids);
@@ -158,7 +158,7 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
     };
 
     const chipClass = (selected: boolean) =>
-        `shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border transition-all active:scale-95 ${selected ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500'}`;
+        `shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border transition-all active:scale-95 ${selected ? 'bg-inverse border-inverse text-on-inverse' : 'bg-card border-line text-ink-muted'}`;
 
     return (
         <>
@@ -194,11 +194,11 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
                     <section key={department.id} aria-labelledby={`area-${department.id}`} className="space-y-2.5">
                         {/* DEPARTMENT SEPARATOR */}
                         <div className="flex items-center gap-3 px-1">
-                            <MapPin size={14} className="text-slate-400 shrink-0" aria-hidden />
-                            <h2 id={`area-${department.id}`} className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] select-none">
+                            <MapPin size={14} className="text-ink-subtle shrink-0" aria-hidden />
+                            <h2 id={`area-${department.id}`} className="text-[11px] font-black text-ink-muted uppercase tracking-[0.15em] select-none">
                                 {department.name}
                             </h2>
-                            <div className="h-px flex-1 bg-linear-to-r from-slate-200 to-transparent rounded-full"></div>
+                            <div className="h-px flex-1 bg-linear-to-r from-line to-transparent rounded-full"></div>
                         </div>
 
                         {department.items.map(item => (
@@ -214,16 +214,16 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
                 ))}
 
                 {departments.length === 0 && (
-                    <div className="text-center py-20 text-gray-400 font-bold">{t('noProducts')}</div>
+                    <div className="text-center py-20 text-ink-subtle font-bold">{t('noProducts')}</div>
                 )}
             </div>
 
-            {/* TOAST: result of the last move, with Undo */}
+            {/* TOAST: result of the last move, with Undo. Dark in both themes, so it stands out from the list */}
             <div aria-live="polite" className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex justify-center pointer-events-none">
                 {toast && (
                     <div
                         role={toast.kind === 'error' ? 'alert' : 'status'}
-                        className={`pointer-events-auto w-full max-w-md flex items-center gap-3 pl-5 pr-2 py-2 rounded-2xl shadow-2xl ${toast.kind === 'error' ? 'bg-red-600 text-white' : 'bg-gray-900 text-white'}`}
+                        className={`pointer-events-auto w-full max-w-md flex items-center gap-3 pl-5 pr-2 py-2 rounded-2xl shadow-2xl ${toast.kind === 'error' ? 'bg-red-600 text-white' : 'bg-zinc-900 text-white ring-1 ring-white/10'}`}
                     >
                         {toast.kind === 'error' && <AlertCircle size={20} className="shrink-0" />}
                         <p className="flex-1 min-w-0 py-2 text-sm font-bold truncate">

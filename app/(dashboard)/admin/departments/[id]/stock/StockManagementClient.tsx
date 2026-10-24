@@ -69,16 +69,16 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <Link
                         href="/admin/departments"
-                        className="flex items-center gap-2 text-xs font-bold uppercase text-gray-400 hover:text-[#171717] transition-colors"
+                        className="flex items-center gap-2 text-xs font-bold uppercase text-ink-subtle hover:text-ink transition-colors"
                     >
                         <ArrowLeft size={14} /> {t("backToDepartments")}
                     </Link>
 
                     <div className="flex items-center gap-3">
-                        <button onClick={() => openForm(null)} className="flex items-center gap-2 px-4 py-2 bg-[#171717] text-white rounded-xl text-xs font-bold uppercase hover:bg-black transition-all shadow-lg shadow-gray-200">
+                        <button onClick={() => openForm(null)} className="flex items-center gap-2 px-4 py-2 bg-inverse text-on-inverse rounded-xl text-xs font-bold uppercase hover:bg-accent hover:text-on-accent transition-all">
                             <Plus size={16} /> {t("addProduct")}
                         </button>
-                        <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold uppercase hover:bg-gray-50 transition-all">
+                        <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-card border border-line text-ink-muted rounded-xl text-xs font-bold uppercase hover:bg-subtle transition-all">
                             <History size={16} /> {t("viewReport")}
                         </Link>
                     </div>
@@ -86,30 +86,30 @@ export default function StockManagementClient({ initialInventory, departmentId, 
 
                 {/* STATS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("totalSku")}</p>
-                        <p className="text-2xl font-black text-[#171717]">{inventory.length}</p>
+                    <div className="bg-card p-5 rounded-3xl border border-line">
+                        <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest">{t("totalSku")}</p>
+                        <p className="text-2xl font-semibold text-ink">{inventory.length}</p>
                     </div>
-                    <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex justify-between items-center">
+                    <div className="bg-card p-5 rounded-3xl border border-line flex justify-between items-center">
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("lowStock")}</p>
-                            <p className="text-2xl font-black text-orange-500">{lowStockCount}</p>
+                            <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest">{t("lowStock")}</p>
+                            <p className="text-2xl font-semibold text-warning">{lowStockCount}</p>
                         </div>
-                        {lowStockCount > 0 && <AlertTriangle className="text-orange-500 opacity-20" size={32} />}
+                        {lowStockCount > 0 && <AlertTriangle className="text-warning opacity-20" size={32} />}
                     </div>
-                    <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("estimatedValue")}</p>
-                        <p className="text-2xl font-black text-[#0070f3]">$---</p>
+                    <div className="bg-card p-5 rounded-3xl border border-line">
+                        <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest">{t("estimatedValue")}</p>
+                        <p className="text-2xl font-semibold text-accent">$---</p>
                     </div>
                 </div>
 
                 {/* SEARCH */}
                 <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-subtle" size={18} />
                     <input
                         type="text"
                         placeholder={t("searchPlaceholder")}
-                        className="w-full bg-white border-none rounded-2xl py-4 pl-12 pr-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                        className="w-full bg-card border border-line rounded-full py-4 pl-12 pr-4 text-sm text-ink placeholder:text-ink-subtle outline-none focus:ring-2 focus:ring-accent/30 transition-all"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />

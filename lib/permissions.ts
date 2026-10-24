@@ -6,6 +6,7 @@ import { ROLES } from "./constants";
  * The session's permissions are loaded from the role at sign-in, see lib/roles.
  */
 export const hasPermission = (session: Session | null | undefined, permissionKey: string): boolean => {
-    if (session?.user?.role === ROLES.SUPERADMIN) return true;
+    // The superadmin only uses the /superadmin panel, never an organization's pages or APIs
+    if (session?.user?.role === ROLES.SUPERADMIN) return false;
     return !!session?.user?.permissions?.[permissionKey];
 };

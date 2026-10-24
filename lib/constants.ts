@@ -76,5 +76,8 @@ export const MOVEMENT_REASONS = {
 /** Units a stock item can be counted in. Stored as-is in department_stock.unit; labels are in the "units" messages. */
 export const STOCK_UNITS = ["unidades", "kg", "cajas", "litros"] as const;
 
+/** Minimum length of the reason the superadmin types for a support tool, so every audit entry says something useful. */
+export const SUPPORT_REASON_MIN_LENGTH = 10;
+
 /** Name of the plan new organizations start on ("plans" collection). */
 export const DEFAULT_PLAN_NAME = "Plan Gratuito";

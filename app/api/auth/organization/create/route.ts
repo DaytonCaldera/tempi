@@ -3,13 +3,10 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { apiError, badRequest, getDb, serverError, unauthorized } from "@/lib/api";
 import { DEFAULT_PLAN_NAME, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants";
+import { AUDIT_ACTIONS, logAudit } from "@/lib/audit";
+import { generateClientCode } from "@/lib/organizations";
 import { forgetCachedUsers } from "@/lib/users";
 
-/** Random join code in the format "ABC-123". */
-const generateClientCode = () => {
-    const part = () => Math.random().toString(36).substring(2, 5).toUpperCase();
-    return `${part()}-${part()}`;
-};
 
 /**
  * POST /api/auth/organization/create
@@ -30,7 +27,7 @@ export async function POST(req: Request) {
         if (!defaultPlan) return apiError("defaultPlanNotFound", 500);
 
         const t = await getTranslations("api");
-        const clientCode = generateClientCode();
+        const clientCode = await generateClientCode();
         const { insertedId: clientId } = await db.collection("clients").insertOne({
             name: companyName,
             clientCode,
@@ -74,6 +71,9 @@ export async function POST(req: Request) {
             }
         );
         forgetCachedUsers();
+        await logAudit(AUDIT_ACTIONS.CREATE_ORGANIZATION, {
+            actor: session.user, clientId, target: { type: "organization", id: clientId, label: companyName },
+        });
 
         return NextResponse.json({ message: t("organizationCreated"), clientCode, clientId: clientId.toString() });
     } catch (error) {

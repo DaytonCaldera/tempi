@@ -4,7 +4,7 @@ import { getDb } from '@/lib/api';
 import { ROLES } from '@/lib/constants';
 import { hasPermission } from '@/lib/permissions';
 import { getClientTenantQuery, getTenantQuery, getUserTenantQuery } from '@/lib/tenant-guard';
-import { canCloseOrganization, OPEN_ORGANIZATION } from '@/lib/organizations';
+import { canCloseOrganization, OPEN_ORGANIZATION, otherActiveMemberships } from '@/lib/organizations';
 import type { Organization, User } from '@/types/models';
 import UserManagementClient, { type UserRow } from "./UserManagementClient";
 
@@ -46,6 +46,7 @@ export default async function UserManagementPage() {
                 departments={departments}
                 client={organization ? { _id: organization._id.toString(), code: organization.clientCode, name: organization.name } : null}
                 canCloseOrganization={!!organization && !!session.user.clientId && canCloseOrganization(session, organization)}
+                isLastOrganization={otherActiveMemberships(session.user.organizations, session.user.clientId ?? "").length === 0}
             />
         </div>
     );

@@ -8,7 +8,8 @@
         {
             "href": "/dashboard",
             "labelKey": "dashboard",
-            "icon": "LayoutDashboard"
+            "icon": "LayoutDashboard",
+            "requiresOrganization": true
         }
     ],
     "admin": [

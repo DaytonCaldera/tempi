@@ -4,6 +4,7 @@ import { badRequest, getDb, notFound, toObjectId, unauthorized } from '@/lib/api
 import { PERMISSIONS, ROLES } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { forgetCachedUsers } from '@/lib/users';
+import { AUDIT_ACTIONS, logAudit } from '@/lib/audit';
 
 /**
  * POST /api/admin/users/approve - Approves a pending user in the admin's organization
@@ -37,6 +38,10 @@ export async function POST(req: Request) {
     );
     if (result.matchedCount === 0) return notFound("userNotFound");
     forgetCachedUsers();
+    const approved = await db.collection('users').findOne({ _id: userObjectId }, { projection: { name: 1 } });
+    await logAudit(AUDIT_ACTIONS.APPROVE_MEMBER, {
+        actor: session.user, clientId, target: { type: "user", id: userObjectId, label: approved?.name }, details: { departments: [deptId] },
+    });
 
     return NextResponse.json({ success: true });
 }

@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 export default function LegalLinks() {
     const t = useTranslations("legal");
     return (
-        <nav className="flex justify-center gap-6 text-sm text-gray-500">
-            <Link href="/privacy" className="hover:text-white">{t("privacy.title")}</Link>
-            <Link href="/terms" className="hover:text-white">{t("terms.title")}</Link>
+        <nav className="flex justify-center gap-6 text-sm text-ink-subtle">
+            <Link href="/privacy" className="hover:text-ink">{t("privacy.title")}</Link>
+            <Link href="/terms" className="hover:text-ink">{t("terms.title")}</Link>
         </nav>
     );
 }
