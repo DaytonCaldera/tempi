@@ -9,8 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@auth/mongodb-adapter": "^3.11.1",
-    "@auth/unstorage-adapter": "^2.0.0",
+    "@auth/mongodb-adapter": "^3.11.3",
+    "@auth/unstorage-adapter": "^2.11.3",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
     "chalk": "^4.1.2",
@@ -18,8 +18,8 @@
     "inquirer": "^8.2.7",
     "lucide-react": "^0.577.0",
     "mongodb": "^6.21.0",
-    "next": "^16.2.6",
-    "next-auth": "^5.0.0-beta.19",
+    "next": "^16.4.2",
+    "next-auth": "^5.0.0-beta.32",
     "next-intl": "^4.12.0",
     "papaparse": "^5.5.3",
     "react": "19.2.3",
@@ -36,7 +36,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.2.6",
+    "eslint-config-next": "^16.4.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
