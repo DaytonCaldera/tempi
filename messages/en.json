@@ -90,7 +90,9 @@
         "transferConflict": "The stock changed during the transfer. Check the quantities and try again.",
         "invalidCost": "The cost must be a number from 0.",
         "invalidCurrency": "That currency isn't available.",
-        "invalidTimeZone": "That time zone doesn't exist."
+        "invalidTimeZone": "That time zone doesn't exist.",
+        "heldNotFound": "That held move is no longer pending.",
+        "heldNotYours": "The person who made this move decides it first. Admins can decide it 30 minutes later."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -1030,7 +1032,8 @@
                 "subscription": "Subscription changed",
                 "import": "Imported products",
                 "updateAlerts": "Changed the email alerts",
-                "updateCurrency": "Changed the currency"
+                "updateCurrency": "Changed the currency",
+                "resolveHeld": "Decided a held move"
             },
             "change": "{field}: {before} → {after}",
             "fields": {

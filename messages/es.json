@@ -90,7 +90,9 @@
         "transferConflict": "El stock cambió mientras se transfería. Revisa las cantidades e inténtalo de nuevo.",
         "invalidCost": "El costo debe ser un número desde 0.",
         "invalidCurrency": "Esa moneda no está disponible.",
-        "invalidTimeZone": "Esa zona horaria no existe."
+        "invalidTimeZone": "Esa zona horaria no existe.",
+        "heldNotFound": "Ese movimiento retenido ya no está pendiente.",
+        "heldNotYours": "Este movimiento lo decide primero quien lo hizo. Los administradores pueden decidirlo 30 minutos después."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -1030,7 +1032,8 @@
                 "subscription": "Cambió la suscripción",
                 "import": "Importó productos",
                 "updateAlerts": "Cambió los avisos por correo",
-                "updateCurrency": "Cambió la moneda"
+                "updateCurrency": "Cambió la moneda",
+                "resolveHeld": "Decidió un movimiento retenido"
             },
             "change": "{field}: {before} → {after}",
             "fields": {

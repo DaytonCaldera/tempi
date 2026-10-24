@@ -42,6 +42,11 @@ const INDEXES = [
     // Consumption report and movement drill-down
     ['stock_movements', { inventoryId: 1, createdAt: 1 }, 'movements of an item by date'],
     ['stock_movements', { clientId: 1, createdAt: -1 }, 'movements of an organization'],
+    // Moves made without connection (lib/offline-sync.ts): each id the device gave applies or is held once
+    ['stock_movements', { offlineId: 1 }, 'offline move applied once', { unique: true, partialFilterExpression: { offlineId: { $exists: true } } }],
+    ['held_movements', { offlineId: 1 }, 'offline move held once', { unique: true }],
+    ['held_movements', { clientId: 1, status: 1, heldAt: 1 }, 'pending held moves of an organization'],
+    ['held_movements', { 'user.email': 1, status: 1 }, 'pending held moves of a runner'],
     // Dashboard (lib/dashboard.ts): movements and consumption of some departments in a period
     ['stock_movements', { departmentId: 1, createdAt: -1 }, 'movements of departments by date'],
     // Superadmin panel (lib/superadmin.ts): activity by period, and the audit log

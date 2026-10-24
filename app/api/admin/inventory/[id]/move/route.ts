@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
-import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
-import { costSnapshot } from "@/lib/currency";
-import { findOwnDepartment, runnerDepartmentIds } from "@/lib/departments";
+import { findOwnDepartment } from "@/lib/departments";
 import { afterStockChange } from "@/lib/stock-alerts";
+import { applyMove, canMoveIn } from "@/lib/stock-moves";
 import type { MovementType, StockItem } from "@/types/models";
-
-const MANAGEMENT_ROLES = [ROLES.ADMIN];
 
 /**
  * PATCH /api/admin/inventory/[id]/move
@@ -17,6 +14,7 @@ const MANAGEMENT_ROLES = [ROLES.ADMIN];
  * - Admins can move stock in any department of their organization.
  * - Users (runners) only in the departments they are assigned to.
  * - Stock can't go below zero.
+ * Moves made without connection come through /api/runner/sync instead.
  */
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -33,57 +31,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const item = await db.collection<StockItem>('department_stock').findOne({ _id: itemId, isDeleted: { $ne: true } });
         const department = item && await findOwnDepartment(session, item.departmentId);
         if (!item || !department) return notFound("productNotFoundOrDenied");
+        if (!await canMoveIn(session, item.departmentId)) return forbidden("moveNotAllowed");
 
-        // The session's role and departments are resolved from the user's document (see the jwt callback in auth.ts)
-        const role = session.user.role;
-        const isManagement = MANAGEMENT_ROLES.includes(role);
-        const isAssignedUser = role === ROLES.USER &&
-            (await runnerDepartmentIds(session)).some(id => id.equals(item.departmentId));
-
-        if (!isManagement && !isAssignedUser) {
-            return forbidden("moveNotAllowed");
-        }
-
-        // Atomic $inc: concurrent moves can't overwrite each other, and an OUT only matches while there is enough stock
-        const delta = type === "IN" ? quantity : -quantity;
-        const stock = db.collection<StockItem>('department_stock');
-        const updated = await stock.findOneAndUpdate(
-            { _id: itemId, isDeleted: { $ne: true }, ...(type === "OUT" && { quantity: { $gte: quantity } }) },
-            { $inc: { quantity: delta }, $set: { updatedAt: new Date() } },
-            { returnDocument: "after" }
-        );
-        if (!updated) return badRequest("insufficientStock");
-
-        const newBalance = updated.quantity;
-        const previousBalance = newBalance - delta;
-
-        try {
-            await db.collection('stock_movements').insertOne({
-                inventoryId: itemId,
-                departmentId: item.departmentId,
-                departmentName: department.name,
-                clientId: department.clientId,
-                productName: item.productName,
-                sku: item.sku,
-                type,
-                amount: quantity,
-                previousBalance,
-                newBalance,
-                reason: reason || MOVEMENT_REASONS.MANUAL_ADJUSTMENT,
-                ...costSnapshot(item.unitCost),
-                user: { id: toObjectId(session.user.id), name: session.user.name, email: session.user.email },
-                createdAt: new Date()
-            });
-        } catch (error) {
-            // Without its movement the change would break the reports: undo it
-            await stock.updateOne({ _id: itemId }, { $inc: { quantity: -delta } });
-            throw error;
-        }
+        const result = await applyMove({ item, department, type, amount: quantity, reason, user: session.user });
+        if (!result.ok) return result.error === "productGone" ? notFound("productNotFoundOrDenied") : badRequest("insufficientStock");
 
         // Emails the admins when this move took it to its minimum (or clears the alert once it's back above)
         await afterStockChange(req, [itemId]);
 
-        return NextResponse.json({ success: true, newQuantity: newBalance });
+        return NextResponse.json({ success: true, newQuantity: result.newQuantity });
     } catch (error) {
         console.error("Move stock error:", error);
         return serverError();

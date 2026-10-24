@@ -17,6 +17,8 @@ export const AUDIT_ACTIONS = {
     UPDATE_ALERTS: "organization.updateAlerts",
     // An admin changed the currency the organization's costs are in (app/api/admin/organization/currency)
     UPDATE_CURRENCY: "organization.updateCurrency",
+    // A runner or an admin applied or discarded a move held when it synced (lib/offline-sync-server.ts)
+    RESOLVE_HELD: "stock.resolveHeld",
     // Superadmin support tools (app/(superadmin)/superadmin/organizations/[id]/actions.ts). details.reason says why
     REGENERATE_CODE: "organization.regenerateCode",
     TRANSFER_OWNERSHIP: "organization.transferOwnership",

@@ -1,4 +1,5 @@
 import type { ObjectId } from "mongodb";
+import type { HoldReason } from "@/lib/offline-sync";
 
 /**
  * Shapes of the documents stored in MongoDB.
@@ -167,9 +168,42 @@ export interface StockMovement<Id = ObjectId> {
     /** The product's unit cost when it moved, so later cost changes don't rewrite past consumption. Missing on
      *  movements of products without a cost, and on movements from before costs existed */
     unitCost?: number;
+    /** Moves made without connection: the id the device gave it (applied once) and when it really happened.
+     *  createdAt is when it reached the server (lib/offline-sync.ts) */
+    offlineId?: string;
+    occurredAt?: Date;
     /** On the two movements of a transfer: the same id, and the other department (where it went or came from) */
     transfer?: { id: Id; departmentId: Id; departmentName: string };
     createdAt: Date;
+}
+
+/**
+ * A move made without connection that wasn't applied when it synced ("held_movements" collection), for the runner
+ * (then, after HOLD_ESCALATE_MS, an admin) to apply or discard. See lib/offline-sync.ts.
+ */
+export interface HeldMovement<Id = ObjectId> {
+    _id: Id;
+    offlineId: string;
+    clientId: Id;
+    departmentId: Id;
+    departmentName: string;
+    inventoryId: Id;
+    productName: string;
+    sku: string;
+    unit: string;
+    type: MovementType;
+    amount: number;
+    reason: string;
+    holdReason: HoldReason;
+    /** The colleague's movement it may repeat (possibleDuplicate) */
+    duplicateOf?: { userName: string | null; userEmail: string | null; amount: number; createdAt: Date };
+    /** When it really happened, and when it reached the server */
+    occurredAt: Date;
+    heldAt: Date;
+    user: { id?: Id | null; name?: string | null; email?: string | null };
+    status: "pending" | "applied" | "discarded";
+    resolvedAt?: Date;
+    resolvedBy?: { name?: string | null; email?: string | null };
 }
 
 /** What a transfer will do in the destination (POST /api/admin/inventory/[id]/transfer with dryRun). */
