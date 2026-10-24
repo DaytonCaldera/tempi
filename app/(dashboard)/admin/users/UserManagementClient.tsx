@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import { Modal } from "@/components/ui/Modal";
+import { usePlanLimitDialog } from "@/components/admin/PlanLimitDialog";
 import {
-    Shield, Edit3, UserPlus, Ban, Copy, Check
+    Shield, Edit3, UserPlus, Ban, Copy, Check, Lock
 } from "lucide-react";
 import { ROLES } from "@/lib/constants";
 import { labelOf } from "@/i18n/labels";
@@ -30,10 +32,13 @@ interface UserManagementClientProps {
     client: { _id: string; code: string; name: string } | null;
     canCloseOrganization: boolean;
     isLastOrganization: boolean;
+    /** Whether the plan applies department assignments (PLAN_FEATURES.DEPARTMENT_ASSIGNMENT). Without it runners see every department */
+    canAssignDepartments: boolean;
 }
 
-export default function UserManagementClient({ users, departments, client, canCloseOrganization, isLastOrganization }: UserManagementClientProps) {
+export default function UserManagementClient({ users, departments, client, canCloseOrganization, isLastOrganization, canAssignDepartments }: UserManagementClientProps) {
     const t = useTranslations("users");
+    const tPlan = useTranslations("plan");
     const tCommon = useTranslations("common");
     const tRoles = useTranslations("roles");
     const tErrors = useTranslations("errors");
@@ -43,6 +48,7 @@ export default function UserManagementClient({ users, departments, client, canCl
     const [selectedRole, setSelectedRole] = useState<string>(ROLES.USER);
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
+    const { handlePlanError, planDialog } = usePlanLimitDialog();
 
     const clientCode = client?.code || "N/A";
 
@@ -78,7 +84,7 @@ export default function UserManagementClient({ users, departments, client, canCl
             router.refresh();
         } else {
             const data = await res.json().catch(() => ({}));
-            alert(data.error || tErrors("saveFailed"));
+            if (!handlePlanError(data)) alert(data.error || tErrors("saveFailed"));
         }
         setLoading(false);
     };
@@ -227,6 +233,13 @@ export default function UserManagementClient({ users, departments, client, canCl
 
                     <div className="space-y-4">
                         <label className="text-[10px] font-semibold text-ink-subtle uppercase tracking-[0.2em] ml-2">{t("areaAssignment")}</label>
+                        {!canAssignDepartments && (
+                            // The assignment is saved anyway, so it applies as soon as the plan includes it
+                            <p className="flex items-start gap-2 rounded-2xl bg-accent/10 px-4 py-3 text-xs text-ink-muted">
+                                <Lock size={14} className="mt-0.5 shrink-0 text-accent" aria-hidden />
+                                <span>{tPlan("locked.assignment")} <Link href="/admin/plan" className="font-semibold text-accent hover:underline">{tPlan("upgradeShort")}</Link></span>
+                            </p>
+                        )}
                         <div className="grid grid-cols-2 gap-3">
                             {departments.map((dept) => {
                                 const isSelected = selectedDepts.includes(dept._id);
@@ -246,6 +259,7 @@ export default function UserManagementClient({ users, departments, client, canCl
 
                 </div>
             </Modal>
+            {planDialog}
         </div>
     );
 }

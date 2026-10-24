@@ -36,7 +36,9 @@ export function MovementDetails({ details }: { details: MovementLog[] }) {
                                 </div>
                             </div>
                             <div className="px-4 py-2 bg-subtle text-ink-muted text-[10px] font-semibold uppercase tracking-wider rounded-xl">
-                                {movementReasonLabel(tReasons, log.reason)}
+                                {log.transfer
+                                    ? t(log.type === 'OUT' ? "transferTo" : "transferFrom", { department: log.transfer.departmentName })
+                                    : movementReasonLabel(tReasons, log.reason)}
                             </div>
                         </div>
                     ))

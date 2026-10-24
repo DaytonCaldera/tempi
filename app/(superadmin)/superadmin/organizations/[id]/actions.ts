@@ -2,8 +2,10 @@
 import { revalidatePath } from "next/cache";
 import { getDb, toObjectId } from "@/lib/api";
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit";
-import { ROLES, SUPPORT_REASON_MIN_LENGTH } from "@/lib/constants";
+import { ROLES } from "@/lib/constants";
+import { guarded, readReason } from "@/lib/support-tools";
 import { generateClientCode, OPEN_ORGANIZATION, restoreOrganization } from "@/lib/organizations";
+import { forgetCachedPlans } from "@/lib/plans";
 import { requireSuperadmin } from "@/lib/superadmin";
 import { applyStockRepair, planStockRepair } from "@/lib/stock-repair";
 import { forgetCachedUsers } from "@/lib/users";
@@ -28,24 +30,6 @@ export type RepairState = ToolState & {
     preview?: { items: number; missing: number; sync: number; sample: { productName: string; sku: string; departmentName: string; missing: number; sync: number }[] };
     applied?: { items: number; archived: number; inserted: number };
 };
-
-const readReason = (form: FormData) => {
-    const reason = String(form.get("reason") ?? "").trim();
-    return reason.length >= SUPPORT_REASON_MIN_LENGTH ? reason.slice(0, 500) : null;
-};
-
-/**
- * Runs a tool and turns an unexpected failure into a message instead of a silent click.
- * requireSuperadmin() stays outside: its redirect is thrown, and must not be caught.
- */
-async function guarded(name: string, run: () => Promise<ToolState>): Promise<ToolState> {
-    try {
-        return await run();
-    } catch (error) {
-        console.error(`Superadmin tool ${name} failed:`, error);
-        return { error: "invalid" };
-    }
-}
 
 /** Replaces the organization's join code (e.g. it leaked). Members keep their access; the old code stops working. */
 export async function regenerateJoinCode(_: ToolState, form: FormData): Promise<ToolState> {
@@ -213,6 +197,7 @@ export async function changePlan(_: ToolState, form: FormData): Promise<ToolStat
             ? await db.collection<Plan>("plans").findOne({ _id: organization.planId }, { projection: { name: 1 } })
             : null;
         await db.collection("clients").updateOne({ _id }, { $set: { planId } });
+        forgetCachedPlans(_id);
         await logAudit(AUDIT_ACTIONS.CHANGE_PLAN, {
             actor: session.user, clientId: _id, target: { type: "organization", id: _id, label: organization.name },
             details: { reason, plan: { before: previous?.name ?? null, after: plan.name } },

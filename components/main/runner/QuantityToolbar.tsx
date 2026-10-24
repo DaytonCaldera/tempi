@@ -1,5 +1,5 @@
 "use client";
-import { Minus, Plus, Search, X } from "lucide-react";
+import { Minus, Plus, ScanBarcode, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 /** Quick picks for the quantity to move. */
@@ -10,10 +10,14 @@ interface QuantityToolbarProps {
     onQuantityChange: (quantity: number) => void;
     search: string;
     onSearchChange: (search: string) => void;
+    /** Enter in the search: what a USB/Bluetooth scanner sends after typing the code */
+    onSearchSubmit: (search: string) => void;
+    /** Opens the camera scanner */
+    onScan: () => void;
 }
 
-/** Sticky bar with the quantity every −/+ button moves, and the product search. */
-export default function QuantityToolbar({ quantity, onQuantityChange, search, onSearchChange }: QuantityToolbarProps) {
+/** Sticky bar with the quantity every −/+ button moves, the product search and the barcode scanner. */
+export default function QuantityToolbar({ quantity, onQuantityChange, search, onSearchChange, onSearchSubmit, onScan }: QuantityToolbarProps) {
     const t = useTranslations('runner');
 
     const stepClass = "w-11 h-11 shrink-0 bg-subtle rounded-xl flex items-center justify-center text-ink-muted active:scale-90 transition-all disabled:opacity-30";
@@ -56,25 +60,36 @@ export default function QuantityToolbar({ quantity, onQuantityChange, search, on
                     ))}
                 </div>
 
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-subtle" size={18} />
-                    <input
-                        type="search"
-                        aria-label={t('search')}
-                        placeholder={t('search')}
-                        className="w-full bg-card text-ink h-12 pl-11 pr-11 rounded-2xl text-base font-bold border border-line shadow-sm outline-none focus:ring-2 ring-accent/30 transition-all [&::-webkit-search-cancel-button]:hidden"
-                        value={search}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                    />
-                    {search && (
-                        <button
-                            onClick={() => onSearchChange("")}
-                            aria-label={t('clearSearch')}
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-xl text-ink-subtle hover:text-ink"
-                        >
-                            <X size={18} />
-                        </button>
-                    )}
+                <div className="flex gap-2">
+                    <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-subtle" size={18} />
+                        <input
+                            type="search"
+                            aria-label={t('search')}
+                            placeholder={t('search')}
+                            className="w-full bg-card text-ink h-12 pl-11 pr-11 rounded-2xl text-base font-bold border border-line shadow-sm outline-none focus:ring-2 ring-accent/30 transition-all [&::-webkit-search-cancel-button]:hidden"
+                            value={search}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onSearchSubmit(search); } }}
+                        />
+                        {search && (
+                            <button
+                                onClick={() => onSearchChange("")}
+                                aria-label={t('clearSearch')}
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-xl text-ink-subtle hover:text-ink"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+                    </div>
+                    <button
+                        onClick={onScan}
+                        aria-label={t('scan')}
+                        title={t('scan')}
+                        className="w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl bg-inverse text-on-inverse shadow-sm active:scale-95 transition-all"
+                    >
+                        <ScanBarcode size={22} />
+                    </button>
                 </div>
             </div>
         </div>

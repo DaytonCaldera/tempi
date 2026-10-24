@@ -1,5 +1,6 @@
 'use client';
 import { useActionState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ArchiveRestore, CheckCircle2, CreditCard, KeyRound, UserCog, Wrench } from "lucide-react";
 import { SUPPORT_REASON_MIN_LENGTH } from "@/lib/constants";
@@ -189,7 +190,10 @@ function ChangePlan({ clientId, plans, currentPlanId }: { clientId: string; plan
                 </select>
             </div>
             <Reason id="plan-reason" />
-            <button type="submit" aria-disabled={pending} className="self-start rounded-2xl bg-inverse px-5 py-2.5 text-xs font-semibold text-on-inverse aria-disabled:opacity-50">{t("button")}</button>
+            <div className="flex flex-wrap items-center gap-3">
+                <button type="submit" aria-disabled={pending} className="rounded-2xl bg-inverse px-5 py-2.5 text-xs font-semibold text-on-inverse aria-disabled:opacity-50">{t("button")}</button>
+                <Link href={`/superadmin/plans/new?clientId=${clientId}`} className="text-xs font-semibold text-accent hover:underline">{t("custom")}</Link>
+            </div>
             <Result state={state} pending={pending} done={t("done", { name: state.name ?? "" })} />
         </form>
     );

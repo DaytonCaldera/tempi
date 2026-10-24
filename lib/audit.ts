@@ -13,6 +13,12 @@ export const AUDIT_ACTIONS = {
     CLOSE_ORGANIZATION: "organization.close",
     APPROVE_MEMBER: "member.approve",
     UPDATE_MEMBER: "member.update",
+    // An admin changed which emails the organization gets (app/api/admin/organization/alerts)
+    UPDATE_ALERTS: "organization.updateAlerts",
+    // An admin changed the currency the organization's costs are in (app/api/admin/organization/currency)
+    UPDATE_CURRENCY: "organization.updateCurrency",
+    // A runner or an admin applied or discarded a move held when it synced (lib/offline-sync-server.ts)
+    RESOLVE_HELD: "stock.resolveHeld",
     // Superadmin support tools (app/(superadmin)/superadmin/organizations/[id]/actions.ts). details.reason says why
     REGENERATE_CODE: "organization.regenerateCode",
     TRANSFER_OWNERSHIP: "organization.transferOwnership",
@@ -22,6 +28,13 @@ export const AUDIT_ACTIONS = {
     EXPORT_CSV: "superadmin.export",
     // The superadmin opened an organization's read-only view (lib/superadmin-view.ts)
     VIEW_AS: "superadmin.viewAs",
+    // The superadmin created or edited a plan (app/(superadmin)/superadmin/plans/actions.ts)
+    CREATE_PLAN: "superadmin.createPlan",
+    UPDATE_PLAN: "superadmin.updatePlan",
+    // An admin imported products from a file (app/api/admin/departments/[id]/stock/import)
+    IMPORT_STOCK: "stock.import",
+    // A Lemon Squeezy webhook changed an organization's subscription (app/api/billing/webhook)
+    SUBSCRIPTION: "billing.subscription",
 } as const;
 
 export type AuditAction = typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS];
@@ -35,7 +48,7 @@ export interface AuditEntry<Id = ObjectId> {
     /** The organization it happened in, if any. */
     clientId?: Id | null;
     /** The user or organization it was done to, when it isn't the actor. */
-    target?: { type: "user" | "organization"; id?: Id | null; label?: string | null };
+    target?: { type: "user" | "organization" | "plan"; id?: Id | null; label?: string | null };
     /** Action-specific values, e.g. { before, after } for a membership change. */
     details?: Record<string, unknown>;
     createdAt: Date;
@@ -44,7 +57,7 @@ export interface AuditEntry<Id = ObjectId> {
 type AuditInput = {
     actor: Session["user"] | { id?: ObjectId | string | null; email?: string | null; name?: string | null } | null | undefined;
     clientId?: ObjectId | string | null;
-    target?: { type: "user" | "organization"; id?: ObjectId | string | null; label?: string | null };
+    target?: { type: "user" | "organization" | "plan"; id?: ObjectId | string | null; label?: string | null };
     details?: Record<string, unknown>;
 };
 

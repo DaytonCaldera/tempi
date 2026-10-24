@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit";
 import { ROLES } from "@/lib/constants";
+import { csvResponse } from "@/lib/csv";
 import {
     listAudit, listOrganizations, listUsers, ORGANIZATION_FILTERS, USER_FILTERS,
     type OrganizationFilter, type UserFilter,
@@ -49,17 +50,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
     }
 
     await logAudit(AUDIT_ACTIONS.EXPORT_CSV, { actor: session.user, details: { kind, filters: Object.fromEntries(search), rows: rows.length } });
-
-    const date = new Date().toISOString().slice(0, 10);
-    // The BOM makes Excel read the file as UTF-8 (accents, ñ)
-    const csv = "﻿" + [header, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n");
-    return new NextResponse(csv, {
-        headers: {
-            "Content-Type": "text/csv; charset=utf-8",
-            "Content-Disposition": `attachment; filename="tempi-${kind}-${date}.csv"`,
-            "Cache-Control": "no-store",
-        },
-    });
+    return csvResponse(kind, header, rows);
 }
 
 /** Every page of a paginated list, up to MAX_ROWS rows. */
@@ -71,15 +62,4 @@ async function collect<T>(load: (page: number) => Promise<{ rows: T[]; pages: nu
         if (page >= result.pages) break;
     }
     return rows.slice(0, MAX_ROWS);
-}
-
-/**
- * One CSV cell. Dates as ISO, quotes escaped, and text that starts like a formula (= + - @) is prefixed
- * with ' so a spreadsheet shows it instead of running it: names and emails are typed by users.
- */
-function csvCell(value: unknown): string {
-    if (value === null || value === undefined) return "";
-    let text = value instanceof Date ? value.toISOString() : String(value);
-    if (typeof value === "string" && /^[=+\-@\t\r]/.test(text)) text = `'${text}`;
-    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }

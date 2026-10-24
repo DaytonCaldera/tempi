@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { badRequest, forbidden, getDb, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit";
+import { cancelSubscription } from "@/lib/billing";
+import { subscriptionGivesAccess } from "@/lib/plans";
 import { canCloseOrganization, closeOrganization, OPEN_ORGANIZATION, otherActiveMemberships } from "@/lib/organizations";
 import { findUserByEmail } from "@/lib/users";
 import type { Organization } from "@/types/models";
@@ -39,6 +41,12 @@ export async function POST(req: Request) {
         }
 
         if (!await closeOrganization(clientId.toString(), session.user.email)) return notFound();
+        // A closed organization must not keep being charged. A failure here doesn't undo the close: it is logged,
+        // and the subscription can still be cancelled from Lemon Squeezy
+        if (organization.subscription && subscriptionGivesAccess(organization.subscription) && organization.subscription.status !== "cancelled") {
+            await cancelSubscription(organization.subscription.id)
+                .catch(error => console.error(`Could not cancel subscription ${organization.subscription?.id} of closed organization ${clientId}:`, error));
+        }
         await logAudit(AUDIT_ACTIONS.CLOSE_ORGANIZATION, {
             actor: session.user, clientId, target: { type: "organization", id: clientId, label: organization.name },
         });

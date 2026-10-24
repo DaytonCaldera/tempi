@@ -1,6 +1,9 @@
 import NextAuth from "next-auth"
 import type { JWT } from "next-auth/jwt"
+import type { Provider } from "next-auth/providers"
 import Google from "next-auth/providers/google"
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id"
+import Resend from "next-auth/providers/resend"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
 import { getDb } from "@/lib/api"
@@ -8,43 +11,74 @@ import { getRolePermissions } from "@/lib/roles"
 import { recordDailyActivity } from "@/lib/activity"
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit"
 import { findUserByEmail, forgetCachedUsers } from "@/lib/users"
+import { isTimeZone } from "@/lib/timezone"
 import { getSuperAdminEmail, isPlaceholderOrg, PLACEHOLDER_CLIENT_ID, ROLES } from "@/lib/constants"
+import { nameFromEmail, NEW_USER_DEFAULTS, SIGN_IN_METHODS } from "@/lib/auth-methods"
+import { MAGIC_LINK_MAX_AGE_SECONDS, sendMagicLink } from "@/lib/magic-link"
 import type { Membership, SessionMembership, User } from "@/types/models"
 
 const SUPERADMIN_EMAIL = getSuperAdminEmail();
 if (!SUPERADMIN_EMAIL) console.warn("SUPERADMIN_EMAIL is not set: no user will have superadmin access.");
 
+/**
+ * Users are matched by email across methods: the same address signs in to the same account with Google or an
+ * email link. Microsoft doesn't link (see below), so its users keep using the method they signed up with.
+ */
+const providers: Provider[] = [
+	Google({
+		clientId: process.env.GOOGLE_ID_CLIENT as string,
+		clientSecret: process.env.GOOGLE_API_SECRET as string,
+		// Users can exist before their first Google sign-in (e.g. created in the DB, signed up with an email link,
+		// or by sign-ins written to another database before MONGODB_DB): link them by email instead of failing
+		// with OAuthAccountNotLinked. Safe with Google only because it verifies the email it returns.
+		allowDangerousEmailAccountLinking: true,
+		// Always show the account chooser, otherwise Google silently reuses the last account
+		authorization: { params: { prompt: "select_account" } },
+	}),
+];
+
+if (SIGN_IN_METHODS.email) {
+	providers.push(Resend({
+		apiKey: process.env.AUTH_RESEND_KEY,
+		from: process.env.EMAIL_FROM,
+		maxAge: MAGIC_LINK_MAX_AGE_SECONDS,
+		sendVerificationRequest: sendMagicLink,
+	}));
+}
+
+if (SIGN_IN_METHODS.microsoft) {
+	providers.push(MicrosoftEntraID({
+		clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
+		clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+		// A tenant URL limits sign-in to that organization; without it, any work or personal Microsoft account
+		issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
+		// No allowDangerousEmailAccountLinking: in multi-tenant apps Entra doesn't guarantee the email claim
+		// is verified, so linking by it would let anyone who controls a tenant take over an existing account.
+		profile(profile) {
+			return {
+				id: profile.sub,
+				name: profile.name,
+				// Users are looked up by exact email, and Entra keeps the case the admin typed
+				email: profile.email?.toLowerCase(),
+				// The default fetches the photo from Graph as a data URL, which would bloat the session cookie
+				image: null,
+			}
+		},
+	}));
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
 	// Same database as getDb(), so sign-in writes users and accounts where the app reads them
 	adapter: MongoDBAdapter(clientPromise, { databaseName: process.env.MONGODB_DB }),
-	providers: [
-		Google({
-			clientId: process.env.GOOGLE_ID_CLIENT as string,
-			clientSecret: process.env.GOOGLE_API_SECRET as string,
-			// Users can exist before their first Google sign-in (e.g. created in the DB, or by sign-ins written to
-			// another database before MONGODB_DB): link them by email instead of failing with OAuthAccountNotLinked.
-			// Safe with Google only because it verifies the email it returns.
-			allowDangerousEmailAccountLinking: true,
-			// Always show the account chooser, otherwise Google silently reuses the last account
-			authorization: { params: { prompt: "select_account" } },
-			profile(profile) {
-				// Maps the Google profile to the user document created on first sign-in
-				return {
-					id: profile.sub,
-					name: profile.name,
-					email: profile.email,
-					image: profile.picture,
-					role: ROLES.NEW_USER,
-					clientId: null, // New users get an organization when they create or join one in the lobby
-					isActive: true,
-					permissions: {},
-					organizations: [],
-					activeOrganization: null,
-				}
-			}
-		})
-	],
+	providers,
+	pages: {
+		signIn: "/login",
+		verifyRequest: "/login/check-email",
+		error: "/login", // Gets ?error=..., shown by the login page
+	},
 	callbacks: {
+		// Every user is looked up by email (findUserByEmail): an account without one could never be resolved
+		signIn: ({ user }) => !!user.email,
 		/**
 		 * Runs on sign-in and every time the session is read (pages, API routes, the proxy).
 		 * Role, organization, permissions and status are always resolved from the DB, never taken from the client,
@@ -82,6 +116,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			const startedAt = Date.now();
 			Object.assign(token, await resolveContext(token, requestedClientId, fresh));
 			if (fresh) token.resolvedAt = startedAt;
+			// The time zone set in the account. Read from the users cache resolveContext just filled
+			const timeZone = (await findUserByEmail(token.email, { notBefore: token.resolvedAt }))?.timeZone;
+			token.timeZone = isTimeZone(timeZone) ? timeZone : null;
 			await recordLastSeen(token);
 			return token;
 		},
@@ -95,22 +132,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				session.user.permissions = token.permissions;
 				session.user.organizations = token.organizations;
 				session.user.activeOrganization = token.clientId ?? undefined;
+				session.user.startPage = token.startPage ?? null;
+				session.user.timeZone = token.timeZone ?? null;
 			}
 			return session;
 		},
 		authorized: async ({ auth }) => !!auth,
 	},
 	events: {
-		// The adapter doesn't store when a user was created: the superadmin panel counts sign-ups by it
+		// Runs right after the adapter inserts the user, before the jwt callback reads it. Gives every method the
+		// same starting fields, and stores when the user was created (the superadmin panel counts sign-ups by it).
 		async createUser({ user }) {
+			const name = user.name || nameFromEmail(user.email!);
 			const db = await getDb();
-			await db.collection('users').updateOne({ email: user.email }, { $set: { createdAt: new Date() } });
-			await logAudit(AUDIT_ACTIONS.SIGN_UP, { actor: { id: user.id, email: user.email, name: user.name } });
+			// Auth.js also fires this when it links a new Google account to an existing user by email
+			// (allowDangerousEmailAccountLinking): only a document the adapter just inserted lacks a role,
+			// so existing users keep their organizations
+			const { modifiedCount } = await db.collection('users').updateOne(
+				{ email: user.email, role: { $exists: false } },
+				{ $set: { ...NEW_USER_DEFAULTS, name, createdAt: new Date() } }
+			);
+			if (modifiedCount) await logAudit(AUDIT_ACTIONS.SIGN_UP, { actor: { id: user.id, email: user.email, name } });
 		},
-		async signIn({ user }) {
+		async signIn({ user, account }) {
 			const db = await getDb();
 			await db.collection('users').updateOne({ email: user.email }, { $set: { lastLoginAt: new Date() } });
-			await logAudit(AUDIT_ACTIONS.SIGN_IN, { actor: { id: user.id, email: user.email, name: user.name } });
+			await logAudit(AUDIT_ACTIONS.SIGN_IN, {
+				actor: { id: user.id, email: user.email, name: user.name },
+				details: { provider: account?.provider },
+			});
 		},
 	},
 	session: { strategy: 'jwt' },
@@ -178,7 +228,7 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 		userDoc = await findUserByEmail(token.email, { fresh: true });
 	}
 
-	const noAccess = { role: ROLES.NEW_USER, clientId: null, activeOrganization: null, permissions: {}, organizations: [] };
+	const noAccess = { role: ROLES.NEW_USER, clientId: null, activeOrganization: null, permissions: {}, organizations: [], startPage: null };
 
 	// Deleted or globally disabled account
 	if (!userDoc || userDoc.isActive === false) return { ...noAccess, isActive: false };
@@ -211,6 +261,7 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 		activeOrganization: membership.clientId.toString(),
 		permissions: await permissionsFor(token, role),
 		organizations: toSessionMemberships(memberships),
+		startPage: userDoc.startPage ?? null,
 		isActive: true,
 	};
 }

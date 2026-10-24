@@ -1,15 +1,16 @@
 {
     "general": [
         {
-            "href": "/",
-            "labelKey": "home",
-            "icon": "Home"
-        },
-        {
             "href": "/dashboard",
             "labelKey": "dashboard",
             "icon": "LayoutDashboard",
             "requiresOrganization": true
+        },
+        {
+            "href": "/runner",
+            "labelKey": "runner",
+            "icon": "Boxes",
+            "requiresAssignedAreas": true
         }
     ],
     "admin": [
@@ -23,6 +24,12 @@
             "href": "/admin/users",
             "labelKey": "staff",
             "icon": "Users",
+            "permission": "manage_users"
+        },
+        {
+            "href": "/admin/plan",
+            "labelKey": "plan",
+            "icon": "CreditCard",
             "permission": "manage_users"
         }
     ]

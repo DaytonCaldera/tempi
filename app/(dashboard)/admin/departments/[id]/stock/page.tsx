@@ -5,10 +5,16 @@ import { getDb, toObjectId } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { hasPermission } from '@/lib/permissions';
-import type { StockItem } from '@/types/models';
+import { normalizeBarcode } from '@/lib/sku';
+import { getOrganizationCurrency } from '@/lib/organizations';
+import type { Department, StockItem } from '@/types/models';
 import StockManagementClient from './StockManagementClient';
 
-export default async function DepartmentStockPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DepartmentStockPage({ params, searchParams }: {
+    params: Promise<{ id: string }>;
+    /** barcode: a code the runner scanned and didn't find, to create the product with it */
+    searchParams: Promise<{ barcode?: string }>;
+}) {
     const session = await auth();
     if (!session) redirect("/");
     if (!hasPermission(session, PERMISSIONS.EDIT_STOCK)) redirect("/unauthorized");
@@ -19,9 +25,16 @@ export default async function DepartmentStockPage({ params }: { params: Promise<
 
     const t = await getTranslations('stock');
     const db = await getDb();
-    const inventory = await db.collection<StockItem>('department_stock')
-        .find({ departmentId: department._id, isDeleted: { $ne: true } })
-        .toArray();
+    const [inventory, otherDepartments] = await Promise.all([
+        db.collection<StockItem>('department_stock')
+            .find({ departmentId: department._id, isDeleted: { $ne: true } })
+            .toArray(),
+        // Where its products can be transferred to
+        db.collection<Department>('departments')
+            .find({ clientId: department.clientId, _id: { $ne: department._id } }, { projection: { name: 1 } })
+            .sort({ name: 1 })
+            .toArray(),
+    ]);
 
     return (
         <div className="p-6 lg:p-10">
@@ -43,6 +56,9 @@ export default async function DepartmentStockPage({ params }: { params: Promise<
                 }))}
                 departmentId={department._id.toString()}
                 departmentName={department.name}
+                otherDepartments={otherDepartments.map(d => ({ _id: d._id.toString(), name: d.name }))}
+                currency={await getOrganizationCurrency(department.clientId)}
+                newBarcode={normalizeBarcode((await searchParams).barcode) || undefined}
             />
         </div>
     );

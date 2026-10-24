@@ -10,6 +10,8 @@ interface StockRowProps {
     /** The quantity the −/+ buttons move. */
     quantity: number;
     isPending: boolean;
+    /** Just found by its barcode: outlined so the eye lands on it */
+    isHighlighted?: boolean;
     /** Must be stable (rows are memoized): the parent passes one callback for every row. */
     onMove: (item: StockItem<string>, type: MovementType) => void;
 }
@@ -18,7 +20,7 @@ interface StockRowProps {
  * One product: name, SKU and stock, with buttons to take out or put in `quantity`.
  * Memoized, so a move, a toast or another row's spinner only re-renders the rows that changed.
  */
-function StockRow({ item, quantity, isPending, onMove }: StockRowProps) {
+function StockRow({ item, quantity, isPending, isHighlighted = false, onMove }: StockRowProps) {
     const t = useTranslations('runner');
     const tUnits = useTranslations('units');
 
@@ -30,7 +32,10 @@ function StockRow({ item, quantity, isPending, onMove }: StockRowProps) {
     const buttonClass = "w-14 h-14 shrink-0 flex items-center justify-center gap-0.5 rounded-2xl active:scale-95 transition-all disabled:opacity-25";
 
     return (
-        <div className="flex items-center gap-3 bg-card p-2.5 pl-4 rounded-3xl border border-line shadow-sm">
+        <div
+            id={`stock-${item._id}`}
+            className={`flex items-center gap-3 bg-card p-2.5 pl-4 rounded-3xl border shadow-sm scroll-mt-40 transition-shadow ${isHighlighted ? "border-accent ring-4 ring-accent/30" : "border-line"}`}
+        >
             <div className="flex-1 min-w-0">
                 <h3 className="text-base font-black text-ink leading-tight line-clamp-2">{item.productName}</h3>
                 <p className="text-[11px] font-bold text-accent uppercase tracking-tight truncate">{item.sku}</p>

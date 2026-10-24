@@ -4,7 +4,7 @@ import LegalDocument from "@/components/legal/LegalDocument";
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("legal.terms");
-    return { title: `${t("title")} | TEMPI` };
+    return { title: `${t("title")} | Vitalliz` };
 }
 
 // Public page: it is not in the proxy matcher, so no session is needed

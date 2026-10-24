@@ -32,6 +32,8 @@
   --danger: #dc2626;
   --success: #16a34a;
   --warning: #d97706;
+
+  --chart: #059669;        /* data marks (bars); checked with the dataviz palette validator per theme */
 }
 
 :root[data-theme="dark"] {
@@ -55,6 +57,8 @@
   --danger: #f87171;
   --success: #4ade80;
   --warning: #fbbf24;
+
+  --chart: #0f9f71;
 }
 
 /* Without JavaScript the script can't set data-theme: follow the system */
@@ -80,6 +84,8 @@
     --danger: #f87171;
     --success: #4ade80;
     --warning: #fbbf24;
+
+    --chart: #0f9f71;
   }
 }
 
@@ -100,6 +106,7 @@
   --color-danger: var(--danger);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-chart: var(--chart);
 }
 
 body {

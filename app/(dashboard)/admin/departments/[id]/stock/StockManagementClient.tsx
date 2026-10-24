@@ -2,10 +2,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { Search, Plus, AlertTriangle, History, ArrowLeft } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
+import { Search, Plus, AlertTriangle, History, ArrowLeft, Upload } from "lucide-react";
 import { useDepartmentStock, type StockRow } from "./useDepartmentStock";
 import { StockItemModal } from "./StockItemModal";
+import { StockImportModal } from "./StockImportModal";
+import { TransferStockModal } from "./TransferStockModal";
 import { DeleteStockItemModal } from "./DeleteStockItemModal";
 import { StockTable } from "./StockTable";
 
@@ -13,26 +15,41 @@ interface StockManagementClientProps {
     initialInventory: StockRow[];
     departmentId: string;
     departmentName: string;
+    /** Opens the new product form with this barcode (from the runner's "create product" for an unknown code) */
+    newBarcode?: string;
+    /** The organization's other departments, the ones products can be transferred to */
+    otherDepartments: { _id: string; name: string }[];
+    /** The organization's currency */
+    currency: string;
 }
 
 /** Admin view of a department's inventory: stats, search, quick +/- moves, create, edit and delete. */
-export default function StockManagementClient({ initialInventory, departmentId, departmentName }: StockManagementClientProps) {
+export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode, otherDepartments, currency }: StockManagementClientProps) {
     const t = useTranslations("stock");
+    const format = useFormatter();
     const router = useRouter();
-    const { inventory, quickMove, remove } = useDepartmentStock(departmentId, initialInventory);
+    const { inventory, quickMove, remove, refresh } = useDepartmentStock(departmentId, initialInventory);
 
     const [searchTerm, setSearchTerm] = useState("");
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(!!newBarcode);
     const [formKey, setFormKey] = useState(0);
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [importKey, setImportKey] = useState(0);
     const [editingItem, setEditingItem] = useState<StockRow | null>(null);
     const [deletingItem, setDeletingItem] = useState<StockRow | null>(null);
+    const [transferringItem, setTransferringItem] = useState<StockRow | null>(null);
+    const [transferKey, setTransferKey] = useState(0);
 
     const search = searchTerm.toLowerCase();
     const filteredInventory = inventory.filter(item =>
         item.productName.toLowerCase().includes(search) ||
-        item.sku.toLowerCase().includes(search)
+        item.sku.toLowerCase().includes(search) ||
+        !!item.barcode?.toLowerCase().includes(search)
     );
     const lowStockCount = inventory.filter(item => item.quantity <= item.minStock).length;
+    // Stock value: quantity × cost of the products that have a cost
+    const stockValue = inventory.reduce((sum, item) => sum + (item.unitCost !== undefined ? item.quantity * item.unitCost : 0), 0);
+    const withoutCost = inventory.filter(item => item.unitCost === undefined).length;
 
     const openForm = (item: StockRow | null) => {
         setEditingItem(item);
@@ -48,10 +65,34 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 editingItem={editingItem}
                 departmentId={departmentId}
                 departmentName={departmentName}
+                currency={currency}
+                initialBarcode={formKey === 0 && !editingItem ? newBarcode : undefined}
                 onClose={() => setIsFormOpen(false)}
                 onSaved={() => {
                     setIsFormOpen(false);
                     router.refresh();
+                }}
+            />
+
+            <StockImportModal
+                key={`import-${importKey}`} // Unlike the form's, so the two siblings' keys never match
+                isOpen={isImportOpen}
+                departmentId={departmentId}
+                onClose={() => setIsImportOpen(false)}
+                onImported={() => {
+                    refresh();
+                    router.refresh();
+                }}
+            />
+
+            <TransferStockModal
+                key={`transfer-${transferKey}`}
+                item={transferringItem}
+                departments={otherDepartments}
+                onClose={() => setTransferringItem(null)}
+                onTransferred={() => {
+                    setTransferringItem(null);
+                    refresh();
                 }}
             />
 
@@ -78,6 +119,12 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                         <button onClick={() => openForm(null)} className="flex items-center gap-2 px-4 py-2 bg-inverse text-on-inverse rounded-xl text-xs font-bold uppercase hover:bg-accent hover:text-on-accent transition-all">
                             <Plus size={16} /> {t("addProduct")}
                         </button>
+                        <button
+                            onClick={() => { setImportKey(key => key + 1); setIsImportOpen(true); }}
+                            className="flex items-center gap-2 px-4 py-2 bg-card border border-line text-ink-muted rounded-xl text-xs font-bold uppercase hover:bg-subtle transition-all"
+                        >
+                            <Upload size={16} /> {t("importProducts")}
+                        </button>
                         <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-card border border-line text-ink-muted rounded-xl text-xs font-bold uppercase hover:bg-subtle transition-all">
                             <History size={16} /> {t("viewReport")}
                         </Link>
@@ -99,7 +146,8 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     </div>
                     <div className="bg-card p-5 rounded-3xl border border-line">
                         <p className="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest">{t("estimatedValue")}</p>
-                        <p className="text-2xl font-semibold text-accent">$---</p>
+                        <p className="text-2xl font-semibold text-accent">{format.number(stockValue, { style: "currency", currency, currencyDisplay: "narrowSymbol" })}</p>
+                        {withoutCost > 0 && <p className="text-[11px] text-ink-subtle">{t("withoutCost", { count: withoutCost })}</p>}
                     </div>
                 </div>
 
@@ -120,6 +168,8 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     onQuickMove={quickMove}
                     onEdit={openForm}
                     onDelete={setDeletingItem}
+                    currency={currency}
+                    onTransfer={otherDepartments.length > 0 ? (item) => { setTransferKey(key => key + 1); setTransferringItem(item); } : undefined}
                 />
             </div>
         </>

@@ -1,6 +1,7 @@
 "use client";
-import { Download, Calendar, FileText, Printer, Info } from "lucide-react";
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { Download, Calendar, FileText, Printer, Info, Lock } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 import { useConsumptionReport, type DateRange } from "./useConsumptionReport";
 import { DepartmentReportTable } from "./DepartmentReportTable";
 import { PrintableReport } from "./PrintableReport";
@@ -9,6 +10,10 @@ export interface ReportProps {
     /** Limit the report to one department; without it, all departments of the organization */
     deptId?: string;
     title?: string;
+    /** Whether the organization's plan includes the CSV export (PLAN_FEATURES.EXPORT_CSV) */
+    canExport?: boolean;
+    /** The organization's currency, for the value of what was consumed */
+    currency: string;
 }
 
 function DateInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
@@ -26,10 +31,12 @@ function DateInput({ value, onChange }: { value: string; onChange: (value: strin
 }
 
 /** Consumption report: stock at the start of a date range, ins and outs during it, and stock at the end. */
-export default function ConsumptionReport({ deptId, title: titleProp }: ReportProps) {
+export default function ConsumptionReport({ deptId, title: titleProp, canExport = false, currency }: ReportProps) {
     const t = useTranslations("reports");
+    const tPlan = useTranslations("plan");
+    const format = useFormatter();
     const title = titleProp ?? t("title");
-    const { range, setRange, data, loading, expandedId, details, toggleDetails } = useConsumptionReport(deptId);
+    const { range, setRange, bounds, data, loading, limitedFrom, exportUrl, expandedId, details, toggleDetails } = useConsumptionReport(deptId);
     const updateRange = (changes: Partial<DateRange>) => setRange({ ...range, ...changes });
 
     const handlePrint = (e: React.MouseEvent) => {
@@ -69,11 +76,29 @@ export default function ConsumptionReport({ deptId, title: titleProp }: ReportPr
                             <Printer size={22} className="group-hover:scale-110 transition-transform" />
                         </button>
 
-                        <button type="button" title={t("download")} className="w-full sm:w-14 h-14 bg-inverse text-on-inverse rounded-2xl flex items-center justify-center hover:scale-105 transition-all active:scale-95 group">
-                            <Download size={24} className="group-hover:translate-y-1 transition-transform" />
-                        </button>
+                        {canExport ? (
+                            <a href={exportUrl ?? undefined} download title={t("download")} aria-label={t("download")} className="w-full sm:w-14 h-14 bg-inverse text-on-inverse rounded-2xl flex items-center justify-center hover:scale-105 transition-all active:scale-95 group">
+                                <Download size={24} className="group-hover:translate-y-1 transition-transform" />
+                            </a>
+                        ) : (
+                            // Not in the plan: shown locked, and it leads to the plan page instead of hiding the feature
+                            <Link href="/admin/plan" title={tPlan("locked.export")} aria-label={tPlan("locked.export")} className="relative w-full sm:w-14 h-14 bg-card text-ink-subtle border border-line border-dashed rounded-2xl flex items-center justify-center hover:text-ink transition-colors">
+                                <Download size={22} />
+                                <span className="absolute -top-2 -right-2 flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase text-on-accent">
+                                    <Lock size={9} aria-hidden /> Pro
+                                </span>
+                            </Link>
+                        )}
                     </div>
                 </div>
+
+                {limitedFrom && (
+                    <p className="flex flex-wrap items-center gap-2 rounded-2xl border border-warning/30 bg-warning/10 px-5 py-3 text-sm text-ink">
+                        <Info size={16} className="text-warning" aria-hidden />
+                        {tPlan("historyLimited", { date: format.dateTime(limitedFrom, { dateStyle: "medium" }) })}
+                        <Link href="/admin/plan" className="font-semibold text-accent underline-offset-2 hover:underline">{tPlan("upgradeShort")}</Link>
+                    </p>
+                )}
 
                 {/* CONTENT */}
                 {loading ? (
@@ -106,9 +131,20 @@ export default function ConsumptionReport({ deptId, title: titleProp }: ReportPr
                             </div>
                         </div>
 
+                        {/* What everything consumed in the range cost, all departments together */}
+                        {data.length > 1 && (
+                            <p className="px-4 text-sm text-ink-muted">
+                                {t.rich("totalConsumedValue", {
+                                    value: format.number(data.reduce((sum, d) => sum + d.items.reduce((s, i) => s + i.consumedValue, 0), 0), { style: "currency", currency, currencyDisplay: "narrowSymbol" }),
+                                    b: (chunks) => <span className="text-lg font-semibold text-ink">{chunks}</span>,
+                                })}
+                            </p>
+                        )}
+
                         {data.map(department => (
                             <DepartmentReportTable
                                 key={department._id}
+                                currency={currency}
                                 department={department}
                                 showDepartmentName={!deptId}
                                 expandedId={expandedId}
@@ -126,7 +162,7 @@ export default function ConsumptionReport({ deptId, title: titleProp }: ReportPr
             </div>
 
             {/* PRINT VIEW (hidden on screen) */}
-            <PrintableReport title={title} range={range} data={data} showDepartmentNames={!deptId} />
+            <PrintableReport title={title} bounds={bounds} data={data} showDepartmentNames={!deptId} currency={currency} />
         </div>
     );
 }

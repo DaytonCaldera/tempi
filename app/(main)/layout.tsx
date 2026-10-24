@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import AuthProvider from "@/components/SessionProvider";
+import TimeZoneSync from "@/components/TimeZoneSync";
 import { NextIntlClientProvider } from "next-intl";
 import { THEME_SCRIPT } from "@/lib/theme-script";
 
@@ -40,6 +41,7 @@ export default async function MainLayout({
                     <AuthProvider>
                         {/* Inherits locale, messages and timeZone from i18n/request.ts */}
                         <NextIntlClientProvider>
+                            <TimeZoneSync />
                             {children}
                         </NextIntlClientProvider>
                     </AuthProvider>

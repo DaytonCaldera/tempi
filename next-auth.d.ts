@@ -1,5 +1,5 @@
 import { DefaultSession } from "next-auth"
-import type { SessionMembership } from "@/types/models"
+import type { SessionMembership, StartPage } from "@/types/models"
 
 declare module "next-auth" {
   interface User {
@@ -21,6 +21,9 @@ declare module "next-auth" {
       isActive?: boolean
       permissions?: Record<string, boolean>
       organizations?: SessionMembership[]
+      startPage?: StartPage | null
+      /** The time zone set in the account, null to follow the browser (lib/timezone.ts) */
+      timeZone?: string | null
     } & DefaultSession["user"]
   }
 }
@@ -34,6 +37,8 @@ declare module "next-auth/jwt" {
     isActive?: boolean
     permissions?: Record<string, boolean>
     organizations?: SessionMembership[]
+    startPage?: StartPage | null
+    timeZone?: string | null
     /** When the token was last resolved from a fresh DB read (ms). See findUserByEmail's notBefore. */
     resolvedAt?: number
     /** When users.lastSeenAt was last written for this session (ms). See recordLastSeen in auth.ts. */

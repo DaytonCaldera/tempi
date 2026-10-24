@@ -42,7 +42,7 @@ export const getSuperAdminEmail = (): string | null => {
 
 /** Details shown on the privacy policy and terms pages (app/(main)/privacy, app/(main)/terms). */
 export const LEGAL = {
-    contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@tempi.pro",
+    contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@vitalliz.com",
     // Bump when the text in the "legal" messages changes
     effectiveDate: "2026-10-23",
 };
@@ -69,15 +69,39 @@ export const MOVEMENT_REASONS = {
     INITIAL_STOCK: "Inventario inicial",
     // Written by scripts/repair-stock-movements.js for quantity changes that were never logged
     RECONCILIATION: "Conciliación de inventario",
+    // Quantity set by a file import (lib/stock-import.ts) on a product that already existed
+    IMPORT: "Importación de inventario",
+    // Both halves of a transfer between departments (app/api/admin/inventory/[id]/transfer); movement.transfer
+    // names the other department
+    TRANSFER: "Transferencia entre departamentos",
     // Reverses an earlier movement (the runner Undo); reports subtract it from the column it reverses
     CORRECTION: "Corrección",
 } as const;
 
 /** Units a stock item can be counted in. Stored as-is in department_stock.unit; labels are in the "units" messages. */
-export const STOCK_UNITS = ["unidades", "kg", "cajas", "litros"] as const;
+/** Movements written by maintenance (sync, repair scripts), not by people: they don't count as activity. */
+export const SYSTEM_REASONS = [MOVEMENT_REASONS.INITIAL_SYNC, MOVEMENT_REASONS.RECONCILIATION];
+
+export const STOCK_UNITS =["unidades", "kg", "cajas", "litros"] as const;
 
 /** Minimum length of the reason the superadmin types for a support tool, so every audit entry says something useful. */
 export const SUPPORT_REASON_MIN_LENGTH = 10;
 
-/** Name of the plan new organizations start on ("plans" collection). */
+/** Name of the plan new organizations start on ("plans" collection). Only a fallback: it is found by key "free" */
 export const DEFAULT_PLAN_NAME = "Plan Gratuito";
+
+/** Catalog plans, cheapest first. scripts/seed-plans.js creates them; their limits are edited from /superadmin/plans */
+export const PLAN_KEYS = ["free", "pro", "business"] as const;
+
+/** Features a plan can include (plans.features). Checked with hasPlanFeature / planFeatureError (lib/plans.ts) */
+export const PLAN_FEATURES = {
+    // Runners only see the departments they are assigned to. Without it, they see all of them
+    DEPARTMENT_ASSIGNMENT: "department_assignment",
+    EXPORT_CSV: "export_csv",
+    PRIORITY_SUPPORT: "priority_support",
+} as const;
+
+export type PlanFeature = typeof PLAN_FEATURES[keyof typeof PLAN_FEATURES];
+
+/** Days a past_due subscription keeps its plan while the payment is retried */
+export const BILLING_GRACE_DAYS = 7;

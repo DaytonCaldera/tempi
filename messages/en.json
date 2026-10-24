@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "title": "Tempi | Everything adds up",
+        "title": "Vitalliz | Everything adds up",
         "description": "Close every event knowing where every unit went. No midnight recounts, no losses you find too late. Your business under control, your mind at ease."
     },
     "common": {
@@ -22,7 +22,8 @@
         "system": "System",
         "user": "User",
         "backToHome": "Back to home",
-        "back": "Back"
+        "back": "Back",
+        "close": "Close"
     },
     "errors": {
         "unauthorized": "Unauthorized",
@@ -67,7 +68,31 @@
             "users": "Your plan ({plan}) allows up to {limit} active members. Upgrade the plan to add more.",
             "departments": "Your plan ({plan}) allows up to {limit} departments. Upgrade the plan to add more.",
             "items": "Your plan ({plan}) allows up to {limit} products. Upgrade the plan to add more."
-        }
+        },
+        "planFeature": {
+            "department_assignment": "Your plan ({plan}) doesn't include assigning staff to departments. Upgrade to use it.",
+            "export_csv": "Your plan ({plan}) doesn't include exporting reports. Upgrade to download them.",
+            "priority_support": "Your plan ({plan}) doesn't include priority support."
+        },
+        "billingNotConfigured": "Online payments aren't available yet. Write to us to change your plan.",
+        "planNotPurchasable": "This plan can't be bought online. Write to us to get it.",
+        "checkoutFailed": "The payment couldn't start. Try again in a few minutes.",
+        "ownerOnly": "Only the organization's owner can manage the subscription.",
+        "importEmpty": "The file has no rows to import",
+        "importTooManyRows": "Up to {max} rows can be imported at once. Split the file.",
+        "importConflict": "Someone added one of these SKUs during the import. Check the preview and try again.",
+        "tooManyAlertEmails": "You can add up to 5 addresses.",
+        "invalidEmail": "One of the addresses isn't valid.",
+        "invalidBarcode": "The barcode isn't valid (up to 64 characters, no spaces).",
+        "duplicateBarcode": "A product with that barcode already exists in this department",
+        "transferSameDepartment": "Pick another department: the product is already in this one.",
+        "transferUnitMismatch": "The destination's product is counted in another unit. Change it in one of them to transfer.",
+        "transferConflict": "The stock changed during the transfer. Check the quantities and try again.",
+        "invalidCost": "The cost must be a number from 0.",
+        "invalidCurrency": "That currency isn't available.",
+        "invalidTimeZone": "That time zone doesn't exist.",
+        "heldNotFound": "That held move is no longer pending.",
+        "heldNotYours": "The person who made this move decides it first. Admins can decide it 30 minutes later."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -91,6 +116,8 @@
         "INITIAL_STOCK": "Initial stock",
         "RECONCILIATION": "Inventory reconciliation",
         "CORRECTION": "Correction (undo)",
+        "IMPORT": "Inventory import",
+        "TRANSFER": "Transfer between departments",
         "none": "No reason given"
     },
     "nav": {
@@ -98,8 +125,8 @@
             "general": "General",
             "admin": "Admin"
         },
-        "home": "Home",
         "dashboard": "Dashboard",
+        "runner": "Runner",
         "departments": "Departments",
         "staff": "Staff",
         "toggleSidebar": "Toggle sidebar",
@@ -112,7 +139,10 @@
         "unnamedOrganization": "Unnamed organization",
         "joinOrCreate": "+ Join or create new",
         "switching": "Switching context...",
-        "account": "My account"
+        "account": "My account",
+        "plan": "Plan & billing",
+        "language": "Language",
+        "userMenu": "Account menu"
     },
     "theme": {
         "label": "Theme",
@@ -121,7 +151,7 @@
         "system": "System"
     },
     "landing": {
-        "cta": "Get started with Google",
+        "cta": "Get started",
         "hero": {
             "eyebrow": "For teams that live by their stock",
             "title": "End every event knowing everything adds up.",
@@ -192,7 +222,9 @@
             "title": "Your business under control. Your mind at ease.",
             "subtitle": "A tool for the mind and for the business."
         },
-        "legalNotice": "By signing in you agree to the <terms>Terms of Service</terms> and the <privacy>Privacy Policy</privacy>."
+        "legalNotice": "By signing in you agree to the <terms>Terms of Service</terms> and the <privacy>Privacy Policy</privacy>.",
+        "signIn": "Sign in",
+        "pricingDetails": "See every plan detail"
     },
     "pending": {
         "title": "Access pending",
@@ -203,6 +235,37 @@
         "loading": "Loading context...",
         "title": "You are not authorized to access this page",
         "deactivated": "Your account has been deactivated. Please contact the administrator for more information."
+    },
+    "login": {
+        "title": "Sign in to Vitalliz",
+        "subtitle": "New here? Signing in creates your account.",
+        "google": "Continue with Google",
+        "microsoft": "Continue with Microsoft",
+        "or": "or",
+        "emailLabel": "Email",
+        "emailPlaceholder": "you@company.com",
+        "emailButton": "Email me a sign-in link",
+        "sending": "Sending...",
+        "legalNotice": "By signing in you agree to the <terms>Terms of Service</terms> and the <privacy>Privacy Policy</privacy>.",
+        "errors": {
+            "OAuthAccountNotLinked": "This email already has an account. Sign in the way you did the first time, or with an email link.",
+            "EmailSignin": "We couldn't send the email. Wait a few minutes and try again.",
+            "Verification": "That link expired or was already used. Request a new one.",
+            "AccessDenied": "This account can't sign in. Try another method.",
+            "default": "Something went wrong while signing in. Please try again."
+        },
+        "checkEmail": {
+            "title": "Check your email",
+            "description": "We sent you a sign-in link. It works once and expires in 15 minutes. If you don't see it, check your spam folder.",
+            "retry": "Use another email or method"
+        }
+    },
+    "magicLink": {
+        "subject": "Your sign-in link for {host}",
+        "title": "Sign in to Vitalliz",
+        "button": "Sign in",
+        "expires": "This link works once and expires in {minutes} minutes.",
+        "ignore": "If you didn't ask for it, you can ignore this email."
     },
     "lobby": {
         "invalidCode": "Invalid code",
@@ -219,8 +282,11 @@
             "modalDescription": "Set your company's trade name. You can edit it later.",
             "nameLabel": "Company name",
             "namePlaceholder": "e.g. Pacific Events",
-            "confirm": "Confirm and create"
-        }
+            "confirm": "Confirm and create",
+            "modalDescriptionCheckout": "Set your company's trading name. Next you'll go to the secure payment of your plan.",
+            "confirmCheckout": "Create and continue to payment"
+        },
+        "checkoutIntent": "Create your company to continue to the payment of your plan."
     },
     "runner": {
         "title": "Inventory monitoring",
@@ -255,11 +321,51 @@
         "noAreas": {
             "title": "Restricted access",
             "description": "Your user has no assigned areas. Contact an administrator to enable your inventory."
+        },
+        "scan": "Scan code",
+        "codeNotFound": "No product has the code {code}",
+        "createProduct": "Create",
+        "queued": "saved offline",
+        "heldTitle": "{count, plural, one {# move to review} other {# moves to review}}",
+        "heldIntro": "You made these moves offline and they didn't apply by themselves. Decide what to do with each one.",
+        "heldChip": "{count} to review",
+        "queue": {
+            "pending": "{count} pending",
+            "sending": "Sending {count}…",
+            "title": "{count, plural, one {# move not sent} other {# moves not sent}}",
+            "introOffline": "You saved them offline. They are sent by themselves as soon as the connection is back. If a colleague already recorded one for you, cancel it here so it isn't counted twice.",
+            "introOnline": "You're online: they are being sent. If a colleague already recorded one for you, cancel it here so it isn't counted twice.",
+            "empty": "No pending moves.",
+            "cancel": "Cancel the move of {product}",
+            "sendNow": "Send now",
+            "sendingNow": "Sending…",
+            "waiting": "They'll be sent when the connection is back"
         }
     },
     "dashboard": {
         "reportsTitle": "Consumption reports",
-        "reportsDescription": "Review your departments' consumption"
+        "reportsDescription": "Review your departments' consumption",
+        "scopeOrganization": "Whole organization · {count, plural, one {# department} other {# departments}}",
+        "scopeAssigned": "Your areas · {count, plural, one {# department} other {# departments}}",
+        "emptyOrganization": "There are no departments yet. Create the first one and add its products to see stock and activity here.",
+        "emptyAssigned": "You have no areas assigned yet. Ask an admin to assign you one.",
+        "createDepartment": "Create a department",
+        "lowStock": "Products low on stock",
+        "lowStockHint": "of {count, plural, one {# product} other {# products}}",
+        "movements": "Movements (7 days)",
+        "activePeople": "Active people (7 days)",
+        "products": "Products",
+        "productsHint": "in {count, plural, one {# department} other {# departments}}",
+        "movementsChart": "Stock movements",
+        "lowStockTitle": "Low stock",
+        "lowStockNone": "Every product is above its minimum.",
+        "lowStockMore": "and {count, plural, one {# more product} other {# more products}}",
+        "outOfStock": "Out of stock",
+        "minimum": "min. {amount}",
+        "topConsumed": "Most used (7 days)",
+        "topConsumedNone": "Nothing was used in the last 7 days.",
+        "inventoryValue": "Inventory value",
+        "inventoryValueMissing": "{count, plural, one {# product without cost} other {# products without cost}}"
     },
     "departments": {
         "title": "Departments",
@@ -292,7 +398,15 @@
             "product": "Product / SKU",
             "category": "Category",
             "quantity": "Current quantity",
-            "quickActions": "Quick actions"
+            "quickActions": "Quick actions",
+            "actions": {
+                "remove": "Remove 1 from {product}",
+                "add": "Add 1 to {product}",
+                "transfer": "Transfer {product} to another department",
+                "edit": "Edit {product}",
+                "delete": "Delete {product}"
+            },
+            "costLine": "{cost} each · {value}"
         },
         "form": {
             "editTitle": "Edit product",
@@ -306,12 +420,107 @@
             "currentQuantity": "Current quantity",
             "initialStock": "Initial stock",
             "minStock": "Minimum (alert)",
-            "register": "Add to inventory"
+            "register": "Add to inventory",
+            "barcode": "Barcode (optional)",
+            "barcodePlaceholder": "Scan or type it",
+            "scanBarcode": "Scan with the camera",
+            "unitCost": "Cost per unit ({currency}, optional)",
+            "unitCostPlaceholder": "E.g. 1500",
+            "unitCostHint": "A new cost applies from now on: past movements keep the cost they had."
         },
         "delete": {
             "title": "Delete product",
             "confirm": "Are you sure you want to delete <b>{name}</b> ({sku})? It will be hidden from the inventory, but its history will be kept."
-        }
+        },
+        "importProducts": "Import",
+        "import": {
+            "title": "Import products",
+            "intro": "Upload a CSV or Excel (.xlsx) file with one row per product, up to {max} rows. Only the name is required: without a SKU one is generated, without a unit units are used, and without a quantity it starts at 0.",
+            "chooseFile": "Choose or drop a file",
+            "downloadTemplate": "Download template",
+            "templateFileName": "inventory-template.xlsx",
+            "example": {
+                "water": "Water 500 ml",
+                "rice": "Rice",
+                "drinks": "Drinks",
+                "pantry": "Pantry"
+            },
+            "existingLabel": "Products whose SKU the department already has",
+            "mode": {
+                "skip": {
+                    "title": "Skip them",
+                    "description": "Only new products are added."
+                },
+                "update": {
+                    "title": "Update them",
+                    "description": "Their details change to the file's. A different quantity is recorded as a movement; empty cells change nothing."
+                }
+            },
+            "reading": "Reading the file…",
+            "summary": {
+                "create": "{count} new",
+                "update": "{count} to update",
+                "unchanged": "{count} unchanged",
+                "skip": "{count} skipped",
+                "invalid": "{count} with errors"
+            },
+            "columns": {
+                "line": "Row",
+                "product": "Product / SKU",
+                "quantity": "Quantity",
+                "result": "Result"
+            },
+            "status": {
+                "create": "New",
+                "update": "Update",
+                "unchanged": "Unchanged",
+                "skip": "Skipped",
+                "invalid": "Error"
+            },
+            "autoSku": "Automatic SKU",
+            "rowErrors": {
+                "nameRequired": "The name is missing",
+                "nameTooLong": "The name is too long (max. 200)",
+                "skuTooLong": "The SKU is too long (max. 50)",
+                "categoryTooLong": "The category is too long (max. 100)",
+                "invalidUnit": "Unknown unit: use units, kg, boxes or liters",
+                "invalidQuantity": "The quantity must be a number from 0",
+                "invalidMinStock": "The minimum stock must be a number from 0",
+                "duplicateSku": "SKU repeated in the file",
+                "invalidBarcode": "Invalid barcode",
+                "duplicateBarcode": "Barcode repeated in the file",
+                "barcodeTaken": "Another product of the department already has that barcode",
+                "invalidCost": "Invalid cost"
+            },
+            "invalidNote": "Rows with errors aren't imported. Fix them in the file and upload it again if you need them.",
+            "confirm": "{count, plural, =0 {Nothing to import} one {Import # product} other {Import # products}}",
+            "doneMessage": "Done: {created, plural, one {# new product} other {# new products}} and {updated} updated.",
+            "doneInvalid": "{count, plural, one {# row wasn't imported} other {# rows weren't imported}} because of errors.",
+            "errors": {
+                "unreadable": "The file couldn't be read. Use a CSV or an Excel file (.xlsx).",
+                "missingNameColumn": "The name column wasn't found. The first row must have the titles, as in the template.",
+                "empty": "The file has no rows below the titles.",
+                "tooManyRows": "The file has {count} rows and up to {max} can be imported at once. Split it into several."
+            }
+        },
+        "transfer": {
+            "title": "Transfer to another department",
+            "intro": "<b>{product}</b>: there are {quantity} {unit} in this department.",
+            "toLabel": "Destination department",
+            "amountLabel": "Amount ({unit})",
+            "tooMuch": "There are only {quantity} {unit}.",
+            "previewExisting": "Adds to “{product}” ({sku}) in {department}: {before} → {after} {unit}.",
+            "previewNew": "{department} doesn't have this product: it will be created with {amount} {unit} and the same minimum ({min}).",
+            "confirm": "Transfer",
+            "transferring": "Transferring…",
+            "lowSource": "Here it will end at or below its minimum ({min} {unit}): it shows as low stock and the admins are emailed.",
+            "lowTarget": "In {department} it will end at or below its minimum ({min} {unit}): it shows as low stock and the admins are emailed.",
+            "moveAllLabel": "Move the whole product",
+            "moveAllDescription": "Moves all its stock ({quantity} {unit}) to {department} and removes it from this department. Its history is kept.",
+            "previewRemoved": "“{product}” will be removed from this department.",
+            "confirmMoveAll": "Move product"
+        },
+        "withoutCost": "{count, plural, one {# product without cost} other {# products without cost}}"
     },
     "users": {
         "inviteCode": "Invite code",
@@ -332,7 +541,7 @@
         "areaAssignment": "Area assignment",
         "closeOrganization": {
             "title": "Close organization",
-            "description": "Removes every member from the organization and disables its invite code. Use it if you no longer use Tempi or created this company by mistake.",
+            "description": "Removes every member from the organization and disables its invite code. Use it if you no longer use Vitalliz or created this company by mistake.",
             "button": "Close organization",
             "warning": "Every member will lose access to {name} right away. This can't be undone from the app.",
             "confirmLabel": "Type {name} to confirm",
@@ -342,6 +551,22 @@
             "lastTitle": "This is your only organization",
             "lastDescription": "Closing {name} leaves you without an organization. Your account stays active: we'll take you to your account page, where you can create or join another organization, or delete your account.",
             "confirmLast": "Close and leave me without an organization"
+        },
+        "alerts": {
+            "title": "Email alerts",
+            "description": "Lets you know when a product reaches its minimum stock, once each time it drops. Admins get it, and so do the addresses you add.",
+            "notConfigured": "Email isn't set up on this server: alerts are saved but not sent.",
+            "lowStockLabel": "Low stock alerts",
+            "lowStockDescription": "An email when a product is at or below its minimum.",
+            "extraLabel": "Other addresses (up to {max})",
+            "extraPlaceholder": "purchasing@company.com and Enter",
+            "remove": "Remove {email}",
+            "saved": "Saved"
+        },
+        "currency": {
+            "title": "Currency",
+            "description": "The currency product costs are in. Changing it doesn't convert amounts: it only changes how they show.",
+            "saved": "Saved"
         }
     },
     "reports": {
@@ -371,19 +596,31 @@
             "out": "Outs",
             "balance": "Balance",
             "currentFinal": "Current inv. (final)",
-            "final": "Final inv."
+            "final": "Final inv.",
+            "department": "Department",
+            "transfers": "Transfers",
+            "transferIn": "Transferred in",
+            "transferOut": "Transferred out",
+            "consumedValue": "Consumed value",
+            "unitCost": "Unit cost"
         },
         "movements": {
             "title": "Recent movement history",
             "empty": "No movements in the selected dates.",
-            "units": "units"
+            "units": "units",
+            "transferTo": "Transferred to {department}",
+            "transferFrom": "Received from {department}"
         },
         "printView": {
             "range": "Date range: {start} — {end}",
             "generated": "Generated on: {date}",
             "empty": "No data available to print in this range.",
             "department": "Department: {name}"
-        }
+        },
+        "totalConsumedValue": "Total consumed value: <b>{value}</b>",
+        "departmentConsumedValue": "Consumed value: <b>{value}</b>",
+        "valueIncomplete": "Some outs have no cost to value them",
+        "valueIncompleteNote": "* Some products have no cost: their outs don't add to the value."
     },
     "api": {
         "defaultDepartmentDescription": "Default initial department",
@@ -400,7 +637,7 @@
         "contactBody": "If you have questions about this document or want to exercise your rights, write to <email></email>.",
         "privacy": {
             "title": "Privacy Policy",
-            "intro": "This policy explains what information TEMPI (\"we\", \"the service\") collects when you use the inventory management application, how we use it, and the choices you have. By signing in to TEMPI you agree to the practices described here.",
+            "intro": "This policy explains what information Vitalliz (\"we\", \"the service\") collects when you use the inventory management application, how we use it, and the choices you have. By signing in to Vitalliz you agree to the practices described here.",
             "sections": {
                 "collect": {
                     "title": "Information we collect",
@@ -417,9 +654,9 @@
                 "google": {
                     "title": "Google user data",
                     "paragraphs": [
-                        "TEMPI uses Google Sign-In only to authenticate you. We request the basic \"openid\", \"email\" and \"profile\" scopes and nothing else: we do not access your Gmail, Google Drive, Calendar, contacts or any other Google service.",
-                        "Your Google name, email and profile picture are used solely to create and identify your TEMPI account, show who you are inside your organization, and attribute inventory movements to you in the audit log. We do not use Google user data for advertising, we do not sell it, and we do not transfer it to third parties except as needed to provide the service or as required by law.",
-                        "TEMPI's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements."
+                        "Vitalliz uses Google Sign-In only to authenticate you. We request the basic \"openid\", \"email\" and \"profile\" scopes and nothing else: we do not access your Gmail, Google Drive, Calendar, contacts or any other Google service.",
+                        "Your Google name, email and profile picture are used solely to create and identify your Vitalliz account, show who you are inside your organization, and attribute inventory movements to you in the audit log. We do not use Google user data for advertising, we do not sell it, and we do not transfer it to third parties except as needed to provide the service or as required by law.",
+                        "Vitalliz's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements."
                     ]
                 },
                 "use": {
@@ -439,7 +676,7 @@
                     "title": "Who can see your information",
                     "paragraphs": [
                         "Inside the application, administrators and members of an organization you belong to can see your name, email, profile picture and role in that organization, and the stock movements you made there. Organizations cannot see your activity in other organizations.",
-                        "We do not sell or rent personal information. We share it only with the service providers that host the application and its database, who process it on our behalf and only to run TEMPI, or when required by law."
+                        "We do not sell or rent personal information. We share it only with the service providers that host the application and its database, who process it on our behalf and only to run Vitalliz, or when required by law."
                     ]
                 },
                 "storage": {
@@ -460,19 +697,19 @@
                     "title": "Your rights",
                     "paragraphs": [
                         "You can ask us to access, correct or delete your personal information, or object to its processing, by contacting us at the address below. These rights include those granted by Costa Rica's Law 8968 on the Protection of Individuals with regard to the Processing of their Personal Data, and similar laws where you live.",
-                        "You can also revoke TEMPI's access to your Google account at any time from your Google Account settings (Security → Third-party apps with account access)."
+                        "You can also revoke Vitalliz's access to your Google account at any time from your Google Account settings (Security → Third-party apps with account access)."
                     ]
                 },
                 "cookies": {
                     "title": "Cookies",
                     "paragraphs": [
-                        "TEMPI uses only essential cookies: authentication cookies that keep you signed in and protect sign-in requests, and a cookie that remembers your language. We do not use advertising or third-party tracking cookies."
+                        "Vitalliz uses only essential cookies: authentication cookies that keep you signed in and protect sign-in requests, and a cookie that remembers your language. We do not use advertising or third-party tracking cookies."
                     ]
                 },
                 "children": {
                     "title": "Children",
                     "paragraphs": [
-                        "TEMPI is a business tool and is not directed to children under 13. We do not knowingly collect information from children."
+                        "Vitalliz is a business tool and is not directed to children under 13. We do not knowingly collect information from children."
                     ]
                 },
                 "changes": {
@@ -485,7 +722,7 @@
         },
         "terms": {
             "title": "Terms of Service",
-            "intro": "These terms govern your use of TEMPI, an inventory and logistics management application. By signing in or using the service you agree to these terms. If you use TEMPI on behalf of a company, you confirm that you are authorized to accept them for that company.",
+            "intro": "These terms govern your use of Vitalliz, an inventory and logistics management application. By signing in or using the service you agree to these terms. If you use Vitalliz on behalf of a company, you confirm that you are authorized to accept them for that company.",
             "sections": {
                 "acceptance": {
                     "title": "Acceptance",
@@ -496,7 +733,7 @@
                 "service": {
                     "title": "The service",
                     "paragraphs": [
-                        "TEMPI lets organizations manage departments, products and stock levels, record stock movements and generate consumption reports. Features and limits may depend on the plan your organization uses."
+                        "Vitalliz lets organizations manage departments, products and stock levels, record stock movements and generate consumption reports. Features and limits may depend on the plan your organization uses."
                     ]
                 },
                 "accounts": {
@@ -508,13 +745,13 @@
                 "organizations": {
                     "title": "Organizations and roles",
                     "paragraphs": [
-                        "The person who creates an organization becomes its administrator. Administrators decide who may join, which role and departments each member has, and may deactivate members. Each organization is responsible for the information its members enter and for how it uses TEMPI with its own staff."
+                        "The person who creates an organization becomes its administrator. Administrators decide who may join, which role and departments each member has, and may deactivate members. Each organization is responsible for the information its members enter and for how it uses Vitalliz with its own staff."
                     ]
                 },
                 "acceptableUse": {
                     "title": "Acceptable use",
                     "paragraphs": [
-                        "When using TEMPI you agree not to:"
+                        "When using Vitalliz you agree not to:"
                     ],
                     "bullets": [
                         "Access organizations, data or features you have not been given access to, or try to get around permissions.",
@@ -532,19 +769,19 @@
                 "availability": {
                     "title": "Availability and changes",
                     "paragraphs": [
-                        "We work to keep TEMPI available and accurate, but the service is provided \"as is\" and \"as available\", without guarantees that it will be uninterrupted or error-free. We may change, add or remove features, and we will try to give notice of changes that significantly affect you. Keep your own copies of any records you are required to retain."
+                        "We work to keep Vitalliz available and accurate, but the service is provided \"as is\" and \"as available\", without guarantees that it will be uninterrupted or error-free. We may change, add or remove features, and we will try to give notice of changes that significantly affect you. Keep your own copies of any records you are required to retain."
                     ]
                 },
                 "termination": {
                     "title": "Suspension and termination",
                     "paragraphs": [
-                        "You can stop using TEMPI at any time and ask us to delete your account. We may suspend or end access for accounts or organizations that break these terms or put the service or other users at risk."
+                        "You can stop using Vitalliz at any time and ask us to delete your account. We may suspend or end access for accounts or organizations that break these terms or put the service or other users at risk."
                     ]
                 },
                 "liability": {
                     "title": "Limitation of liability",
                     "paragraphs": [
-                        "To the extent permitted by law, TEMPI and its operators are not liable for indirect, incidental or consequential damages, or for loss of profits, data or business, arising from the use of or inability to use the service. Inventory figures and reports depend on the data entered by users and should be verified before relying on them for important decisions."
+                        "To the extent permitted by law, Vitalliz and its operators are not liable for indirect, incidental or consequential damages, or for loss of profits, data or business, arising from the use of or inability to use the service. Inventory figures and reports depend on the data entered by users and should be verified before relying on them for important decisions."
                     ]
                 },
                 "law": {
@@ -556,7 +793,7 @@
                 "changes": {
                     "title": "Changes to these terms",
                     "paragraphs": [
-                        "We may update these terms. The \"last updated\" date above shows when they last changed. If you keep using TEMPI after a change, you accept the updated terms."
+                        "We may update these terms. The \"last updated\" date above shows when they last changed. If you keep using Vitalliz after a change, you accept the updated terms."
                     ]
                 }
             }
@@ -576,7 +813,10 @@
         "preferences": {
             "title": "Preferences",
             "language": "Language",
-            "theme": "Theme"
+            "theme": "Theme",
+            "startPage": "Start page",
+            "timeZone": "Time zone",
+            "timeZoneAuto": "Automatic ({zone})"
         },
         "organizations": {
             "title": "My organizations",
@@ -616,7 +856,8 @@
             "signOut": "Sign out",
             "menu": "Superadmin menu",
             "health": "Health",
-            "support": "Support"
+            "support": "Support",
+            "plans": "Plans"
         },
         "periods": {
             "1d": "24 h",
@@ -633,9 +874,6 @@
         "overview": {
             "title": "Overview",
             "subtitle": "How the whole app is being used",
-            "vsPrevious": "vs previous period",
-            "noChange": "no change",
-            "notComparable": "No previous period to compare",
             "usage": "Usage",
             "growth": "Growth",
             "metrics": {
@@ -660,13 +898,7 @@
             },
             "charts": {
                 "movements": "Stock movements",
-                "signUps": "New users",
-                "table": "Show as table",
-                "bucket": "Date",
-                "count": "Count",
-                "total": "{count} in the period",
-                "byHour": "By hour",
-                "byDay": "By day"
+                "signUps": "New users"
             },
             "activeUsers": "Active users",
             "dau": "Today",
@@ -692,7 +924,7 @@
         },
         "organizations": {
             "title": "Organizations",
-            "subtitle": "Every organization created in Tempi",
+            "subtitle": "Every organization created in Vitalliz",
             "searchPlaceholder": "Name, owner or join code",
             "count": "{count, plural, one {# organization} other {# organizations}}",
             "empty": "No organizations match.",
@@ -745,7 +977,7 @@
         },
         "users": {
             "title": "Users",
-            "subtitle": "Everyone who signed in to Tempi",
+            "subtitle": "Everyone who signed in to Vitalliz",
             "searchPlaceholder": "Name or email",
             "count": "{count, plural, one {# user} other {# users}}",
             "empty": "No users match.",
@@ -812,7 +1044,14 @@
                 "restore": "Restored an organization",
                 "export": "Exported data",
                 "viewAs": "Viewed an organization (read-only)",
-                "changePlan": "Changed the plan"
+                "changePlan": "Changed the plan",
+                "createPlan": "Created a plan",
+                "updatePlan": "Edited a plan",
+                "subscription": "Subscription changed",
+                "import": "Imported products",
+                "updateAlerts": "Changed the email alerts",
+                "updateCurrency": "Changed the currency",
+                "resolveHeld": "Decided a held move"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -962,7 +1201,8 @@
                 "pick": "Pick a plan…",
                 "limits": "{users} members · {departments} departments · {items} products",
                 "button": "Change plan",
-                "done": "The organization is now on {name}."
+                "done": "The organization is now on {name}.",
+                "custom": "Create a custom plan"
             }
         },
         "exportCsv": "Export CSV",
@@ -1009,6 +1249,78 @@
                 "out": "out",
                 "system": "System"
             }
+        },
+        "plans": {
+            "title": "Plans",
+            "subtitle": "The public catalog and the custom-made plans",
+            "newCustom": "New custom plan",
+            "newHint": "A private plan for a single organization. Starts from Business's values.",
+            "catalogHint": "Public catalog plan. Changes apply to every organization that uses it.",
+            "back": "Back to plans",
+            "catalog": "Catalog",
+            "customFor": "Custom for",
+            "manual": "Manual billing",
+            "limits": "{users} users · {departments} depts. · {items} products",
+            "days": "{days} days",
+            "fullHistory": "Full",
+            "active": "Active",
+            "inactive": "Inactive",
+            "hint": "Limits of 0 mean unlimited. Lowering a limit never takes anything away: the organization just can't grow.",
+            "columns": {
+                "plan": "Plan",
+                "price": "Price",
+                "limits": "Limits",
+                "history": "History",
+                "features": "Features",
+                "organizations": "Organizations",
+                "status": "Status"
+            },
+            "fields": {
+                "organization": "Organization",
+                "assign": "Assign it this plan when saving",
+                "name": "Name",
+                "price": "Monthly price (USD)",
+                "priceYearly": "Yearly price (USD)",
+                "maxUsers": "Approved users",
+                "maxDepartments": "Departments",
+                "maxItems": "Products",
+                "historyDays": "History days",
+                "features": "Included features",
+                "billingMode": "Billing",
+                "status": "Status",
+                "monthlyVariantId": "Lemon Squeezy monthly variant",
+                "yearlyVariantId": "Lemon Squeezy yearly variant",
+                "notes": "Internal notes"
+            },
+            "pickOrganization": "Pick an organization…",
+            "namePlaceholder": "E.g. Business Hotel Pacífico",
+            "catalogNameHint": "The app shows the catalog's translated name; this name appears in limit messages.",
+            "priceHint": "0 for a free plan",
+            "priceYearlyHint": "0 if it isn't sold yearly",
+            "unlimitedHint": "0 = unlimited",
+            "historyHint": "How many days back reports can look. 0 = all of it",
+            "limitsTitle": "Limits",
+            "billing": {
+                "lemonsqueezy": "Online (Lemon Squeezy)",
+                "manual": "Manual (Vitalliz invoice)"
+            },
+            "notesPlaceholder": "What was agreed with the customer, who asked for it…",
+            "preview": "See impact",
+            "save": "Save changes",
+            "create": "Create plan",
+            "saved": "Plan saved.",
+            "impact": {
+                "organizations": "{count, plural, =0 {No organization uses this plan} one {# organization uses this plan} other {# organizations use this plan}}.",
+                "noneOver": "None would be over the new limits.",
+                "over": "{count, plural, one {# would be} other {# would be}} over a limit: they keep everything, but can't grow."
+            },
+            "errors": {
+                "invalid": "Check the fields: a name of 1 to 60 characters and numbers from 0.",
+                "notFound": "The plan no longer exists.",
+                "pickOrganization": "Pick the open organization this plan is for.",
+                "inUse": "It can't be deactivated: organizations are using it. Move them to another plan first.",
+                "defaultPlan": "The free plan can't be deactivated: new organizations get it."
+            }
         }
     },
     "plan": {
@@ -1024,6 +1336,180 @@
         "usageUnlimited": "{used}",
         "full": "Limit reached",
         "over": "Over the limit: nothing is removed, but you can't add more",
-        "contact": "To change your plan, contact {email}."
+        "contact": "To change your plan, contact {email}.",
+        "names": {
+            "free": "Free",
+            "pro": "Pro",
+            "business": "Business"
+        },
+        "trialUntil": "Trial until {date}",
+        "upgradeHint": "See plans with more room",
+        "upgradeShort": "See plans",
+        "historyLimited": "Your plan shows history from {date}. Older movements are still saved.",
+        "locked": {
+            "export": "CSV export is available on Pro",
+            "assignment": "On your plan, all staff see every department. The assignment is saved and applies once your plan includes it."
+        },
+        "limitDialog": {
+            "title": "You reached your plan's limit",
+            "seePlans": "See plans"
+        },
+        "trialBanner": "You have {days, plural, one {# day} other {# days}} of {plan} left for free.",
+        "page": {
+            "title": "Plan & billing",
+            "checkoutSuccess": "Thank you! Your payment is being processed and the plan will be active in a few seconds.",
+            "subscription": {
+                "on_trial": "Subscription in trial",
+                "active": "Active subscription",
+                "paused": "Subscription paused",
+                "past_due": "Payment pending: we are retrying the charge",
+                "unpaid": "Payment failed: update your payment method",
+                "cancelled": "Subscription cancelled",
+                "expired": "Subscription expired"
+            },
+            "renewsOn": "Renews on {date}.",
+            "endsOn": "You keep the plan until {date}. Then you move to Free without losing data.",
+            "trialTitle": "You are trying a paid plan",
+            "trialBody": "Until {date}. Then you move to Free without losing anything: you just can't grow past its limits.",
+            "manualTitle": "Billing handled by Vitalliz",
+            "manualBody": "Your plan is custom. For changes or invoices write to {email}.",
+            "manage": "Manage subscription",
+            "comparePlans": "Plans",
+            "fairUse": "\"Unlimited\" is subject to fair use. If your team goes over 150 active users, write to {email} and we'll build a plan for you."
+        }
+    },
+    "startPage": {
+        "title": "Start on the runner page?",
+        "description": "You are assigned to inventory areas. Do you want to open the runner page right after signing in, instead of the dashboard?",
+        "hint": "You can change this anytime in My account.",
+        "yes": "Yes, runner",
+        "no": "No, dashboard",
+        "saving": "Saving..."
+    },
+    "pricing": {
+        "title": "Pricing",
+        "subtitle": "One price per organization, not per user. Start free and grow when you need to.",
+        "interval": {
+            "label": "Billing period",
+            "monthly": "Monthly",
+            "yearly": "Yearly",
+            "saving": "2 months free"
+        },
+        "popular": "Most popular",
+        "taglines": {
+            "free": "To get started with a small team.",
+            "pro": "For businesses with several areas and staff.",
+            "business": "For large operations with unlimited staff."
+        },
+        "free": "Free",
+        "perMonth": "/mo",
+        "perYear": "/yr",
+        "yearlyEquivalent": "Same as {price} a month",
+        "rows": {
+            "users": "Users: {value}",
+            "departments": "Departments: {value}",
+            "items": "Products: {value}",
+            "history": "Report history: {days} days",
+            "historyFull": "Full report history",
+            "runner": "Runner, movements and undo"
+        },
+        "features": {
+            "department_assignment": "Assign staff to departments",
+            "export_csv": "Export reports to CSV",
+            "priority_support": "Priority support and onboarding"
+        },
+        "notIncluded": "not included",
+        "start": "Get started",
+        "startFree": "Start for free",
+        "current": "Your current plan",
+        "upgrade": "Switch to {plan}",
+        "contactToBuy": "Write to us to get this plan.",
+        "checkoutFailed": "The payment couldn't start. Try again.",
+        "faq": {
+            "flat": {
+                "title": "No per-user fees",
+                "body": "You pay per organization. Add all your staff without sharing accounts: every movement stays under the name of whoever made it."
+            },
+            "noLoss": {
+                "title": "You never lose data",
+                "body": "If you downgrade, everything is kept. You just can't add more past the new plan's limits."
+            },
+            "custom": {
+                "title": "Need more?",
+                "body": "We build custom plans for large operations. Write to us at {email}."
+            }
+        }
+    },
+    "checkout": {
+        "title": "We couldn't start the payment",
+        "toPlan": "See my plan",
+        "toHome": "Back to home"
+    },
+    "stats": {
+        "notComparable": "No previous period to compare",
+        "noChange": "no change",
+        "vsPrevious": "vs previous period",
+        "table": "Show as table",
+        "bucket": "Date",
+        "count": "Count",
+        "total": "{count} in the period",
+        "byHour": "By hour",
+        "byDay": "By day"
+    },
+    "stockAlerts": {
+        "subjectOne": "Low stock: {product}",
+        "subjectMany": "{count} products low on stock",
+        "left": "{amount} left",
+        "outOfStock": "Out of stock",
+        "minimum": "Minimum: {amount}",
+        "button": "View inventory",
+        "footer": "You get this alert for the organization {organization}. Admins can turn it off in Staff > Email alerts."
+    },
+    "scanner": {
+        "title": "Scan code",
+        "close": "Close",
+        "starting": "Opening the camera…",
+        "hint": "Point at the barcode or QR code",
+        "typeInstead": "Type the code",
+        "typeLabel": "Barcode or SKU",
+        "search": "Search",
+        "errors": {
+            "insecure": "The camera needs a secure connection (HTTPS). Type the code.",
+            "unsupported": "This browser can't use the camera. Type the code.",
+            "denied": "There's no permission to use the camera. Allow it in the browser or type the code.",
+            "noCamera": "No camera was found. Type the code.",
+            "failed": "The camera couldn't be opened. Type the code."
+        }
+    },
+    "held": {
+        "empty": "No held moves.",
+        "madeAt": "You recorded it offline: {time}",
+        "madeBy": "{name}, offline: {time}",
+        "reasons": {
+            "tooOld": "It was made more than 6 hours ago: the stock may have changed a lot since.",
+            "possibleDuplicate": "{name} recorded the same ({amount}) at {time}. Is it the same move? If so, discard it.",
+            "possibleDuplicateUnknown": "Someone else recorded the same shortly after. Is it the same move? If so, discard it.",
+            "insufficientStock": "There isn't enough stock for this out anymore. Check the real amount before applying it.",
+            "productGone": "The product was deleted or moved to another department.",
+            "notAllowed": "You no longer work in this department."
+        },
+        "apply": "Apply",
+        "discard": "Discard",
+        "dashboardTitle": "{count, plural, one {# held move} other {# held moves}}",
+        "dashboardIntro": "Moves made offline that didn't apply by themselves: yours and, if you manage stock, the ones their runner didn't review within 30 minutes."
+    },
+    "notifications": {
+        "label": "Notifications",
+        "labelWithCount": "Notifications ({count})",
+        "title": "Notifications",
+        "empty": "You're all caught up.",
+        "held": "{count, plural, one {# held move to review} other {# held moves to review}}",
+        "heldHint": "Made offline and not applied. Apply or discard them on the dashboard.",
+        "queued": "{count, plural, one {# move not sent yet} other {# moves not sent yet}}",
+        "queuedHint": "Saved on this device while offline. Open the runner with a connection to send them.",
+        "lowStock": "Low stock ({count})",
+        "outOfStock": "Out of stock",
+        "left": "{amount} left, minimum {minimum}",
+        "more": "{count, plural, one {See # more product} other {See # more products}}"
     }
 }

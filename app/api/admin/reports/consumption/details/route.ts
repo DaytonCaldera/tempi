@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/authorize';
 import { badRequest, getDb, notFound, toObjectId } from '@/lib/api';
 import { MOVEMENT_REASONS, PERMISSIONS } from '@/lib/constants';
+import { historyHeaders, reportRange } from '@/lib/consumption';
 import { getTenantQuery } from '@/lib/tenant-guard';
 
 /**
@@ -30,15 +31,16 @@ export async function GET(req: Request) {
     });
     if (!department) return notFound("productNotFound");
 
+    const { start: startDate, limitedFrom } = await reportRange(department.clientId, new Date(start));
     const logs = await db.collection('stock_movements')
         .find({
             inventoryId,
-            createdAt: { $gte: new Date(start), $lte: new Date(end) },
+            createdAt: { $gte: startDate, $lte: new Date(end) },
             // Movements created by the sync tool are not real consumption
             reason: { $ne: MOVEMENT_REASONS.INITIAL_SYNC }
         })
         .sort({ createdAt: -1 })
         .toArray();
 
-    return NextResponse.json(logs);
+    return NextResponse.json(logs, { headers: historyHeaders(limitedFrom) });
 }

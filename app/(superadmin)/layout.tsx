@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import "@/app/globals.css";
 import AuthProvider from "@/components/SessionProvider";
+import TimeZoneSync from "@/components/TimeZoneSync";
 import SuperadminNav from "@/components/superadmin/SuperadminNav";
 import { requireSuperadmin } from "@/lib/superadmin";
 import { THEME_SCRIPT } from "@/lib/theme-script";
@@ -13,7 +14,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("superadmin");
-    return { title: `${t("panel")} · Tempi`, robots: { index: false, follow: false } };
+    return { title: `${t("panel")} · Vitalliz`, robots: { index: false, follow: false } };
 }
 
 /**
@@ -33,6 +34,7 @@ export default async function SuperadminLayout({ children }: { children: React.R
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-canvas text-ink selection:bg-accent/30`}>
                 <AuthProvider>
                     <NextIntlClientProvider>
+                        <TimeZoneSync />
                         <div className="min-h-screen md:flex">
                             <SuperadminNav />
                             <main className="min-w-0 flex-1 p-4 md:p-10">

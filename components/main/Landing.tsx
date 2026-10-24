@@ -1,9 +1,10 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { ArrowRight, Check, Coffee, Moon, Sprout, Users } from "lucide-react";
 import LegalLinks from "@/components/legal/LegalLinks";
 import ThemeToggle from "@/components/ThemeToggle";
+import PricingTable from "@/components/plan/PricingTable";
+import type { PlanSummary } from "@/lib/plans";
 
 /** Rows of the closing report shown in the hero, keyed under "landing.moment.rows". */
 const MOMENT_ROWS = ["out", "used", "returned", "missing"] as const;
@@ -17,12 +18,10 @@ const GAINS = [
 
 function GetStarted({ label }: { label: string }) {
     return (
-        <form action={() => signIn("google")}>
-            <button className="group inline-flex items-center gap-2 rounded-full bg-inverse px-7 py-3.5 text-sm font-semibold text-on-inverse transition hover:bg-accent hover:text-on-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas">
-                {label}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </button>
-        </form>
+        <Link href="/login" className="group inline-flex items-center gap-2 rounded-full bg-inverse px-7 py-3.5 text-sm font-semibold text-on-inverse transition hover:bg-accent hover:text-on-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas">
+            {label}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </Link>
     );
 }
 
@@ -30,10 +29,19 @@ function GetStarted({ label }: { label: string }) {
  * Public home page. It sells the outcome (the calm of a day that closes with numbers that add up),
  * not the feature list: visitors should picture themselves after the event, not learn the screens.
  */
-export default function Landing() {
+export default function Landing({ plans }: { plans: PlanSummary[] }) {
     const t = useTranslations("landing");
+    const tPricing = useTranslations("pricing");
     return (
         <div className="text-left font-(family-name:--font-geist-sans) overflow-x-clip">
+            <header className="flex items-center justify-between gap-4">
+                <Link href="/" className="text-sm font-bold tracking-[0.2em] text-ink">VITALLIZ</Link>
+                <nav className="flex items-center gap-5 text-sm font-medium">
+                    {plans.length > 0 && <a href="#pricing" className="text-ink-muted hover:text-ink">{tPricing("title")}</a>}
+                    <Link href="/login" className="rounded-full border border-line px-4 py-2 text-ink hover:border-line-strong">{t("signIn")}</Link>
+                </nav>
+            </header>
+
             {/* Hero: the promise, next to the moment it comes true */}
             <section className="grid items-center gap-14 pt-6 pb-24 md:grid-cols-[1.15fr_1fr] md:pt-16">
                 <div>
@@ -114,6 +122,20 @@ export default function Landing() {
                     ))}
                 </div>
             </section>
+
+            {/* Prices, so visitors can pick a plan and pay without asking anyone (/checkout) */}
+            {plans.length > 0 && (
+                <section id="pricing" className="scroll-mt-8 border-t border-line py-24">
+                    <div className="mx-auto mb-12 max-w-2xl text-center">
+                        <h2 className="mb-3 text-3xl font-semibold tracking-tight md:text-4xl">{tPricing("title")}</h2>
+                        <p className="text-ink-muted">{tPricing("subtitle")}</p>
+                    </div>
+                    <PricingTable plans={plans} mode="public" />
+                    <p className="mt-8 text-center text-sm">
+                        <Link href="/pricing" className="text-ink-muted underline hover:text-ink">{t("pricingDetails")}</Link>
+                    </p>
+                </section>
+            )}
 
             {/* Closing call */}
             <section className="flex flex-col items-center border-t border-line py-24 text-center">

@@ -1,6 +1,5 @@
 import { useFormatter, useTranslations } from "next-intl";
 import type { ConsumptionReportDepartment } from "@/types/models";
-import type { DateRange } from "./useConsumptionReport";
 
 // Next.js layouts use fixed-height, scrolling containers; reset them so the browser prints every page
 const PRINT_STYLES = `
@@ -20,16 +19,19 @@ const PRINT_STYLES = `
 
 interface PrintableReportProps {
     title: string;
-    range: DateRange;
+    /** The instants the report covers (null until both dates are picked) */
+    bounds: { start: Date; end: Date } | null;
     data: ConsumptionReportDepartment[];
     showDepartmentNames: boolean;
+    currency: string;
 }
 
 /** Plain-table version of the report, hidden on screen and shown only when printing. */
-export function PrintableReport({ title, range, data, showDepartmentNames }: PrintableReportProps) {
+export function PrintableReport({ title, bounds, data, showDepartmentNames, currency }: PrintableReportProps) {
     const t = useTranslations("reports");
     const format = useFormatter();
     const formatDate = (date: Date) => format.dateTime(date, { dateStyle: "medium", timeStyle: "short" });
+    const money = (value: number) => format.number(value, { style: "currency", currency, currencyDisplay: "narrowSymbol" });
 
     return (
         <>
@@ -39,7 +41,7 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                 <div className="mb-8 border-b-2 border-black pb-4">
                     <h1 className="text-3xl font-black uppercase tracking-tight">{title}</h1>
                     <p className="text-[1rem] font-bold mt-2 text-gray-700">
-                        {t("printView.range", { start: formatDate(new Date(range.start)), end: formatDate(new Date(range.end)) })}
+                        {bounds && t("printView.range", { start: formatDate(bounds.start), end: formatDate(bounds.end) })}
                     </p>
                     <p className="text-[1rem] mt-1 text-gray-600">
                         {t("printView.generated", { date: formatDate(new Date()) })}
@@ -66,6 +68,8 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                     <th className="py-3 px-2 font-black text-center">{t("columns.initial")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.in")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.out")}</th>
+                                    <th className="py-3 px-2 font-black text-center">{t("columns.transfers")}</th>
+                                    <th className="py-3 px-2 font-black text-right">{t("columns.consumedValue")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.balance")}</th>
                                     <th className="py-3 px-2 font-black text-center">{t("columns.final")}</th>
                                 </tr>
@@ -78,6 +82,12 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                         <td className="py-3 px-2 text-center text-gray-600">{item.initialQuantity}</td>
                                         <td className="py-3 px-2 text-center font-bold text-green-700">+{item.totalIn}</td>
                                         <td className="py-3 px-2 text-center font-bold text-red-700">-{item.totalOut}</td>
+                                        <td className="py-3 px-2 text-center text-gray-600 whitespace-nowrap">
+                                            {item.transferIn || item.transferOut ? `+${item.transferIn} / −${item.transferOut}` : "—"}
+                                        </td>
+                                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                                            {item.consumedValue || !item.consumedValueIncomplete ? money(item.consumedValue) : "—"}
+                                        </td>
                                         <td className="py-3 px-2 text-center font-bold">
                                             {item.finalBalance > 0 ? `+${item.finalBalance}` : item.finalBalance}
                                         </td>
@@ -86,6 +96,9 @@ export function PrintableReport({ title, range, data, showDepartmentNames }: Pri
                                 ))}
                             </tbody>
                         </table>
+                        <p className="mt-2 text-right font-bold">
+                            {t.rich("departmentConsumedValue", { value: money(department.items.reduce((sum, item) => sum + item.consumedValue, 0)), b: (chunks) => <span>{chunks}</span> })}
+                        </p>
                     </div>
                 ))}
             </div>

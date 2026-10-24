@@ -42,5 +42,5 @@ export function useDepartmentStock(departmentId: string, initialInventory: Stock
         }
     };
 
-    return { inventory, quickMove, remove };
+    return { inventory, quickMove, remove, refresh: () => mutate() };
 }

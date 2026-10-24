@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
-import { Building2, HeartPulse, LayoutDashboard, LifeBuoy, LogOut, ScrollText, ShieldCheck, UserRound, Users } from "lucide-react";
+import { Building2, CreditCard, HeartPulse, LayoutDashboard, LifeBuoy, LogOut, ScrollText, ShieldCheck, UserRound, Users } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -12,6 +12,7 @@ const ITEMS = [
     { href: "/superadmin/health", labelKey: "health", icon: HeartPulse },
     { href: "/superadmin/organizations", labelKey: "organizations", icon: Building2 },
     { href: "/superadmin/users", labelKey: "users", icon: Users },
+    { href: "/superadmin/plans", labelKey: "plans", icon: CreditCard },
     { href: "/superadmin/support", labelKey: "support", icon: LifeBuoy },
     { href: "/superadmin/audit", labelKey: "audit", icon: ScrollText },
 ] as const;
@@ -29,7 +30,7 @@ export default function SuperadminNav() {
                     <ShieldCheck className="text-on-inverse" size={20} aria-hidden />
                 </div>
                 <div>
-                    <p className="text-lg font-semibold leading-tight tracking-tight">TEMPI</p>
+                    <p className="text-lg font-semibold leading-tight tracking-tight">VITALLIZ</p>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-subtle">{t("panel")}</p>
                 </div>
             </div>

@@ -1,19 +1,16 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Package, Hash, Ruler, RefreshCw } from "lucide-react";
+import { Package, Hash, Ruler, RefreshCw, Barcode, ScanBarcode, Coins } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import BarcodeScanner from "@/components/scanner/BarcodeScanner";
+import { usePlanLimitDialog } from "@/components/admin/PlanLimitDialog";
 import { STOCK_UNITS } from "@/lib/constants";
+import { generateSKU } from "@/lib/sku";
 import type { StockRow } from "./useDepartmentStock";
 
-export type StockItemForm = { name: string; sku: string; unit: string; quantity: number; minStock: number };
-
-/** Random SKU with the department prefix, e.g. "LOG-4832". */
-export const generateSKU = (departmentName: string) => {
-    const prefix = departmentName.substring(0, 3).toUpperCase().replace(/\s/g, 'X');
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    return `${prefix}-${randomNum}`;
-};
+/** unitCost as typed: "" for no cost */
+export type StockItemForm = { name: string; sku: string; barcode: string; unit: string; quantity: number; minStock: number; unitCost: string };
 
 interface StockItemModalProps {
     isOpen: boolean;
@@ -21,6 +18,10 @@ interface StockItemModalProps {
     editingItem: StockRow | null;
     departmentId: string;
     departmentName: string;
+    /** Barcode a new product starts with (a code the runner scanned and didn't find) */
+    initialBarcode?: string;
+    /** The organization's currency, shown next to the cost */
+    currency: string;
     onClose: () => void;
     onSaved: () => void;
 }
@@ -29,18 +30,20 @@ interface StockItemModalProps {
  * Create/edit form for a product. Quantity is only set on creation, later it changes through stock moves.
  * The parent gives it a new `key` each time it opens, so the form starts from the item's current values.
  */
-export function StockItemModal({ isOpen, editingItem, departmentId, departmentName, onClose, onSaved }: StockItemModalProps) {
+export function StockItemModal({ isOpen, editingItem, departmentId, departmentName, initialBarcode = "", currency, onClose, onSaved }: StockItemModalProps) {
     const t = useTranslations("stock.form");
     const tCommon = useTranslations("common");
     const tErrors = useTranslations("errors");
     const tUnits = useTranslations("units");
     const isEditing = !!editingItem;
     const [isSaving, setIsSaving] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
+    const { handlePlanError, planDialog } = usePlanLimitDialog();
     const [formData, setFormData] = useState<StockItemForm>(() => editingItem
-        ? { name: editingItem.productName, sku: editingItem.sku, unit: editingItem.unit, quantity: editingItem.quantity, minStock: editingItem.minStock }
-        : { name: "", sku: generateSKU(departmentName), unit: STOCK_UNITS[0], quantity: 0, minStock: 5 });
+        ? { name: editingItem.productName, sku: editingItem.sku, barcode: editingItem.barcode ?? "", unit: editingItem.unit, quantity: editingItem.quantity, minStock: editingItem.minStock, unitCost: editingItem.unitCost?.toString() ?? "" }
+        : { name: "", sku: generateSKU(departmentName), barcode: initialBarcode, unit: STOCK_UNITS[0], quantity: 0, minStock: 5, unitCost: "" });
 
-    const update = (changes: Partial<StockItemForm>) => setFormData({ ...formData, ...changes });
+    const update = (changes: Partial<StockItemForm>) => setFormData(current => ({ ...current, ...changes }));
 
     const handleSave = async () => {
         if (!formData.name || !formData.sku) {
@@ -62,7 +65,10 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                 }
             );
             if (res.ok) onSaved();
-            else alert((await res.json()).error || tErrors("saveFailed"));
+            else {
+                const data = await res.json().catch(() => ({}));
+                if (!handlePlanError(data)) alert(data.error || tErrors("saveFailed"));
+            }
         } catch (error) {
             console.error("Error saving stock:", error);
         } finally {
@@ -133,6 +139,34 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                     </div>
                 </div>
 
+                {/* BARCODE: optional, typed, read with a USB/Bluetooth scanner (it types it) or with the camera */}
+                <div>
+                    <label htmlFor="product-barcode" className="text-[10px] font-bold text-ink-subtle uppercase mb-1.5 block ml-1">{t("barcode")}</label>
+                    <div className="relative flex items-center">
+                        <Barcode className="absolute left-4 text-ink-subtle" size={16} aria-hidden />
+                        <input
+                            id="product-barcode"
+                            type="text"
+                            autoComplete="off"
+                            className="w-full bg-subtle border border-line rounded-xl py-3 pl-12 pr-12 text-sm font-mono outline-none focus:border-accent transition-all"
+                            placeholder={t("barcodePlaceholder")}
+                            value={formData.barcode}
+                            // A scanner ends with Enter: keep it from submitting anything
+                            onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                            onChange={(e) => update({ barcode: e.target.value })}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setIsScanning(true)}
+                            className="absolute right-3 p-1.5 text-ink-subtle hover:text-accent transition-colors"
+                            title={t("scanBarcode")}
+                            aria-label={t("scanBarcode")}
+                        >
+                            <ScanBarcode size={16} />
+                        </button>
+                    </div>
+                </div>
+
                 <hr className="border-line my-2" />
 
                 <div className="grid grid-cols-2 gap-4">
@@ -162,6 +196,25 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                     </div>
                 </div>
 
+                {/* COST: optional; it values the stock and what is consumed. A new cost applies from now on */}
+                <div>
+                    <label htmlFor="product-cost" className="text-[10px] font-bold text-ink-subtle uppercase mb-1.5 block ml-1">{t("unitCost", { currency })}</label>
+                    <div className="relative">
+                        <Coins className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-subtle" size={16} aria-hidden />
+                        <input
+                            id="product-cost"
+                            type="text"
+                            inputMode="decimal"
+                            autoComplete="off"
+                            className="w-full bg-subtle border border-line rounded-xl py-3 pl-12 pr-4 text-sm outline-none focus:border-accent transition-all"
+                            placeholder={t("unitCostPlaceholder")}
+                            value={formData.unitCost}
+                            onChange={(e) => update({ unitCost: e.target.value })}
+                        />
+                    </div>
+                    {isEditing && <p className="mt-1 ml-1 text-[11px] text-ink-subtle">{t("unitCostHint")}</p>}
+                </div>
+
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
@@ -170,6 +223,8 @@ export function StockItemModal({ isOpen, editingItem, departmentId, departmentNa
                     {isSaving ? tCommon("saving") : isEditing ? tCommon("saveChanges") : t("register")}
                 </button>
             </div>
+            {planDialog}
+            <BarcodeScanner open={isScanning} onClose={() => setIsScanning(false)} onDetected={(code) => update({ barcode: code })} />
         </Modal>
     );
 }

@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/authorize";
 import { PERMISSIONS } from "@/lib/constants";
-import { apiError, badRequest, getDb, notFound, serverError, toObjectId } from "@/lib/api";
+import { apiError, badRequest, getDb, isDuplicateKeyError, notFound, serverError, toObjectId } from "@/lib/api";
 import { findOwnDepartment } from "@/lib/departments";
+import { normalizeBarcode } from "@/lib/sku";
+import { normalizeCost } from "@/lib/currency";
+import { afterStockChange } from "@/lib/stock-alerts";
 
 type Params = { params: Promise<{ id: string; stockId: string }> };
 
 /**
  * PUT /api/admin/departments/[id]/stock/[stockId]
- * Updates a stock item's descriptive fields (name, SKU, unit, minStock).
+ * Updates a stock item's descriptive fields (name, SKU, barcode, unit, minStock, unitCost). An empty barcode or
+ * cost removes it. A new cost applies from now on: past movements keep the cost they had.
  * Quantity is NOT changed here: quantity changes go through /api/admin/inventory/[id]/move
  * so they are recorded in stock_movements.
  */
@@ -20,9 +24,14 @@ export async function PUT(req: Request, { params }: Params) {
         const { id, stockId } = await params;
         const departmentId = toObjectId(id);
         const itemId = toObjectId(stockId);
-        const { name, sku, unit, minStock } = await req.json();
+        const { name, sku, unit, minStock, barcode: rawBarcode, unitCost: rawCost } = await req.json();
 
         if (!name || !sku) return badRequest("nameAndSkuRequired");
+        const barcode = normalizeBarcode(rawBarcode);
+        if (barcode === false) return badRequest("invalidBarcode");
+        // Left as it is when the request doesn't mention it
+        const unitCost = rawCost === undefined ? undefined : normalizeCost(rawCost);
+        if (unitCost === false) return badRequest("invalidCost");
         if (!departmentId || !itemId) return notFound("productNotFoundOrDenied");
 
         const db = await getDb();
@@ -34,13 +43,30 @@ export async function PUT(req: Request, { params }: Params) {
         ]);
         if (!item || !department) return notFound("productNotFoundOrDenied");
 
-        const duplicate = await stock.findOne({ _id: { $ne: itemId }, departmentId, sku });
+        // Deleted products don't hold on to their SKU
+        const duplicate = await stock.findOne({ _id: { $ne: itemId }, departmentId, sku, isDeleted: { $ne: true } });
         if (duplicate) return apiError("duplicateSku", 409);
+        if (barcode && await stock.findOne({ _id: { $ne: itemId }, departmentId, barcode, isDeleted: { $ne: true } })) {
+            return apiError("duplicateBarcode", 409);
+        }
 
-        await stock.updateOne(
-            { _id: itemId },
-            { $set: { productName: name, sku, unit, minStock, updatedAt: new Date() } }
-        );
+        try {
+            await stock.updateOne(
+                { _id: itemId },
+                {
+                    $set: { productName: name, sku, unit, minStock, updatedAt: new Date(), ...(barcode && { barcode }), ...(typeof unitCost === "number" && { unitCost }) },
+                    // Unset rather than "": the unique barcode index only covers products that have one
+                    ...((!barcode || unitCost === null) && { $unset: { ...(!barcode && { barcode: "" }), ...(unitCost === null && { unitCost: "" }) } }),
+                }
+            );
+        } catch (error) {
+            if (isDuplicateKeyError(error, "barcode")) return apiError("duplicateBarcode", 409);
+            if (isDuplicateKeyError(error)) return apiError("duplicateSku", 409);
+            throw error;
+        }
+
+        // A new minimum can put the product below it, or above it again
+        if (Number(minStock) !== item.minStock) await afterStockChange(req, [itemId]);
 
         const updatedItem = await stock.findOne({ _id: itemId });
         return NextResponse.json({ success: true, item: updatedItem });

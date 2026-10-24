@@ -13,9 +13,13 @@ import { LayoutGrid, ChevronLeft, Building2 } from "lucide-react";
 
 /**
  * `labelKey` is a key of the "nav" messages. `requiresOrganization` hides the item while the user has no
- * active organization (e.g. right after closing their last one, on the account page).
+ * active organization (e.g. right after closing their last one, on the account page). `requiresAssignedAreas`
+ * shows it only to users assigned to departments in the active organization (runners).
  */
-type MenuItem = { href: string; labelKey: string; icon: string; permission?: string; requiresOrganization?: boolean };
+type MenuItem = {
+    href: string; labelKey: string; icon: string; permission?: string;
+    requiresOrganization?: boolean; requiresAssignedAreas?: boolean;
+};
 
 export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
     const t = useTranslations("nav");
@@ -34,6 +38,10 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
     };
 
     const hasOrganization = !!session?.user?.clientId;
+    const hasAssignedAreas = !!session?.user?.organizations
+        ?.find(m => m.clientId === session.user.clientId)?.departments?.length;
+    const isVisible = (item: MenuItem) =>
+        (hasOrganization || !item.requiresOrganization) && (hasAssignedAreas || !item.requiresAssignedAreas);
 
     return (
         <>
@@ -58,7 +66,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                             <LayoutGrid className="text-on-accent" size={20} />
                         </div>
                         <span className={`text-xl font-semibold tracking-tight transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>
-                            TEMPI
+                            VITALLIZ
                         </span>
                     </div>
                     
@@ -97,7 +105,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        {items.filter(item => hasOrganization || !item.requiresOrganization).map(item => (
+                                        {items.filter(isVisible).map(item => (
                                             <SidebarItem
                                                 key={item.href}
                                                 href={item.href}
