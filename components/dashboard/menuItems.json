@@ -10,6 +10,12 @@
             "labelKey": "dashboard",
             "icon": "LayoutDashboard",
             "requiresOrganization": true
+        },
+        {
+            "href": "/runner",
+            "labelKey": "runner",
+            "icon": "Boxes",
+            "requiresAssignedAreas": true
         }
     ],
     "admin": [

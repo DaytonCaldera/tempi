@@ -18,7 +18,6 @@ export interface SyncState {
 
 interface RunnerHeaderProps {
     assignedAreaCount: number;
-    canOpenDashboard: boolean;
     sync: SyncState;
 }
 
@@ -55,7 +54,7 @@ function SyncStatus({ isValidating, hasError, lastUpdated }: SyncState) {
 }
 
 /** Dashboard, language, theme and sign out, behind a ⋯ button so they don't compete with the stock list. */
-function HeaderMenu({ canOpenDashboard }: { canOpenDashboard: boolean }) {
+function HeaderMenu() {
     const t = useTranslations('runner');
     const tCommon = useTranslations('common');
     const tTheme = useTranslations('theme');
@@ -98,11 +97,9 @@ function HeaderMenu({ canOpenDashboard }: { canOpenDashboard: boolean }) {
 
             {isOpen && (
                 <div role="menu" className="absolute right-0 top-full mt-2 z-50 w-56 bg-card rounded-2xl border border-line shadow-2xl p-1.5">
-                    {canOpenDashboard && (
-                        <Link href="/dashboard" role="menuitem" className={`${itemClass} text-ink-muted`}>
-                            <LayoutDashboard size={18} className="text-ink-subtle" /> {tCommon('dashboard')}
-                        </Link>
-                    )}
+                    <Link href="/dashboard" role="menuitem" className={`${itemClass} text-ink-muted`}>
+                        <LayoutDashboard size={18} className="text-ink-subtle" /> {tCommon('dashboard')}
+                    </Link>
 
                     <p className={sectionClass}>
                         <Globe size={14} /> {t('language')}
@@ -146,7 +143,7 @@ function HeaderMenu({ canOpenDashboard }: { canOpenDashboard: boolean }) {
     );
 }
 
-export default function RunnerHeader({ assignedAreaCount, canOpenDashboard, sync }: RunnerHeaderProps) {
+export default function RunnerHeader({ assignedAreaCount, sync }: RunnerHeaderProps) {
     const t = useTranslations('runner');
 
     return (
@@ -159,7 +156,7 @@ export default function RunnerHeader({ assignedAreaCount, canOpenDashboard, sync
                     </p>
                     <SyncStatus {...sync} />
                 </div>
-                <HeaderMenu canOpenDashboard={canOpenDashboard} />
+                <HeaderMenu />
             </div>
         </header>
     );

@@ -95,6 +95,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				session.user.permissions = token.permissions;
 				session.user.organizations = token.organizations;
 				session.user.activeOrganization = token.clientId ?? undefined;
+				session.user.startPage = token.startPage ?? null;
 			}
 			return session;
 		},
@@ -178,7 +179,7 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 		userDoc = await findUserByEmail(token.email, { fresh: true });
 	}
 
-	const noAccess = { role: ROLES.NEW_USER, clientId: null, activeOrganization: null, permissions: {}, organizations: [] };
+	const noAccess = { role: ROLES.NEW_USER, clientId: null, activeOrganization: null, permissions: {}, organizations: [], startPage: null };
 
 	// Deleted or globally disabled account
 	if (!userDoc || userDoc.isActive === false) return { ...noAccess, isActive: false };
@@ -211,6 +212,7 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 		activeOrganization: membership.clientId.toString(),
 		permissions: await permissionsFor(token, role),
 		organizations: toSessionMemberships(memberships),
+		startPage: userDoc.startPage ?? null,
 		isActive: true,
 	};
 }

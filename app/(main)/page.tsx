@@ -18,7 +18,7 @@ function Loading() {
 
 /**
  * Entry point. Logged-out visitors see the landing page, pending users wait for approval here,
- * and everyone else is sent to the page for their role.
+ * and everyone else is sent to the dashboard, or to the runner page if they chose it as their start page.
  */
 export default function Home() {
   const { data: session, status } = useSession()
@@ -37,7 +37,8 @@ export default function Home() {
       // No organization yet: create or join one
       router.replace("/lobby");
     } else if (role !== ROLES.PENDING_USER) {
-      router.replace("/runner");
+      // Runners choose their start page on the dashboard (see StartPagePrompt)
+      router.replace(session?.user?.startPage === "runner" ? "/runner" : "/dashboard");
     }
   }, [session, status, router])
 

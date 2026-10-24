@@ -1,9 +1,9 @@
 'use client';
 import Link from "next/link";
-import { CheckSquare, Home, Layers, LayoutDashboard, Package, Users, type LucideIcon } from "lucide-react";
+import { Boxes, CheckSquare, Home, Layers, LayoutDashboard, Package, Users, type LucideIcon } from "lucide-react";
 
 // Icons that menuItems.json can reference by name. Add new ones here.
-const ICONS: Record<string, LucideIcon> = { CheckSquare, Home, Layers, LayoutDashboard, Users };
+const ICONS: Record<string, LucideIcon> = { Boxes, CheckSquare, Home, Layers, LayoutDashboard, Users };
 
 type SidebarItemProps = {
     href: string;

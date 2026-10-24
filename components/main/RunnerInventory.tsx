@@ -4,7 +4,7 @@ import { MapPin, X, AlertCircle, Undo2 } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { useTranslations } from "next-intl";
 import { fetcher, STOCK_REFRESH_INTERVAL } from "@/lib/fetcher";
-import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
+import { MOVEMENT_REASONS } from "@/lib/constants";
 import RunnerHeader from "@/components/main/runner/RunnerHeader";
 import QuantityToolbar from "@/components/main/runner/QuantityToolbar";
 import StockRow from "@/components/main/runner/StockRow";
@@ -15,8 +15,6 @@ type Item = StockItem<string>;
 interface RunnerInventoryProps {
     initialItems: Item[];
     assignedAreaCount: number;
-    userRole: string;
-    permissions: Record<string, boolean>;
 }
 
 /** A completed move (that can be undone), an undone one, or a move that failed. */
@@ -57,7 +55,7 @@ async function sendMove(id: string, type: MovementType, amount: number, reason: 
     return body;
 }
 
-export default function RunnerInventory({ initialItems, assignedAreaCount, userRole, permissions }: RunnerInventoryProps) {
+export default function RunnerInventory({ initialItems, assignedAreaCount }: RunnerInventoryProps) {
     const t = useTranslations('runner');
     const tCommon = useTranslations('common');
 
@@ -104,7 +102,6 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
         );
         return groupByDepartment(filteredItems, fallbackName);
     }, [items, activeDepartment, deferredSearch, fallbackName]);
-    const canOpenDashboard = userRole === ROLES.ADMIN || permissions.view_dashboard === true;
 
     const setPending = (id: string, pending: boolean) => setPendingIds(ids => {
         const next = new Set(ids);
@@ -164,7 +161,6 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, userR
         <>
             <RunnerHeader
                 assignedAreaCount={assignedAreaCount}
-                canOpenDashboard={canOpenDashboard}
                 sync={{ isValidating, hasError: !!error, lastUpdated }}
             />
 

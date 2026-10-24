@@ -22,6 +22,9 @@ export interface Membership<Id = ObjectId> {
 /** Membership as stored in the session/JWT, with ids as strings. */
 export type SessionMembership = Membership<string>;
 
+/** Page a user lands on after signing in. Missing until a runner answers the prompt on the dashboard. */
+export type StartPage = "runner" | "dashboard";
+
 export interface User {
     _id: ObjectId;
     name: string;
@@ -30,6 +33,7 @@ export interface User {
     isActive: boolean;
     organizations: Membership[];
     activeOrganization?: ObjectId | null;
+    startPage?: StartPage;
 }
 
 /** An organization. Stored in the "clients" collection. */

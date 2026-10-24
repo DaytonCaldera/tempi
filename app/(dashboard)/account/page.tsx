@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ROLES } from "@/lib/constants";
+import { assignedDepartmentIds } from "@/lib/departments";
 import { ownedOpenOrganizations } from "@/lib/organizations";
 import AccountClient from "./AccountClient";
 
@@ -20,6 +21,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 ownedOrganizations={owned.map(o => ({ _id: o._id.toString(), name: o.name }))}
                 justClosedOrganization={closed === "1"}
                 canDeleteAccount={session.user.role !== ROLES.SUPERADMIN}
+                canChooseStartPage={assignedDepartmentIds(session).length > 0}
             />
         </div>
     );

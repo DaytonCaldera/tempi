@@ -100,6 +100,7 @@
         },
         "home": "Home",
         "dashboard": "Dashboard",
+        "runner": "Runner",
         "departments": "Departments",
         "staff": "Staff",
         "toggleSidebar": "Toggle sidebar",
@@ -576,7 +577,8 @@
         "preferences": {
             "title": "Preferences",
             "language": "Language",
-            "theme": "Theme"
+            "theme": "Theme",
+            "startPage": "Start page"
         },
         "organizations": {
             "title": "My organizations",
@@ -1025,5 +1027,13 @@
         "full": "Limit reached",
         "over": "Over the limit: nothing is removed, but you can't add more",
         "contact": "To change your plan, contact {email}."
+    },
+    "startPage": {
+        "title": "Start on the runner page?",
+        "description": "You are assigned to inventory areas. Do you want to open the runner page right after signing in, instead of the dashboard?",
+        "hint": "You can change this anytime in My account.",
+        "yes": "Yes, runner",
+        "no": "No, dashboard",
+        "saving": "Saving..."
     }
 }

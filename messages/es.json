@@ -100,6 +100,7 @@
         },
         "home": "Inicio",
         "dashboard": "Panel de control",
+        "runner": "Runner",
         "departments": "Departamentos",
         "staff": "Personal",
         "toggleSidebar": "Mostrar u ocultar menú",
@@ -576,7 +577,8 @@
         "preferences": {
             "title": "Preferencias",
             "language": "Idioma",
-            "theme": "Tema"
+            "theme": "Tema",
+            "startPage": "Página de inicio"
         },
         "organizations": {
             "title": "Mis organizaciones",
@@ -1025,5 +1027,13 @@
         "full": "Límite alcanzado",
         "over": "Por encima del límite: no se quita nada, pero no puedes añadir más",
         "contact": "Para cambiar tu plan, escribe a {email}."
+    },
+    "startPage": {
+        "title": "¿Empezar en la página de runner?",
+        "description": "Tienes áreas de inventario asignadas. ¿Quieres abrir la página de runner al iniciar sesión, en lugar del panel de control?",
+        "hint": "Puedes cambiarlo cuando quieras en Mi cuenta.",
+        "yes": "Sí, runner",
+        "no": "No, panel de control",
+        "saving": "Guardando..."
     }
 }

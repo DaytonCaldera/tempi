@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, ArrowRight } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { assignedDepartmentIds } from '@/lib/departments';
+import StartPagePrompt from '@/components/dashboard/StartPagePrompt';
 
 export default async function Dashboard() {
 
@@ -16,6 +18,9 @@ export default async function Dashboard() {
     if (session.user.role === ROLES.PENDING_USER) {
         redirect("/");
     }
+
+    // Runners pick once whether they land here or on the runner page after signing in
+    const askStartPage = !session.user.startPage && assignedDepartmentIds(session).length > 0;
 
     const t = await getTranslations('dashboard');
     const tCommon = await getTranslations('common');
@@ -34,6 +39,7 @@ export default async function Dashboard() {
                     <ArrowRight className="mt-6 h-4 w-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
                 </Link>
             </div>
+            {askStartPage && <StartPagePrompt />}
         </div>
     );
 }

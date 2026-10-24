@@ -35,8 +35,6 @@ export default async function RunnerPage() {
             <RunnerInventory
                 initialItems={await assignedStock(session)}
                 assignedAreaCount={departmentIds.length}
-                userRole={session.user.role}
-                permissions={session.user.permissions ?? {}}
             />
         </div>
     );

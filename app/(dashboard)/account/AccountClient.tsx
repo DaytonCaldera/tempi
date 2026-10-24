@@ -9,19 +9,23 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { localeNames, locales } from "@/i18n/config";
 import { useLocaleSwitcher } from "@/i18n/useLocaleSwitcher";
 import { labelOf } from "@/i18n/labels";
-import type { SessionMembership } from "@/types/models";
+import type { SessionMembership, StartPage } from "@/types/models";
 
 interface AccountClientProps {
     /** Open organizations the user owns: they can't leave them, and they block deleting the account. */
     ownedOrganizations: { _id: string; name: string }[];
     justClosedOrganization: boolean;
     canDeleteAccount: boolean;
+    /** Runners (users with assigned areas) choose whether they land on the dashboard or the runner page. */
+    canChooseStartPage: boolean;
 }
+
+const START_PAGES: StartPage[] = ["dashboard", "runner"];
 
 const card = "bg-card p-8 rounded-3xl border border-line";
 const eyebrow = "text-[10px] font-semibold text-ink-subtle uppercase tracking-[0.2em] mb-4";
 
-export default function AccountClient({ ownedOrganizations, justClosedOrganization, canDeleteAccount }: AccountClientProps) {
+export default function AccountClient({ ownedOrganizations, justClosedOrganization, canDeleteAccount, canChooseStartPage }: AccountClientProps) {
     const t = useTranslations("account");
     const tNav = useTranslations("nav");
     const tRoles = useTranslations("roles");
@@ -61,6 +65,17 @@ export default function AccountClient({ ownedOrganizations, justClosedOrganizati
             body: JSON.stringify({ clientId }),
         });
         await enterOrganization(clientId);
+    };
+
+    const handleStartPage = async (startPage: StartPage) => {
+        setLoading(true);
+        await fetch("/api/user/start-page", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ startPage }),
+        });
+        await update(); // Re-reads the user, so the session shows the new choice
+        setLoading(false);
     };
 
     const handleLeave = async () => {
@@ -164,6 +179,28 @@ export default function AccountClient({ ownedOrganizations, justClosedOrganizati
                         <p className="text-sm font-semibold text-ink">{t("preferences.theme")}</p>
                         <ThemeToggle />
                     </div>
+                    {canChooseStartPage && (
+                        <div className="flex items-center justify-between gap-4">
+                            <p className="text-sm font-semibold text-ink">{t("preferences.startPage")}</p>
+                            <div role="radiogroup" aria-label={t("preferences.startPage")} className="inline-flex gap-0.5 rounded-full border border-line bg-card p-1">
+                                {START_PAGES.map(page => {
+                                    const isSelected = (session?.user?.startPage ?? "dashboard") === page;
+                                    return (
+                                        <button
+                                            key={page}
+                                            role="radio"
+                                            aria-checked={isSelected}
+                                            onClick={() => !isSelected && handleStartPage(page)}
+                                            disabled={loading}
+                                            className={`px-3 h-7 rounded-full text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 ${isSelected ? "bg-subtle text-ink" : "text-ink-subtle hover:text-ink"}`}
+                                        >
+                                            {tNav(page)}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </section>
 
