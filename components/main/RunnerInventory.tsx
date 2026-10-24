@@ -10,6 +10,11 @@ import RunnerHeader from "@/components/main/runner/RunnerHeader";
 import QuantityToolbar from "@/components/main/runner/QuantityToolbar";
 import StockRow from "@/components/main/runner/StockRow";
 import BarcodeScanner from "@/components/scanner/BarcodeScanner";
+import PendingQueue from "@/components/main/runner/PendingQueue";
+import HeldList from "@/components/held/HeldList";
+import { Modal } from "@/components/ui/Modal";
+import type { HeldView } from "@/lib/offline-sync-server";
+import { useOfflineQueue, withPending } from "@/components/main/runner/useOfflineQueue";
 import type { MovementType, StockItem } from "@/types/models";
 
 type Item = StockItem<string>;
@@ -19,11 +24,14 @@ interface RunnerInventoryProps {
     assignedAreaCount: number;
     /** Admins: an unknown barcode offers to create the product with it */
     canCreateProducts?: boolean;
+    /** Whose offline queue this is (a shared phone keeps each runner's apart) */
+    userEmail: string;
 }
 
 /** A completed move (that can be undone), an undone one, a move that failed, or a scanned code nothing has. */
 type Toast =
-    | { kind: 'moved'; item: Item; type: MovementType; amount: number }
+    // queuedId: made without connection, still in the queue (undo cancels it)
+    | { kind: 'moved'; item: Item; type: MovementType; amount: number; queuedId?: string }
     | { kind: 'undone'; productName: string }
     | { kind: 'error'; message: string }
     | { kind: 'notFound'; code: string; createHref: string | null };
@@ -61,19 +69,23 @@ const setQuantity = (items: Item[] = [], id: string, quantity: (current: number)
 
 type MoveResult = { newQuantity: number };
 
-/** PATCHes the move; throws with the server's (translated) error message, or an empty one on network errors. */
+/** The move didn't reach the server at all: no connection. It goes to the offline queue. */
+class NetworkError extends Error {}
+
+/** PATCHes the move; throws with the server's (translated) error message, or a NetworkError without connection. */
 async function sendMove(id: string, type: MovementType, amount: number, reason: string): Promise<MoveResult> {
     const res = await fetch(`/api/admin/inventory/${id}/move`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, type, reason })
     }).catch(() => null);
-    const body = await res?.json().catch(() => null);
-    if (!res?.ok) throw new Error(body?.error ?? "");
+    if (!res) throw new NetworkError();
+    const body = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(body?.error ?? "");
     return body;
 }
 
-export default function RunnerInventory({ initialItems, assignedAreaCount, canCreateProducts = false }: RunnerInventoryProps) {
+export default function RunnerInventory({ initialItems, assignedAreaCount, canCreateProducts = false, userEmail }: RunnerInventoryProps) {
     const t = useTranslations('runner');
     const tCommon = useTranslations('common');
 
@@ -88,7 +100,7 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
 
     // Polls so every runner sees stock changes made by others. The server just rendered fresh data,
     // so there's no fetch on mount: the first one comes with the interval or when the tab regains focus.
-    const { data: items = [], mutate, isValidating, error } = useSWR<Item[]>(INVENTORY_KEY, fetcher, {
+    const { data: serverItems = [], mutate, isValidating, error } = useSWR<Item[]>(INVENTORY_KEY, fetcher, {
         fallbackData: initialItems,
         revalidateOnMount: false,
         refreshInterval: STOCK_REFRESH_INTERVAL,
@@ -98,6 +110,37 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
 
     // The bound mutate can't take a mutation that resolves to something other than the list (the move result)
     const { mutate: mutateKey } = useSWRConfig();
+
+    // Moves made without connection wait here, and show in the list on top of the server's stock
+    const [isQueueOpen, setIsQueueOpen] = useState(false);
+    // The runner's moves held when they synced, for them to decide (lib/offline-sync.ts)
+    const [held, setHeld] = useState<HeldView[]>([]);
+    const [isHeldOpen, setIsHeldOpen] = useState(false);
+    const loadHeld = useCallback(async () => {
+        const res = await fetch('/api/runner/held').catch(() => null);
+        if (!res?.ok) return;
+        const mine = (await res.json() as HeldView[]).filter(move => move.mine);
+        setHeld(mine);
+        return mine;
+    }, []);
+    const offline = useOfflineQueue(userEmail, async results => {
+        mutate();
+        // Something was held: show it right away, it's theirs to decide
+        if (results.some(result => result.status === 'held') && (await loadHeld())?.length) setIsHeldOpen(true);
+    });
+    // Keeps this page working without connection (public/sw.js). Not in development: it would serve stale builds
+    useEffect(() => {
+        if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.register('/sw.js').catch(error => console.error('Service worker registration failed:', error));
+    }, []);
+
+    // Held moves from an earlier sync (another day, another tab)
+    useEffect(() => {
+        if (!offline.isOnline) return;
+        const timer = setTimeout(loadHeld, 0);
+        return () => clearTimeout(timer);
+    }, [offline.isOnline, loadHeld]);
+    const items = useMemo(() => withPending(serverItems, offline.queue), [serverItems, offline.queue]);
 
     // Each toast replaces the previous one and hides itself
     useEffect(() => {
@@ -137,9 +180,20 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
         return next;
     });
 
-    /** Moves stock with an optimistic update; returns whether the server accepted it. */
-    const moveStock = async (id: string, type: MovementType, amount: number, reason: string) => {
+    /** Puts a move in the offline queue; it shows in the list right away and is sent when the connection is back. */
+    const queueMove = async (item: Item, type: MovementType, amount: number, reason: string) => {
+        const pending = await offline.add({ inventoryId: item._id, type, amount, reason, productName: item.productName, unit: item.unit });
+        return pending ? { queuedId: pending.offlineId } : false;
+    };
+
+    /**
+     * Moves stock with an optimistic update. Without connection (or when the request can't reach the server) the
+     * move is queued instead. Returns false when it was refused, else { queuedId } when it was queued.
+     */
+    const moveStock = async (item: Item, type: MovementType, amount: number, reason: string): Promise<false | { queuedId?: string }> => {
+        const id = item._id;
         const delta = type === 'IN' ? amount : -amount;
+        if (!navigator.onLine) return queueMove(item, type, amount, reason);
         setPending(id, true);
         try {
             // The server's balance goes into whatever the cache holds when it answers, so moves on other items aren't lost
@@ -149,8 +203,9 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
                 rollbackOnError: true,
                 revalidate: false,
             });
-            return true;
+            return {};
         } catch (error) {
+            if (error instanceof NetworkError) return queueMove(item, type, amount, reason);
             navigator.vibrate?.([40, 60, 40]);
             setToast({ kind: 'error', message: (error as Error).message || t('moveFailed') });
             mutate(); // Someone else may have changed the stock: show the real quantity
@@ -164,9 +219,10 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
         const amount = globalQty;
         if (amount < 1) return;
         const reason = type === 'OUT' ? MOVEMENT_REASONS.RUNNER_CONSUMPTION : MOVEMENT_REASONS.RESTOCK;
-        if (await moveStock(item._id, type, amount, reason)) {
+        const result = await moveStock(item, type, amount, reason);
+        if (result) {
             navigator.vibrate?.(15); // A short buzz confirms the tap without looking (ignored where unsupported)
-            setToast({ kind: 'moved', item, type, amount });
+            setToast({ kind: 'moved', item, type, amount, queuedId: result.queuedId });
         }
     };
 
@@ -175,9 +231,15 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
     useEffect(() => { handleMoveRef.current = handleMove; });
     const onRowMove = useCallback((item: Item, type: MovementType) => handleMoveRef.current(item, type), []);
 
-    const handleUndo = async (item: Item, type: MovementType, amount: number) => {
+    const handleUndo = async (item: Item, type: MovementType, amount: number, queuedId?: string) => {
         setToast(null);
-        if (await moveStock(item._id, type === 'IN' ? 'OUT' : 'IN', amount, MOVEMENT_REASONS.CORRECTION)) {
+        // Still queued: it never reached the server, so undoing it is just not sending it
+        if (queuedId) {
+            await offline.cancel(queuedId);
+            setToast({ kind: 'undone', productName: item.productName });
+            return;
+        }
+        if (await moveStock(item, type === 'IN' ? 'OUT' : 'IN', amount, MOVEMENT_REASONS.CORRECTION)) {
             setToast({ kind: 'undone', productName: item.productName });
         }
     };
@@ -229,6 +291,27 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
             <RunnerHeader
                 assignedAreaCount={assignedAreaCount}
                 sync={{ isValidating, hasError: !!error, lastUpdated }}
+                pending={{ count: offline.queue.length, isSending: offline.isSending, onOpen: () => setIsQueueOpen(true) }}
+                held={{ count: held.length, onOpen: () => setIsHeldOpen(true) }}
+            />
+            <Modal isOpen={isHeldOpen} onClose={() => setIsHeldOpen(false)} title={t('heldTitle', { count: held.length })}>
+                <p className="mb-4 text-sm text-ink-muted">{t('heldIntro')}</p>
+                <HeldList
+                    held={held}
+                    onResolved={async () => {
+                        mutate();
+                        if (!(await loadHeld())?.length) setIsHeldOpen(false);
+                    }}
+                />
+            </Modal>
+            <PendingQueue
+                open={isQueueOpen}
+                queue={offline.queue}
+                isOnline={offline.isOnline}
+                isSending={offline.isSending}
+                onCancel={offline.cancel}
+                onSend={offline.send}
+                onClose={() => setIsQueueOpen(false)}
             />
 
             <QuantityToolbar
@@ -300,14 +383,14 @@ export default function RunnerInventory({ initialItems, assignedAreaCount, canCr
                         {toast.kind === 'error' && <AlertCircle size={20} className="shrink-0" />}
                         {toast.kind === 'notFound' && <ScanBarcode size={20} className="shrink-0 text-amber-300" />}
                         <p className="flex-1 min-w-0 py-2 text-sm font-bold truncate">
-                            {toast.kind === 'moved' && <><span className={toast.type === 'OUT' ? 'text-red-300' : 'text-green-300'}>{toast.type === 'OUT' ? '−' : '+'}{toast.amount}</span> {toast.item.productName}</>}
+                            {toast.kind === 'moved' && <><span className={toast.type === 'OUT' ? 'text-red-300' : 'text-green-300'}>{toast.type === 'OUT' ? '−' : '+'}{toast.amount}</span> {toast.item.productName}{toast.queuedId && <span className="font-normal text-white/70"> · {t('queued')}</span>}</>}
                             {toast.kind === 'undone' && t('undone', { product: toast.productName })}
                             {toast.kind === 'error' && toast.message}
                             {toast.kind === 'notFound' && t('codeNotFound', { code: toast.code })}
                         </p>
                         {toast.kind === 'moved' && (
                             <button
-                                onClick={() => handleUndo(toast.item, toast.type, toast.amount)}
+                                onClick={() => handleUndo(toast.item, toast.type, toast.amount, toast.queuedId)}
                                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
                             >
                                 <Undo2 size={14} /> {t('undo')}

@@ -322,7 +322,23 @@
         },
         "scan": "Scan code",
         "codeNotFound": "No product has the code {code}",
-        "createProduct": "Create"
+        "createProduct": "Create",
+        "queued": "saved offline",
+        "heldTitle": "{count, plural, one {# move to review} other {# moves to review}}",
+        "heldIntro": "You made these moves offline and they didn't apply by themselves. Decide what to do with each one.",
+        "heldChip": "{count} to review",
+        "queue": {
+            "pending": "{count} pending",
+            "sending": "Sending {count}…",
+            "title": "{count, plural, one {# move not sent} other {# moves not sent}}",
+            "introOffline": "You saved them offline. They are sent by themselves as soon as the connection is back. If a colleague already recorded one for you, cancel it here so it isn't counted twice.",
+            "introOnline": "You're online: they are being sent. If a colleague already recorded one for you, cancel it here so it isn't counted twice.",
+            "empty": "No pending moves.",
+            "cancel": "Cancel the move of {product}",
+            "sendNow": "Send now",
+            "sendingNow": "Sending…",
+            "waiting": "They'll be sent when the connection is back"
+        }
     },
     "dashboard": {
         "reportsTitle": "Consumption reports",
@@ -1462,5 +1478,22 @@
             "noCamera": "No camera was found. Type the code.",
             "failed": "The camera couldn't be opened. Type the code."
         }
+    },
+    "held": {
+        "empty": "No held moves.",
+        "madeAt": "You recorded it offline: {time}",
+        "madeBy": "{name}, offline: {time}",
+        "reasons": {
+            "tooOld": "It was made more than 6 hours ago: the stock may have changed a lot since.",
+            "possibleDuplicate": "{name} recorded the same ({amount}) at {time}. Is it the same move? If so, discard it.",
+            "possibleDuplicateUnknown": "Someone else recorded the same shortly after. Is it the same move? If so, discard it.",
+            "insufficientStock": "There isn't enough stock for this out anymore. Check the real amount before applying it.",
+            "productGone": "The product was deleted or moved to another department.",
+            "notAllowed": "You no longer work in this department."
+        },
+        "apply": "Apply",
+        "discard": "Discard",
+        "dashboardTitle": "{count, plural, one {# held move} other {# held moves}}",
+        "dashboardIntro": "Moves made offline that didn't apply by themselves: yours and, if you manage stock, the ones their runner didn't review within 30 minutes."
     }
 }

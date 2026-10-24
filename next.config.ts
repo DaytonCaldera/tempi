@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // The service worker must never be served stale: a new version replaces the old one on the next visit
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
+      {
         source: "/:path*",
         headers: [
           // No other site may frame the app (clickjacking on admin actions)

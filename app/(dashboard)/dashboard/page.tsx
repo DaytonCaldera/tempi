@@ -8,6 +8,8 @@ import { labelOf, planLabel } from '@/i18n/labels';
 import { toObjectId } from '@/lib/api';
 import { getDashboardData } from '@/lib/dashboard';
 import { getOrganizationCurrency } from '@/lib/organizations';
+import { listHeld } from '@/lib/offline-sync-server';
+import HeldCard from './HeldCard';
 import { assignedDepartmentIds } from '@/lib/departments';
 import { hasPermission } from '@/lib/permissions';
 import { daysUntil, getEffectivePlan } from '@/lib/plans';
@@ -38,10 +40,11 @@ export default async function Dashboard() {
     // Admins see how long a free trial of a plan has left (lib/plans.ts), so its end isn't a surprise
     const clientId = toObjectId(session.user.clientId);
     const isAdmin = hasPermission(session, PERMISSIONS.MANAGE_USERS);
-    const [effective, data, currency] = await Promise.all([
+    const [effective, data, currency, held] = await Promise.all([
         clientId && isAdmin ? getEffectivePlan(clientId) : null,
         getDashboardData(session),
         getOrganizationCurrency(clientId),
+        clientId ? listHeld(session) : [],
     ]);
     const trialDaysLeft = effective?.source === "trial" && effective.trialEndsAt ? daysUntil(effective.trialEndsAt) : null;
 
@@ -68,6 +71,8 @@ export default async function Dashboard() {
                     <span className="font-semibold text-accent">{tPlan('upgradeShort')}</span>
                 </Link>
             )}
+
+            {held.length > 0 && <div className="mb-6"><HeldCard held={held} /></div>}
 
             {data.departmentCount === 0 ? (
                 <Card>

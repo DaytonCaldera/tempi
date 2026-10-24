@@ -1,5 +1,6 @@
 "use client"
 import { signIn, signOut } from "next-auth/react"
+import { clearOfflineCache } from "@/lib/offline-queue"
 import Button from "./ui/Button"
 import { useTranslations } from "next-intl";
 
@@ -24,6 +25,7 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
   return (
     <form
       action={async () => {
+        await clearOfflineCache()
         await signOut({ redirect: true, callbackUrl: "/" })
       }}
       className="w-50 mt-6"

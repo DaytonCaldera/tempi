@@ -38,6 +38,7 @@ export default async function RunnerPage() {
                 initialItems={await assignedStock(session, departmentIds)}
                 assignedAreaCount={departmentIds.length}
                 canCreateProducts={hasPermission(session, PERMISSIONS.EDIT_STOCK)}
+                userEmail={session.user.email ?? ""}
             />
         </div>
     );

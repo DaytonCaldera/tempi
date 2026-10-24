@@ -322,7 +322,23 @@
         },
         "scan": "Escanear código",
         "codeNotFound": "Ningún producto tiene el código {code}",
-        "createProduct": "Crear"
+        "createProduct": "Crear",
+        "queued": "guardado sin conexión",
+        "heldTitle": "{count, plural, one {# movimiento por revisar} other {# movimientos por revisar}}",
+        "heldIntro": "Estos movimientos los hiciste sin conexión y no se aplicaron solos. Decide qué hacer con cada uno.",
+        "heldChip": "{count} por revisar",
+        "queue": {
+            "pending": "{count, plural, one {# pendiente} other {# pendientes}}",
+            "sending": "Enviando {count}…",
+            "title": "{count, plural, one {# movimiento sin enviar} other {# movimientos sin enviar}}",
+            "introOffline": "Los guardaste sin conexión. Se envían solos apenas vuelva la conexión. Si un compañero ya registró uno por ti, cancélalo aquí para que no se cuente dos veces.",
+            "introOnline": "Hay conexión: se están enviando. Si un compañero ya registró uno por ti, cancélalo aquí para que no se cuente dos veces.",
+            "empty": "No hay movimientos pendientes.",
+            "cancel": "Cancelar el movimiento de {product}",
+            "sendNow": "Enviar ahora",
+            "sendingNow": "Enviando…",
+            "waiting": "Se enviarán al volver la conexión"
+        }
     },
     "dashboard": {
         "reportsTitle": "Reportes de consumo",
@@ -1462,5 +1478,22 @@
             "noCamera": "No se encontró una cámara. Escribe el código.",
             "failed": "No se pudo abrir la cámara. Escribe el código."
         }
+    },
+    "held": {
+        "empty": "No hay movimientos retenidos.",
+        "madeAt": "Lo registraste sin conexión: {time}",
+        "madeBy": "{name}, sin conexión: {time}",
+        "reasons": {
+            "tooOld": "Se hizo hace más de 6 horas: el stock pudo cambiar mucho desde entonces.",
+            "possibleDuplicate": "{name} registró lo mismo ({amount}) a las {time}. ¿Es el mismo movimiento? Si lo es, descártalo.",
+            "possibleDuplicateUnknown": "Otra persona registró lo mismo poco después. ¿Es el mismo movimiento? Si lo es, descártalo.",
+            "insufficientStock": "Ya no hay stock suficiente para esta salida. Revisa la cantidad real antes de aplicarla.",
+            "productGone": "El producto se eliminó o se movió a otro departamento.",
+            "notAllowed": "Ya no trabajas en este departamento."
+        },
+        "apply": "Aplicar",
+        "discard": "Descartar",
+        "dashboardTitle": "{count, plural, one {# movimiento retenido} other {# movimientos retenidos}}",
+        "dashboardIntro": "Movimientos hechos sin conexión que no se aplicaron solos: los tuyos y, si administras el stock, los que el runner no revisó en 30 minutos."
     }
 }

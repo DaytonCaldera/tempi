@@ -1,5 +1,6 @@
 'use client';
 import { signOut, useSession } from "next-auth/react";
+import { clearOfflineCache } from "@/lib/offline-queue";
 import { Menu, LogOut, User, Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -99,7 +100,7 @@ export default function Navbar({ isSidebarOpen, onToggle }: NavbarProps) {
 
                 {/* Sign Out - Refined Danger Style */}
                 <button 
-                    onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
+                    onClick={async () => { await clearOfflineCache(); signOut({ redirect: true, callbackUrl: "/" }); }}
                     className="ml-1 p-3 text-ink-subtle hover:text-danger hover:bg-danger/10 rounded-2xl transition-all group"
                     title={tCommon("logout")}
                 >

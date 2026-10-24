@@ -3,10 +3,11 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { Check, Globe, LayoutDashboard, LogOut, MoreHorizontal, SunMoon } from "lucide-react";
+import { AlertTriangle, Check, CloudUpload, Globe, LayoutDashboard, LogOut, MoreHorizontal, SunMoon } from "lucide-react";
 import { localeNames, locales } from "@/i18n/config";
 import { useLocaleSwitcher } from "@/i18n/useLocaleSwitcher";
 import { THEMES, useTheme } from "@/lib/theme";
+import { clearOfflineCache } from "@/lib/offline-queue";
 
 /** State of the stock polling, for the status next to the title. */
 export interface SyncState {
@@ -19,6 +20,10 @@ export interface SyncState {
 interface RunnerHeaderProps {
     assignedAreaCount: number;
     sync: SyncState;
+    /** Moves made without connection waiting to be sent */
+    pending: { count: number; isSending: boolean; onOpen: () => void };
+    /** The runner's synced moves held for them to decide */
+    held: { count: number; onOpen: () => void };
 }
 
 const subscribeToOnline = (onChange: () => void) => {
@@ -134,7 +139,7 @@ function HeaderMenu() {
                     ))}
 
                     <div className="h-px bg-line my-1.5" />
-                    <button role="menuitem" onClick={() => signOut({ callbackUrl: "/" })} className={`${itemClass} text-danger hover:bg-danger/10`}>
+                    <button role="menuitem" onClick={async () => { await clearOfflineCache(); signOut({ callbackUrl: "/" }); }} className={`${itemClass} text-danger hover:bg-danger/10`}>
                         <LogOut size={18} /> {tCommon('logout')}
                     </button>
                 </div>
@@ -143,7 +148,7 @@ function HeaderMenu() {
     );
 }
 
-export default function RunnerHeader({ assignedAreaCount, sync }: RunnerHeaderProps) {
+export default function RunnerHeader({ assignedAreaCount, sync, pending, held }: RunnerHeaderProps) {
     const t = useTranslations('runner');
 
     return (
@@ -155,6 +160,23 @@ export default function RunnerHeader({ assignedAreaCount, sync }: RunnerHeaderPr
                         {t('assignedAreas', { count: assignedAreaCount })}
                     </p>
                     <SyncStatus {...sync} />
+                    {pending.count > 0 && (
+                        <button
+                            onClick={pending.onOpen}
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-warning active:scale-95"
+                        >
+                            <CloudUpload size={14} className={pending.isSending ? "animate-pulse" : ""} aria-hidden />
+                            {pending.isSending ? t('queue.sending', { count: pending.count }) : t('queue.pending', { count: pending.count })}
+                        </button>
+                    )}
+                    {held.count > 0 && (
+                        <button
+                            onClick={held.onOpen}
+                            className="mt-2 ml-2 inline-flex items-center gap-1.5 rounded-full bg-danger/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-danger active:scale-95"
+                        >
+                            <AlertTriangle size={14} aria-hidden /> {t('heldChip', { count: held.count })}
+                        </button>
+                    )}
                 </div>
                 <HeaderMenu />
             </div>
