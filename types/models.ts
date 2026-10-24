@@ -158,8 +158,17 @@ export interface StockMovement<Id = ObjectId> {
     newBalance?: number;
     reason: string;
     user: { id?: Id; name?: string | null; email?: string | null };
+    /** On the two movements of a transfer: the same id, and the other department (where it went or came from) */
+    transfer?: { id: Id; departmentId: Id; departmentName: string };
     createdAt: Date;
 }
+
+/** What a transfer will do in the destination (POST /api/admin/inventory/[id]/transfer with dryRun). */
+export type TransferPreview = {
+    /** The destination product it adds to, or null when one is created */
+    target: { _id: string; productName: string; sku: string; quantity: number; unit: string } | null;
+    targetDepartmentName: string;
+};
 
 /** One product row of the consumption report. */
 export interface ConsumptionReportItem {

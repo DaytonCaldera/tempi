@@ -71,6 +71,9 @@ export const MOVEMENT_REASONS = {
     RECONCILIATION: "Conciliación de inventario",
     // Quantity set by a file import (lib/stock-import.ts) on a product that already existed
     IMPORT: "Importación de inventario",
+    // Both halves of a transfer between departments (app/api/admin/inventory/[id]/transfer); movement.transfer
+    // names the other department
+    TRANSFER: "Transferencia entre departamentos",
     // Reverses an earlier movement (the runner Undo); reports subtract it from the column it reverses
     CORRECTION: "Corrección",
 } as const;

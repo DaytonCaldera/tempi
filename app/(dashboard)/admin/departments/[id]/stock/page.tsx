@@ -6,7 +6,7 @@ import { PERMISSIONS } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { hasPermission } from '@/lib/permissions';
 import { normalizeBarcode } from '@/lib/sku';
-import type { StockItem } from '@/types/models';
+import type { Department, StockItem } from '@/types/models';
 import StockManagementClient from './StockManagementClient';
 
 export default async function DepartmentStockPage({ params, searchParams }: {
@@ -24,9 +24,16 @@ export default async function DepartmentStockPage({ params, searchParams }: {
 
     const t = await getTranslations('stock');
     const db = await getDb();
-    const inventory = await db.collection<StockItem>('department_stock')
-        .find({ departmentId: department._id, isDeleted: { $ne: true } })
-        .toArray();
+    const [inventory, otherDepartments] = await Promise.all([
+        db.collection<StockItem>('department_stock')
+            .find({ departmentId: department._id, isDeleted: { $ne: true } })
+            .toArray(),
+        // Where its products can be transferred to
+        db.collection<Department>('departments')
+            .find({ clientId: department.clientId, _id: { $ne: department._id } }, { projection: { name: 1 } })
+            .sort({ name: 1 })
+            .toArray(),
+    ]);
 
     return (
         <div className="p-6 lg:p-10">
@@ -48,6 +55,7 @@ export default async function DepartmentStockPage({ params, searchParams }: {
                 }))}
                 departmentId={department._id.toString()}
                 departmentName={department.name}
+                otherDepartments={otherDepartments.map(d => ({ _id: d._id.toString(), name: d.name }))}
                 newBarcode={normalizeBarcode((await searchParams).barcode) || undefined}
             />
         </div>

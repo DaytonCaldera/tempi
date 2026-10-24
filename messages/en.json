@@ -84,7 +84,10 @@
         "tooManyAlertEmails": "You can add up to 5 addresses.",
         "invalidEmail": "One of the addresses isn't valid.",
         "invalidBarcode": "The barcode isn't valid (up to 64 characters, no spaces).",
-        "duplicateBarcode": "A product with that barcode already exists in this department"
+        "duplicateBarcode": "A product with that barcode already exists in this department",
+        "transferSameDepartment": "Pick another department: the product is already in this one.",
+        "transferUnitMismatch": "The destination's product is counted in another unit. Change it in one of them to transfer.",
+        "transferConflict": "The stock changed during the transfer. Check the quantities and try again."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -109,6 +112,7 @@
         "RECONCILIATION": "Inventory reconciliation",
         "CORRECTION": "Correction (undo)",
         "IMPORT": "Inventory import",
+        "TRANSFER": "Transfer between departments",
         "none": "No reason given"
     },
     "nav": {
@@ -369,7 +373,14 @@
             "product": "Product / SKU",
             "category": "Category",
             "quantity": "Current quantity",
-            "quickActions": "Quick actions"
+            "quickActions": "Quick actions",
+            "actions": {
+                "remove": "Remove 1 from {product}",
+                "add": "Add 1 to {product}",
+                "transfer": "Transfer {product} to another department",
+                "edit": "Edit {product}",
+                "delete": "Delete {product}"
+            }
         },
         "form": {
             "editTitle": "Edit product",
@@ -461,6 +472,17 @@
                 "empty": "The file has no rows below the titles.",
                 "tooManyRows": "The file has {count} rows and up to {max} can be imported at once. Split it into several."
             }
+        },
+        "transfer": {
+            "title": "Transfer to another department",
+            "intro": "<b>{product}</b>: there are {quantity} {unit} in this department.",
+            "toLabel": "Destination department",
+            "amountLabel": "Amount ({unit})",
+            "tooMuch": "There are only {quantity} {unit}.",
+            "previewExisting": "Adds to “{product}” ({sku}) in {department}: {before} → {after} {unit}.",
+            "previewNew": "{department} doesn't have this product: it will be created with {amount} {unit}.",
+            "confirm": "Transfer",
+            "transferring": "Transferring…"
         }
     },
     "users": {
@@ -538,7 +560,9 @@
         "movements": {
             "title": "Recent movement history",
             "empty": "No movements in the selected dates.",
-            "units": "units"
+            "units": "units",
+            "transferTo": "Transferred to {department}",
+            "transferFrom": "Received from {department}"
         },
         "printView": {
             "range": "Date range: {start} — {end}",

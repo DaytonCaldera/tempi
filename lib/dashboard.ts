@@ -137,12 +137,13 @@ async function countPeople(match: Document) {
 
 /**
  * Products with the most stock used up in the period: OUT movements minus the corrections that undid one.
- * Import and reconciliation adjustments are stock counts, not use, so they don't count.
+ * Import and reconciliation adjustments are stock counts, and transfers only move stock between departments:
+ * neither is use, so they don't count.
  */
 async function consumedProducts(departmentIds: ObjectId[], start: Date, end: Date): Promise<ConsumedItem[]> {
     const db = await getDb();
     const rows = await db.collection("stock_movements").aggregate<{ _id: ObjectId; amount: number; productName: string; departmentName: string }>([
-        { $match: { departmentId: { $in: departmentIds }, createdAt: { $gte: start, $lt: end }, reason: { $nin: [...SYSTEM_REASONS, MOVEMENT_REASONS.IMPORT] } } },
+        { $match: { departmentId: { $in: departmentIds }, createdAt: { $gte: start, $lt: end }, reason: { $nin: [...SYSTEM_REASONS, MOVEMENT_REASONS.IMPORT, MOVEMENT_REASONS.TRANSFER] } } },
         {
             $group: {
                 _id: "$inventoryId",

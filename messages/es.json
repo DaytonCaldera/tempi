@@ -84,7 +84,10 @@
         "tooManyAlertEmails": "Puedes agregar hasta 5 direcciones.",
         "invalidEmail": "Una de las direcciones no es válida.",
         "invalidBarcode": "El código de barras no es válido (hasta 64 caracteres, sin espacios).",
-        "duplicateBarcode": "Ya existe un producto con ese código de barras en este departamento"
+        "duplicateBarcode": "Ya existe un producto con ese código de barras en este departamento",
+        "transferSameDepartment": "Elige otro departamento: el producto ya está en este.",
+        "transferUnitMismatch": "El producto del destino se cuenta en otra unidad. Cámbiala en uno de los dos para poder transferir.",
+        "transferConflict": "El stock cambió mientras se transfería. Revisa las cantidades e inténtalo de nuevo."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -109,6 +112,7 @@
         "RECONCILIATION": "Conciliación de inventario",
         "CORRECTION": "Corrección (deshacer)",
         "IMPORT": "Importación de inventario",
+        "TRANSFER": "Transferencia entre departamentos",
         "none": "Sin justificación"
     },
     "nav": {
@@ -369,7 +373,14 @@
             "product": "Producto / SKU",
             "category": "Categoría",
             "quantity": "Cantidad actual",
-            "quickActions": "Acciones rápidas"
+            "quickActions": "Acciones rápidas",
+            "actions": {
+                "remove": "Quitar 1 de {product}",
+                "add": "Sumar 1 a {product}",
+                "transfer": "Transferir {product} a otro departamento",
+                "edit": "Editar {product}",
+                "delete": "Eliminar {product}"
+            }
         },
         "form": {
             "editTitle": "Editar producto",
@@ -461,6 +472,17 @@
                 "empty": "El archivo no tiene filas debajo de los títulos.",
                 "tooManyRows": "El archivo tiene {count} filas y se pueden importar hasta {max} a la vez. Divídelo en varios."
             }
+        },
+        "transfer": {
+            "title": "Transferir a otro departamento",
+            "intro": "<b>{product}</b>: hay {quantity} {unit} en este departamento.",
+            "toLabel": "Departamento de destino",
+            "amountLabel": "Cantidad ({unit})",
+            "tooMuch": "Solo hay {quantity} {unit}.",
+            "previewExisting": "Se suma a «{product}» ({sku}) en {department}: {before} → {after} {unit}.",
+            "previewNew": "{department} no tiene este producto: se creará con {amount} {unit}.",
+            "confirm": "Transferir",
+            "transferring": "Transfiriendo…"
         }
     },
     "users": {
@@ -538,7 +560,9 @@
         "movements": {
             "title": "Historial de movimientos recientes",
             "empty": "No hay movimientos en las fechas seleccionadas.",
-            "units": "unidades"
+            "units": "unidades",
+            "transferTo": "Transferido a {department}",
+            "transferFrom": "Recibido de {department}"
         },
         "printView": {
             "range": "Rango de fechas: {start} — {end}",

@@ -7,6 +7,7 @@ import { Search, Plus, AlertTriangle, History, ArrowLeft, Upload } from "lucide-
 import { useDepartmentStock, type StockRow } from "./useDepartmentStock";
 import { StockItemModal } from "./StockItemModal";
 import { StockImportModal } from "./StockImportModal";
+import { TransferStockModal } from "./TransferStockModal";
 import { DeleteStockItemModal } from "./DeleteStockItemModal";
 import { StockTable } from "./StockTable";
 
@@ -16,10 +17,12 @@ interface StockManagementClientProps {
     departmentName: string;
     /** Opens the new product form with this barcode (from the runner's "create product" for an unknown code) */
     newBarcode?: string;
+    /** The organization's other departments, the ones products can be transferred to */
+    otherDepartments: { _id: string; name: string }[];
 }
 
 /** Admin view of a department's inventory: stats, search, quick +/- moves, create, edit and delete. */
-export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode }: StockManagementClientProps) {
+export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode, otherDepartments }: StockManagementClientProps) {
     const t = useTranslations("stock");
     const router = useRouter();
     const { inventory, quickMove, remove, refresh } = useDepartmentStock(departmentId, initialInventory);
@@ -31,6 +34,8 @@ export default function StockManagementClient({ initialInventory, departmentId, 
     const [importKey, setImportKey] = useState(0);
     const [editingItem, setEditingItem] = useState<StockRow | null>(null);
     const [deletingItem, setDeletingItem] = useState<StockRow | null>(null);
+    const [transferringItem, setTransferringItem] = useState<StockRow | null>(null);
+    const [transferKey, setTransferKey] = useState(0);
 
     const search = searchTerm.toLowerCase();
     const filteredInventory = inventory.filter(item =>
@@ -70,6 +75,17 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                 onImported={() => {
                     refresh();
                     router.refresh();
+                }}
+            />
+
+            <TransferStockModal
+                key={`transfer-${transferKey}`}
+                item={transferringItem}
+                departments={otherDepartments}
+                onClose={() => setTransferringItem(null)}
+                onTransferred={() => {
+                    setTransferringItem(null);
+                    refresh();
                 }}
             />
 
@@ -144,6 +160,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     onQuickMove={quickMove}
                     onEdit={openForm}
                     onDelete={setDeletingItem}
+                    onTransfer={otherDepartments.length > 0 ? (item) => { setTransferKey(key => key + 1); setTransferringItem(item); } : undefined}
                 />
             </div>
         </>
