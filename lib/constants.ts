@@ -125,7 +125,6 @@ export const PLAN_KEYS = ["free", "pro", "business"] as const;
 export const PLAN_FEATURES = {
     // Runners only see the departments they are assigned to. Without it, they see all of them
     DEPARTMENT_ASSIGNMENT: "department_assignment",
-    EXPORT_CSV: "export_csv",
     PRIORITY_SUPPORT: "priority_support",
 } as const;
 

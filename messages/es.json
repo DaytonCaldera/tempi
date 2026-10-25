@@ -40,6 +40,7 @@
         "missingData": "Faltan datos",
         "missingParameters": "Faltan parámetros",
         "datesRequired": "Fechas requeridas",
+        "invalidFormat": "Formato de archivo no válido",
         "invalidDepartment": "Departamento inválido",
         "invalidCode": "Código no válido",
         "missingOrganizationId": "Falta el ID de la organización",
@@ -78,7 +79,6 @@
         },
         "planFeature": {
             "department_assignment": "Tu plan ({plan}) no incluye asignar personal a departamentos. Mejora el plan para usarlo.",
-            "export_csv": "Tu plan ({plan}) no incluye exportar reportes. Mejora el plan para descargarlos.",
             "priority_support": "Tu plan ({plan}) no incluye soporte prioritario."
         },
         "billingNotConfigured": "Los pagos en línea aún no están disponibles. Escríbenos para cambiar tu plan.",
@@ -626,7 +626,7 @@
         "backToDashboard": "Volver al panel",
         "filterDepartment": "Filtro: departamento activo",
         "globalSummary": "Resumen global de movimientos",
-        "print": "Imprimir reporte",
+        "downloadAs": "Descargar en {format}",
         "download": "Descargar reporte",
         "loading": "Sincronizando datos...",
         "fullInventoryTitle": "Inventario completo",
@@ -660,11 +660,12 @@
             "transferTo": "Transferido a {department}",
             "transferFrom": "Recibido de {department}"
         },
-        "printView": {
+        "pdf": {
             "range": "Rango de fechas: {start} — {end}",
             "generated": "Generado el: {date}",
-            "empty": "No hay datos disponibles para imprimir en este rango.",
-            "department": "Departamento: {name}"
+            "empty": "No hay datos en este rango.",
+            "department": "Departamento: {name}",
+            "page": "Página {page} de {pages}"
         },
         "totalConsumedValue": "Valor consumido en total: <b>{value}</b>",
         "departmentConsumedValue": "Valor consumido: <b>{value}</b>",
@@ -1416,7 +1417,6 @@
         "upgradeShort": "Ver planes",
         "historyLimited": "Tu plan muestra el historial desde el {date}. Los movimientos anteriores siguen guardados.",
         "locked": {
-            "export": "Exportar a CSV está disponible en Pro",
             "assignment": "En tu plan, todo el personal ve todos los departamentos. La asignación se guarda y se aplicará cuando tu plan la incluya."
         },
         "limitDialog": {
@@ -1523,11 +1523,11 @@
             "items": "Productos: {value}",
             "history": "Historial de reportes: {days} días",
             "historyFull": "Historial de reportes completo",
-            "runner": "Runner, movimientos y deshacer"
+            "runner": "Runner, movimientos y deshacer",
+            "exports": "Exportar reportes a PDF, Excel y CSV"
         },
         "features": {
             "department_assignment": "Asignar personal a departamentos",
-            "export_csv": "Exportar reportes a CSV",
             "priority_support": "Soporte prioritario y puesta en marcha"
         },
         "notIncluded": "no incluido",

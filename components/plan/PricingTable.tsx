@@ -141,6 +141,7 @@ export default function PricingTable({ plans, mode, currentPlanId, subscription 
                         { label: t("rows.items", { value: limit(plan.limits.items) }), included: true },
                         { label: plan.historyDays ? t("rows.history", { days: plan.historyDays }) : t("rows.historyFull"), included: true },
                         { label: t("rows.runner"), included: true },
+                        { label: t("rows.exports"), included: true },
                         ...Object.values(PLAN_FEATURES).map(feature => ({ label: t(`features.${feature}`), included: plan.features.includes(feature) })),
                     ];
 
