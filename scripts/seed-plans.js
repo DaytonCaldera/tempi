@@ -37,12 +37,12 @@ const CATALOG = [
     {
         key: 'pro', name: 'Pro', legacyNames: ['Profesional'],
         price: 19, priceYearly: 190, maxUsers: 15, maxDepartments: 10, maxItems: 2000, historyDays: 365,
-        features: ['department_assignment', 'export_csv'],
+        features: ['department_assignment'],
     },
     {
         key: 'business', name: 'Business', legacyNames: ['Enterprise'],
         price: 49, priceYearly: 490, maxUsers: 0, maxDepartments: 0, maxItems: 20000, historyDays: 0,
-        features: ['department_assignment', 'export_csv', 'priority_support'],
+        features: ['department_assignment', 'priority_support'],
     },
 ];
 

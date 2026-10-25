@@ -9,6 +9,8 @@ const HISTORY_LIMITED_HEADER = "X-History-Limited-From";
 /** Wall-clock times as datetime-local inputs hold them ("2026-10-24T00:00"), in the user's time zone */
 export type DateRange = { start: string; end: string };
 export type MovementLog = StockMovement<string>;
+/** Same as ReportFormat in lib/report-export.ts (server only) */
+export type ReportFormat = "csv" | "xlsx" | "pdf";
 
 /** The instants the range covers, for the server (which stores and compares UTC). */
 const rangeQuery = (bounds: { start: Date; end: Date }) =>
@@ -83,8 +85,9 @@ export function useConsumptionReport(deptId?: string) {
         setExpandedId(current => (current === inventoryId ? null : inventoryId));
     };
 
-    const exportUrl = bounds
-        ? `/api/admin/reports/export?${rangeQuery(bounds)}${deptId ? `&deptId=${deptId}` : ""}`
+    /** Where the report downloads as a file (app/api/admin/reports/export/route.ts), null until both dates are picked */
+    const exportUrl = (format: ReportFormat) => bounds
+        ? `/api/admin/reports/export?${rangeQuery(bounds)}${deptId ? `&deptId=${deptId}` : ""}&format=${format}`
         : null;
 
     return { range, setRange, bounds, data, loading, limitedFrom, exportUrl, expandedId, details, toggleDetails };

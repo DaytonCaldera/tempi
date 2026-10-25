@@ -40,6 +40,7 @@
         "missingData": "Missing data",
         "missingParameters": "Missing parameters",
         "datesRequired": "Dates are required",
+        "invalidFormat": "Invalid file format",
         "invalidDepartment": "Invalid department",
         "invalidCode": "Invalid code",
         "missingOrganizationId": "Missing organization ID",
@@ -78,7 +79,6 @@
         },
         "planFeature": {
             "department_assignment": "Your plan ({plan}) doesn't include assigning staff to departments. Upgrade to use it.",
-            "export_csv": "Your plan ({plan}) doesn't include exporting reports. Upgrade to download them.",
             "priority_support": "Your plan ({plan}) doesn't include priority support."
         },
         "billingNotConfigured": "Online payments aren't available yet. Write to us to change your plan.",
@@ -626,7 +626,7 @@
         "backToDashboard": "Back to dashboard",
         "filterDepartment": "Filter: active department",
         "globalSummary": "Global movement summary",
-        "print": "Print report",
+        "downloadAs": "Download as {format}",
         "download": "Download report",
         "loading": "Syncing data...",
         "fullInventoryTitle": "Full inventory",
@@ -660,11 +660,12 @@
             "transferTo": "Transferred to {department}",
             "transferFrom": "Received from {department}"
         },
-        "printView": {
+        "pdf": {
             "range": "Date range: {start} — {end}",
             "generated": "Generated on: {date}",
-            "empty": "No data available to print in this range.",
-            "department": "Department: {name}"
+            "empty": "No data in this range.",
+            "department": "Department: {name}",
+            "page": "Page {page} of {pages}"
         },
         "totalConsumedValue": "Total consumed value: <b>{value}</b>",
         "departmentConsumedValue": "Consumed value: <b>{value}</b>",
@@ -1416,7 +1417,6 @@
         "upgradeShort": "See plans",
         "historyLimited": "Your plan shows history from {date}. Older movements are still saved.",
         "locked": {
-            "export": "CSV export is available on Pro",
             "assignment": "On your plan, all staff see every department. The assignment is saved and applies once your plan includes it."
         },
         "limitDialog": {
@@ -1523,11 +1523,11 @@
             "items": "Products: {value}",
             "history": "Report history: {days} days",
             "historyFull": "Full report history",
-            "runner": "Runner, movements and undo"
+            "runner": "Runner, movements and undo",
+            "exports": "Export reports to PDF, Excel and CSV"
         },
         "features": {
             "department_assignment": "Assign staff to departments",
-            "export_csv": "Export reports to CSV",
             "priority_support": "Priority support and onboarding"
         },
         "notIncluded": "not included",

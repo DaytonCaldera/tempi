@@ -5,9 +5,8 @@ import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { toObjectId } from '@/lib/api';
-import { PERMISSIONS, PLAN_FEATURES } from '@/lib/constants';
+import { PERMISSIONS } from '@/lib/constants';
 import { hasPermission } from '@/lib/permissions';
-import { hasPlanFeature } from '@/lib/plans';
 import { getOrganizationCurrency } from '@/lib/organizations';
 
 export default async function GeneralReportPage() {
@@ -29,7 +28,6 @@ export default async function GeneralReportPage() {
             </div>
             <ConsumptionReport
                 title={t('generalTitle')}
-                canExport={!!clientId && await hasPlanFeature(clientId, PLAN_FEATURES.EXPORT_CSV)}
                 currency={await getOrganizationCurrency(clientId)}
             />
         </div>

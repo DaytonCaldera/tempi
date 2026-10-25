@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 /**
- * Server only: CSV downloads (the superadmin's registries and the admins' consumption report).
+ * Server only: file downloads (the superadmin's CSV registries and the admins' consumption report, lib/report-export.ts).
  */
 
 /**
@@ -15,16 +15,21 @@ export function csvCell(value: unknown): string {
     return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-/** A CSV file download named `vitalliz-{name}-{today}.csv`. */
-export function csvResponse(name: string, header: string[], rows: unknown[][]) {
+/** A file download named `vitalliz-{name}-{today}.{extension}`. */
+export function downloadResponse(name: string, extension: string, contentType: string, body: BodyInit) {
     const date = new Date().toISOString().slice(0, 10);
-    // The BOM makes Excel read the file as UTF-8 (accents, ñ)
-    const csv = "﻿" + [header, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n");
-    return new NextResponse(csv, {
+    return new NextResponse(body, {
         headers: {
-            "Content-Type": "text/csv; charset=utf-8",
-            "Content-Disposition": `attachment; filename="vitalliz-${name}-${date}.csv"`,
+            "Content-Type": contentType,
+            "Content-Disposition": `attachment; filename="vitalliz-${name}-${date}.${extension}"`,
             "Cache-Control": "no-store",
         },
     });
+}
+
+/** A CSV file download named `vitalliz-{name}-{today}.csv`. */
+export function csvResponse(name: string, header: string[], rows: unknown[][]) {
+    // The BOM makes Excel read the file as UTF-8 (accents, ñ)
+    const csv = "﻿" + [header, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n");
+    return downloadResponse(name, "csv", "text/csv; charset=utf-8", csv);
 }
