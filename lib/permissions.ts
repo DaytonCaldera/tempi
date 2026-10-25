@@ -10,3 +10,7 @@ export const hasPermission = (session: Session | null | undefined, permissionKey
     if (session?.user?.role === ROLES.SUPERADMIN) return false;
     return !!session?.user?.permissions?.[permissionKey];
 };
+
+/** The session's membership in its active organization (safe to use in server and client components). */
+export const activeMembership = (session: Session | null | undefined) =>
+    session?.user?.organizations?.find(m => m.clientId === session.user.clientId);

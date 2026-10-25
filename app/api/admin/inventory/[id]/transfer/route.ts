@@ -3,15 +3,14 @@ import { ObjectId } from "mongodb";
 import { auth } from "@/auth";
 import mongo from "@/lib/mongodb";
 import { apiError, badRequest, forbidden, getDb, isDuplicateKeyError, notFound, serverError, toObjectId, unauthorized } from "@/lib/api";
-import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
+import { MOVEMENT_REASONS, PERMISSIONS } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
 import { findOwnDepartment, runnerDepartmentIds } from "@/lib/departments";
 import { planLimitError } from "@/lib/plans";
 import { generateUniqueSKU } from "@/lib/sku";
 import { costSnapshot } from "@/lib/currency";
 import { afterStockChange } from "@/lib/stock-alerts";
 import type { Department, StockItem, TransferPreview } from "@/types/models";
-
-const MANAGEMENT_ROLES = [ROLES.ADMIN];
 
 const sameName = (a: string, b: string) => a.trim().localeCompare(b.trim(), undefined, { sensitivity: "accent" }) === 0;
 
@@ -37,7 +36,8 @@ function findCounterpart(item: StockItem, candidates: StockItem[]) {
  *   other department), happen in one transaction: all or nothing.
  * - moveAll moves the whole product: all of its stock (amount is ignored) and the product itself, which is removed
  *   from the source like a delete (soft: its history stays). Works with no stock too, to move an empty product.
- * - Admins can transfer between any departments; runners only between departments they work in.
+ * - Roles that edit stock can transfer between any departments; roles that move stock (runners) only between
+ *   departments they work in.
  * dryRun returns the TransferPreview without changing anything. Otherwise: { sourceQuantity, targetQuantity }.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -63,8 +63,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         if (!target) return notFound("departmentNotFoundOrDenied");
         if (source._id.equals(target._id)) return badRequest("transferSameDepartment");
 
-        if (!MANAGEMENT_ROLES.includes(session.user.role)) {
-            const allowed = session.user.role === ROLES.USER ? await runnerDepartmentIds(session) : [];
+        if (!hasPermission(session, PERMISSIONS.EDIT_STOCK)) {
+            const allowed = hasPermission(session, PERMISSIONS.MOVE_STOCK) ? await runnerDepartmentIds(session) : [];
             if (![source._id, target._id].every(id => allowed.some(a => a.equals(id)))) return forbidden("moveNotAllowed");
         }
 

@@ -13,6 +13,10 @@ export const AUDIT_ACTIONS = {
     CLOSE_ORGANIZATION: "organization.close",
     APPROVE_MEMBER: "member.approve",
     UPDATE_MEMBER: "member.update",
+    // An organization's own roles (app/api/admin/roles)
+    CREATE_ROLE: "role.createRole",
+    UPDATE_ROLE: "role.updateRole",
+    DELETE_ROLE: "role.deleteRole",
     // An admin changed which emails the organization gets (app/api/admin/organization/alerts)
     UPDATE_ALERTS: "organization.updateAlerts",
     // An admin changed the currency the organization's costs are in (app/api/admin/organization/currency)
@@ -53,7 +57,7 @@ export interface AuditEntry<Id = ObjectId> {
     /** The organization it happened in, if any. */
     clientId?: Id | null;
     /** The user or organization it was done to, when it isn't the actor. */
-    target?: { type: "user" | "organization" | "plan"; id?: Id | null; label?: string | null };
+    target?: { type: "user" | "organization" | "plan" | "role"; id?: Id | null; label?: string | null };
     /** Action-specific values, e.g. { before, after } for a membership change. */
     details?: Record<string, unknown>;
     createdAt: Date;
@@ -62,7 +66,7 @@ export interface AuditEntry<Id = ObjectId> {
 type AuditInput = {
     actor: Session["user"] | { id?: ObjectId | string | null; email?: string | null; name?: string | null } | null | undefined;
     clientId?: ObjectId | string | null;
-    target?: { type: "user" | "organization" | "plan"; id?: ObjectId | string | null; label?: string | null };
+    target?: { type: "user" | "organization" | "plan" | "role"; id?: ObjectId | string | null; label?: string | null };
     details?: Record<string, unknown>;
 };
 

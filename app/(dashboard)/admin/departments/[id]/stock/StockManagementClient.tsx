@@ -3,6 +3,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
+import { PERMISSIONS } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
 import { Search, Plus, AlertTriangle, History, ArrowLeft, Upload } from "lucide-react";
 import { useDepartmentStock, type StockRow } from "./useDepartmentStock";
 import { StockItemModal } from "./StockItemModal";
@@ -21,14 +24,20 @@ interface StockManagementClientProps {
     otherDepartments: { _id: string; name: string }[];
     /** The organization's currency */
     currency: string;
+    /** Whether the user's role may delete products (PERMISSIONS.DELETE_STOCK) */
+    canDelete: boolean;
 }
 
 /** Admin view of a department's inventory: stats, search, quick +/- moves, create, edit and delete. */
-export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode, otherDepartments, currency }: StockManagementClientProps) {
+export default function StockManagementClient({ initialInventory, departmentId, departmentName, newBarcode, otherDepartments, currency, canDelete }: StockManagementClientProps) {
     const t = useTranslations("stock");
     const format = useFormatter();
     const router = useRouter();
     const { inventory, quickMove, remove, refresh } = useDepartmentStock(departmentId, initialInventory);
+    // Links only to the pages the user's role can open
+    const { data: session } = useSession();
+    const canManageDepartments = hasPermission(session, PERMISSIONS.MANAGE_DEPTS);
+    const canSeeReports = hasPermission(session, PERMISSIONS.VIEW_REPORTS);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [isFormOpen, setIsFormOpen] = useState(!!newBarcode);
@@ -108,12 +117,14 @@ export default function StockManagementClient({ initialInventory, departmentId, 
             <div className="space-y-6">
                 {/* NAVIGATION & ACTIONS */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <Link
-                        href="/admin/departments"
-                        className="flex items-center gap-2 text-xs font-bold uppercase text-ink-subtle hover:text-ink transition-colors"
-                    >
-                        <ArrowLeft size={14} /> {t("backToDepartments")}
-                    </Link>
+                    {canManageDepartments ? (
+                        <Link
+                            href="/admin/departments"
+                            className="flex items-center gap-2 text-xs font-bold uppercase text-ink-subtle hover:text-ink transition-colors"
+                        >
+                            <ArrowLeft size={14} /> {t("backToDepartments")}
+                        </Link>
+                    ) : <span />}
 
                     <div className="flex items-center gap-3">
                         <button onClick={() => openForm(null)} className="flex items-center gap-2 px-4 py-2 bg-inverse text-on-inverse rounded-xl text-xs font-bold uppercase hover:bg-accent hover:text-on-accent transition-all">
@@ -125,9 +136,11 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                         >
                             <Upload size={16} /> {t("importProducts")}
                         </button>
-                        <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-card border border-line text-ink-muted rounded-xl text-xs font-bold uppercase hover:bg-subtle transition-all">
-                            <History size={16} /> {t("viewReport")}
-                        </Link>
+                        {canSeeReports && (
+                            <Link href={`/admin/departments/${departmentId}/report`} className="flex items-center gap-2 px-4 py-2 bg-card border border-line text-ink-muted rounded-xl text-xs font-bold uppercase hover:bg-subtle transition-all">
+                                <History size={16} /> {t("viewReport")}
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -167,7 +180,7 @@ export default function StockManagementClient({ initialInventory, departmentId, 
                     items={filteredInventory}
                     onQuickMove={quickMove}
                     onEdit={openForm}
-                    onDelete={setDeletingItem}
+                    onDelete={canDelete ? setDeletingItem : undefined}
                     currency={currency}
                     onTransfer={otherDepartments.length > 0 ? (item) => { setTransferKey(key => key + 1); setTransferringItem(item); } : undefined}
                 />

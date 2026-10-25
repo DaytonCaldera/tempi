@@ -27,6 +27,12 @@
             "permission": "manage_users"
         },
         {
+            "href": "/admin/roles",
+            "labelKey": "roles",
+            "icon": "ShieldCheck",
+            "permission": "manage_roles"
+        },
+        {
             "href": "/admin/plan",
             "labelKey": "plan",
             "icon": "CreditCard",

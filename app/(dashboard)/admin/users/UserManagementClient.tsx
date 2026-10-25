@@ -10,7 +10,7 @@ import {
     Shield, Edit3, UserPlus, Ban, Copy, Check, Lock
 } from "lucide-react";
 import { ROLES } from "@/lib/constants";
-import { labelOf } from "@/i18n/labels";
+import { roleLabel } from "@/i18n/labels";
 import CloseOrganizationCard from "./CloseOrganizationCard";
 
 /** A user flattened with their membership in the current organization. */
@@ -21,13 +21,21 @@ export type UserRow = {
     image?: string;
     clientId?: string;
     role: string;
+    /** Name of the organization's own role, when the member has one */
+    roleName?: string;
     isPending: boolean;
     isActive: boolean;
     departments: string[];
+    /** False for the user themself and for members whose role has a permission the user lacks */
+    editable: boolean;
 };
+
+/** A role the staff page lists. `assignable` is false when it has a permission the user lacks */
+export type RoleOption = { slug: string; name: string | null; assignable: boolean };
 
 interface UserManagementClientProps {
     users: UserRow[];
+    roles: RoleOption[];
     departments: { _id: string; name: string }[];
     client: { _id: string; code: string; name: string } | null;
     canCloseOrganization: boolean;
@@ -36,7 +44,7 @@ interface UserManagementClientProps {
     canAssignDepartments: boolean;
 }
 
-export default function UserManagementClient({ users, departments, client, canCloseOrganization, isLastOrganization, canAssignDepartments }: UserManagementClientProps) {
+export default function UserManagementClient({ users, roles, departments, client, canCloseOrganization, isLastOrganization, canAssignDepartments }: UserManagementClientProps) {
     const t = useTranslations("users");
     const tPlan = useTranslations("plan");
     const tCommon = useTranslations("common");
@@ -145,7 +153,7 @@ export default function UserManagementClient({ users, departments, client, canCl
                                 <div className="flex flex-col gap-2 min-w-50">
                                     <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em]">
                                         <Shield size={10} strokeWidth={3} />
-                                        {labelOf(tRoles, user.role)}
+                                        {roleLabel(tRoles, user.role, user.roleName)}
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
                                         {user.departments.map(deptId => {
@@ -171,7 +179,9 @@ export default function UserManagementClient({ users, departments, client, canCl
 
                             <DataTableCell>
                                 <div className="flex items-center justify-end gap-2">
-                                    {user.isPending ? (
+                                    {!user.editable ? (
+                                        <span title={t("cannotEdit")} className="p-2.5 text-ink-subtle"><Lock size={18} /></span>
+                                    ) : user.isPending ? (
                                         <button
                                             onClick={() => openEditModal(user)}
                                             className="px-4 py-2 bg-accent text-on-accent rounded-xl text-xs font-semibold uppercase hover:brightness-110 transition-all"
@@ -226,8 +236,11 @@ export default function UserManagementClient({ users, departments, client, canCl
                             onChange={(e) => setSelectedRole(e.target.value)}
                             className="w-full bg-subtle border border-line rounded-2xl px-5 py-4 text-sm font-bold text-ink focus:ring-2 ring-accent/30 outline-none appearance-none"
                         >
-                            <option value={ROLES.USER}>{tRoles(ROLES.USER)}</option>
-                            <option value={ROLES.ADMIN}>{tRoles(ROLES.ADMIN)}</option>
+                            {roles.map(role => (
+                                <option key={role.slug} value={role.slug} disabled={!role.assignable}>
+                                    {roleLabel(tRoles, role.slug, role.name)}{!role.assignable && ` · ${t("roleAboveYours")}`}
+                                </option>
+                            ))}
                         </select>
                     </div>
 

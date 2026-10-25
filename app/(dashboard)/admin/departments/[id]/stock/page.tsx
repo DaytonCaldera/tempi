@@ -58,6 +58,7 @@ export default async function DepartmentStockPage({ params, searchParams }: {
                 departmentName={department.name}
                 otherDepartments={otherDepartments.map(d => ({ _id: d._id.toString(), name: d.name }))}
                 currency={await getOrganizationCurrency(department.clientId)}
+                canDelete={hasPermission(session, PERMISSIONS.DELETE_STOCK)}
                 newBarcode={normalizeBarcode((await searchParams).barcode) || undefined}
             />
         </div>

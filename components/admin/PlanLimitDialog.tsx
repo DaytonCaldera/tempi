@@ -3,6 +3,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
+import { PERMISSIONS } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
 import { Modal } from "@/components/ui/Modal";
 
 /** Body of an API error response. Plan errors come from planLimitError / planFeatureError (lib/plans.ts). */
@@ -20,6 +23,8 @@ type ErrorBody = { error?: string; code?: string };
 export function usePlanLimitDialog() {
     const t = useTranslations("plan.limitDialog");
     const [message, setMessage] = useState<string | null>(null);
+    const { data: session } = useSession();
+    const canManagePlan = hasPermission(session, PERMISSIONS.MANAGE_USERS);
 
     /** Opens the dialog and returns true when `data` is a plan error; false for any other error. */
     const handlePlanError = (data: ErrorBody) => {
@@ -30,11 +35,12 @@ export function usePlanLimitDialog() {
 
     const planDialog = (
         <Modal isOpen={message !== null} onClose={() => setMessage(null)} title={t("title")}
-            footer={
+            // The plan page needs MANAGE_USERS: other roles (e.g. a manager) only read the message
+            footer={canManagePlan ? (
                 <Link href="/admin/plan" className="flex w-full items-center justify-center gap-2 rounded-3xl bg-accent py-4 text-sm font-semibold uppercase tracking-widest text-on-accent hover:brightness-110">
                     <Sparkles size={16} aria-hidden /> {t("seePlans")}
                 </Link>
-            }
+            ) : undefined}
         >
             <p className="text-sm leading-relaxed text-ink-muted">{message}</p>
         </Modal>

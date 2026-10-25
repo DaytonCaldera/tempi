@@ -9,7 +9,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import TimeZoneSetting from "./TimeZoneSetting";
 import { localeNames, locales } from "@/i18n/config";
 import { useLocaleSwitcher } from "@/i18n/useLocaleSwitcher";
-import { labelOf } from "@/i18n/labels";
+import { roleLabel } from "@/i18n/labels";
 import type { SessionMembership, StartPage } from "@/types/models";
 
 interface AccountClientProps {
@@ -224,7 +224,7 @@ export default function AccountClient({ ownedOrganizations, justClosedOrganizati
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-ink truncate">{org.clientName || tNav("unnamedOrganization")}</p>
                                         <p className="text-[10px] text-ink-subtle uppercase font-semibold tracking-wider">
-                                            {labelOf(tRoles, org.role)}{isOwner && ` · ${t("organizations.owner")}`}
+                                            {roleLabel(tRoles, org.role, org.roleName)}{isOwner && ` · ${t("organizations.owner")}`}
                                         </p>
                                     </div>
                                     {isCurrent ? (

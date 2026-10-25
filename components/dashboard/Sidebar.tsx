@@ -5,9 +5,9 @@ import sections from "./menuItems.json";
 import SidebarItem from "./SidebarItem";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
-import { hasPermission } from "@/lib/permissions";
+import { activeMembership, hasPermission } from "@/lib/permissions";
 import { sectionPermissions } from "@/lib/constants";
-import { labelOf } from "@/i18n/labels";
+import { roleLabel } from "@/i18n/labels";
 import OrganizationSwitcher from "@/components/dashboard/OrganizationSwitcher";
 import { LayoutGrid, ChevronLeft, Building2 } from "lucide-react";
 
@@ -32,16 +32,18 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
         clientName: org.clientName || t("unnamedOrganization"),
     }));
 
-    const isValidSection = (section: string) => {
-        if (section === "general") return true;
-        return hasPermission(session, sectionPermissions[section]);
-    };
-
     const hasOrganization = !!session?.user?.clientId;
-    const hasAssignedAreas = !!session?.user?.organizations
-        ?.find(m => m.clientId === session.user.clientId)?.departments?.length;
+    const hasAssignedAreas = !!activeMembership(session)?.departments?.length;
     const isVisible = (item: MenuItem) =>
-        (hasOrganization || !item.requiresOrganization) && (hasAssignedAreas || !item.requiresAssignedAreas);
+        (hasOrganization || !item.requiresOrganization) && (hasAssignedAreas || !item.requiresAssignedAreas)
+        && (!item.permission || hasPermission(session, item.permission));
+
+    // A section shows when the user may see one of its items, e.g. a manager with only manage_departments
+    const isValidSection = (section: string, items: MenuItem[]) => {
+        if (section === "general") return true;
+        if (sectionPermissions[section] && hasPermission(session, sectionPermissions[section])) return true;
+        return items.some(item => item.permission && isVisible(item));
+    };
 
     return (
         <>
@@ -95,7 +97,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                 <nav className="flex-1 overflow-y-auto overflow-x-hidden px-4 custom-scrollbar">
                     {Object.entries(sections as Record<string, MenuItem[]>).map(([section, items]) => (
                         <div key={section} className="mb-8">
-                            {isValidSection(section) && (
+                            {isValidSection(section, items) && (
                                 <>
                                     <div className={`flex items-center gap-3 px-4 mb-3 transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>
                                         <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-subtle whitespace-nowrap">
@@ -130,7 +132,7 @@ export default function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggl
                         </div>
                         <div className={`transition-opacity duration-300 ${!isOpen ? 'opacity-0' : 'opacity-100'}`}>
                             <p className="text-xs font-semibold truncate w-32">{session?.user?.name}</p>
-                            <p className="text-[10px] text-ink-subtle uppercase font-semibold tracking-wider">{session?.user?.role && labelOf(tRoles, session.user.role)}</p>
+                            <p className="text-[10px] text-ink-subtle uppercase font-semibold tracking-wider">{session?.user?.role && roleLabel(tRoles, session.user.role, activeMembership(session)?.roleName)}</p>
                         </div>
                     </Link>
                 </div>

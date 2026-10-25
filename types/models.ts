@@ -20,8 +20,26 @@ export interface Membership<Id = ObjectId> {
     joinedAt?: Date;
 }
 
-/** Membership as stored in the session/JWT, with ids as strings. */
-export type SessionMembership = Membership<string>;
+/**
+ * Membership as stored in the session/JWT, with ids as strings. roleName is the name of an organization's own
+ * role (built-in roles are labeled with the "roles" messages instead, see roleLabel in i18n/labels.ts).
+ */
+export type SessionMembership = Membership<string> & { roleName?: string };
+
+/**
+ * A role ("roles" collection). Built-in ones (ROLES) have clientId null; an organization's own ones have its
+ * clientId and a "custom_" slug (lib/roles.ts). Memberships store the slug.
+ */
+export interface Role {
+    _id: ObjectId;
+    slug: string;
+    name: string;
+    clientId: ObjectId | null;
+    permissions: Record<string, boolean>;
+    createdAt?: Date;
+    createdBy?: string;
+    updatedAt?: Date;
+}
 
 /** Page a user lands on after signing in. Missing until a runner answers the prompt on the dashboard. */
 export type StartPage = "runner" | "dashboard";

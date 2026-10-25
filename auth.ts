@@ -7,7 +7,8 @@ import Resend from "next-auth/providers/resend"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
 import { getDb } from "@/lib/api"
-import { getRolePermissions } from "@/lib/roles"
+import { getRole, getRolePermissions } from "@/lib/roles"
+import { isCustomRole } from "@/lib/role-rules"
 import { recordDailyActivity } from "@/lib/activity"
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit"
 import { findUserByEmail, forgetCachedUsers } from "@/lib/users"
@@ -194,18 +195,19 @@ function realMemberships(userDoc: User | null): Membership[] {
 	return (userDoc?.organizations || []).filter(m => !isPlaceholderOrg(m));
 }
 
-function toSessionMemberships(memberships: Membership[]): SessionMembership[] {
-	return memberships.map(m => ({
-		...m,
-		role: m.role === ROLES.SUPERADMIN ? ROLES.USER : m.role, // Same rule as resolveContext
-		clientId: m.clientId.toString(),
-		departments: m.departments?.map(id => id.toString()),
+/** The memberships for the session, with the names of the organizations' own roles (getRole caches them). */
+async function toSessionMemberships(memberships: Membership[]): Promise<SessionMembership[]> {
+	return Promise.all(memberships.map(async m => {
+		const role = m.role === ROLES.SUPERADMIN ? ROLES.USER : m.role; // Same rule as resolveContext
+		const roleName = isCustomRole(role) ? (await getRole(role, m.clientId))?.name ?? undefined : undefined;
+		return {
+			...m,
+			role,
+			...(roleName && { roleName }),
+			clientId: m.clientId.toString(),
+			departments: m.departments?.map(id => id.toString()),
+		};
 	}));
-}
-
-/** Permissions of the role, reusing the token's when the role didn't change (saves a query per request). */
-async function permissionsFor(token: JWT, role: string) {
-	return token.role === role && token.permissions ? token.permissions : getRolePermissions(role);
 }
 
 /**
@@ -248,7 +250,7 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 
 	if (!membership) {
 		// No organization yet goes to the lobby; deactivated in every organization goes to /unauthorized
-		return { ...noAccess, organizations: toSessionMemberships(memberships), isActive: memberships.length === 0 };
+		return { ...noAccess, organizations: await toSessionMemberships(memberships), isActive: memberships.length === 0 };
 	}
 
 	// Superadmin comes only from SUPERADMIN_EMAIL: a membership saying "superadmin" (a script, a manual DB edit)
@@ -259,8 +261,10 @@ async function resolveContext(token: JWT, requestedClientId: string | null, fres
 		role,
 		clientId: membership.clientId.toString(), // Always a string, ObjectIds break the JWT
 		activeOrganization: membership.clientId.toString(),
-		permissions: await permissionsFor(token, role),
-		organizations: toSessionMemberships(memberships),
+		// Resolved in the membership's organization: an organization's own roles mean nothing elsewhere.
+		// getRole caches them briefly, so edits to a role apply to its members within seconds
+		permissions: await getRolePermissions(role, membership.clientId),
+		organizations: await toSessionMemberships(memberships),
 		startPage: userDoc.startPage ?? null,
 		isActive: true,
 	};

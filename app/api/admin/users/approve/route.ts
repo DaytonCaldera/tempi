@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from "@/lib/authorize";
-import { badRequest, getDb, notFound, toObjectId, unauthorized } from '@/lib/api';
+import { badRequest, forbidden, getDb, notFound, toObjectId, unauthorized } from '@/lib/api';
+import { getRolePermissions } from '@/lib/roles';
+import { covers } from '@/lib/role-rules';
 import { PERMISSIONS, ROLES } from '@/lib/constants';
 import { findOwnDepartment } from '@/lib/departments';
 import { planLimitError } from '@/lib/plans';
@@ -24,6 +26,8 @@ export async function POST(req: Request) {
     if (!userObjectId || !departmentId) return badRequest();
 
     if (!await findOwnDepartment(session, departmentId)) return notFound("departmentNotFound");
+    // Same rule as the staff page: only roles within the approver's own permissions (lib/role-rules.ts)
+    if (!covers(session.user.permissions, await getRolePermissions(ROLES.USER, clientId))) return forbidden("roleAboveYours");
     // An approved member takes room in the organization's plan
     const limitError = await planLimitError(clientId, "users");
     if (limitError) return limitError;
