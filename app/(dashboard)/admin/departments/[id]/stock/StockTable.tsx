@@ -10,7 +10,8 @@ interface StockTableProps {
     items: StockRow[];
     onQuickMove: (item: StockRow, type: MovementType) => void;
     onEdit: (item: StockRow) => void;
-    onDelete: (item: StockRow) => void;
+    /** Missing when the user's role may not delete products */
+    onDelete?: (item: StockRow) => void;
     /** The organization's currency, for each product's cost and value */
     currency: string;
     /** Missing when the organization has no other department to transfer to */
@@ -95,14 +96,16 @@ export function StockTable({ items, onQuickMove, onEdit, onDelete, onTransfer, c
                                 >
                                     <Edit size={16} className="text-ink-subtle hover:text-accent transition-colors " />
                                 </button>
-                                <button
-                                    onClick={() => onDelete(item)}
-                                    aria-label={t("actions.delete", { product: item.productName })}
-                                    title={t("actions.delete", { product: item.productName })}
-                                    className="p-2 bg-subtle text-ink-subtle rounded-lg hover:bg-danger/10 active:scale-90 transition-all"
-                                >
-                                    <Trash2 size={16} className="text-ink-subtle hover:text-danger transition-colors" />
-                                </button>
+                                {onDelete && (
+                                    <button
+                                        onClick={() => onDelete(item)}
+                                        aria-label={t("actions.delete", { product: item.productName })}
+                                        title={t("actions.delete", { product: item.productName })}
+                                        className="p-2 bg-subtle text-ink-subtle rounded-lg hover:bg-danger/10 active:scale-90 transition-all"
+                                    >
+                                        <Trash2 size={16} className="text-ink-subtle hover:text-danger transition-colors" />
+                                    </button>
+                                )}
                             </div>
                         </DataTableCell>
                     </DataTableRow>

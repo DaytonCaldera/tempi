@@ -1,7 +1,8 @@
 import type { Session } from "next-auth";
 import type { ObjectId } from "mongodb";
 import { getDb, isDuplicateKeyError, toObjectId } from "@/lib/api";
-import { MOVEMENT_REASONS, ROLES } from "@/lib/constants";
+import { MOVEMENT_REASONS, PERMISSIONS } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
 import { costSnapshot } from "@/lib/currency";
 import { runnerDepartmentIds } from "@/lib/departments";
 import type { Department, MovementType, StockItem } from "@/types/models";
@@ -12,14 +13,14 @@ import type { Department, MovementType, StockItem } from "@/types/models";
  * and a held one an admin or the runner applies later.
  */
 
-const MANAGEMENT_ROLES = [ROLES.ADMIN];
-
-/** Whether the user may move stock of `departmentId`: admins anywhere, runners in the departments they work in. */
+/**
+ * Whether the user may move stock of `departmentId`: roles that edit stock (admins, managers) anywhere, roles
+ * that move stock (runners) in the departments they work in.
+ */
 export async function canMoveIn(session: Session, departmentId: ObjectId) {
-    // The session's role and departments are resolved from the user's document (see the jwt callback in auth.ts)
-    const role = session.user.role;
-    if (MANAGEMENT_ROLES.includes(role)) return true;
-    return role === ROLES.USER && (await runnerDepartmentIds(session)).some(id => id.equals(departmentId));
+    // The session's permissions and departments are resolved from the user's document (see the jwt callback in auth.ts)
+    if (hasPermission(session, PERMISSIONS.EDIT_STOCK)) return true;
+    return hasPermission(session, PERMISSIONS.MOVE_STOCK) && (await runnerDepartmentIds(session)).some(id => id.equals(departmentId));
 }
 
 export type MoveUser = { id?: string | ObjectId | null; name?: string | null; email?: string | null };

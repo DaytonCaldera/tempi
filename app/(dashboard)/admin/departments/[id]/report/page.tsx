@@ -25,14 +25,17 @@ export default async function DepartmentReportPage({ params }: { params: Promise
 
     return (
         <div className="p-6 lg:p-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-                <Link
-                    href={`/admin/departments/${id}/stock`}
-                    className="flex items-center gap-2 text-xs font-bold uppercase text-ink-subtle hover:text-ink transition-colors"
-                >
-                    <ArrowLeft size={14} /> {t('backToDepartment')}
-                </Link>
-            </div>
+            {/* The stock page needs EDIT_STOCK: a role that only sees reports has nowhere to go back to */}
+            {hasPermission(session, PERMISSIONS.EDIT_STOCK) && (
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+                    <Link
+                        href={`/admin/departments/${id}/stock`}
+                        className="flex items-center gap-2 text-xs font-bold uppercase text-ink-subtle hover:text-ink transition-colors"
+                    >
+                        <ArrowLeft size={14} /> {t('backToDepartment')}
+                    </Link>
+                </div>
+            )}
             <ConsumptionReport
                 deptId={id}
                 title={t('departmentTitle', { name: department.name })}

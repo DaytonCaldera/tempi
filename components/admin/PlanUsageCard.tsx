@@ -16,6 +16,7 @@ export default async function PlanUsageCard({ usage, title, upgradeLink = true }
     upgradeLink?: boolean;
 }) {
     const t = await getTranslations("plan");
+    const tPricing = await getTranslations("pricing");
     const format = await getFormatter();
 
     return (
@@ -24,6 +25,9 @@ export default async function PlanUsageCard({ usage, title, upgradeLink = true }
                 <h2 className="text-sm font-semibold text-ink">{title ?? t("title")}</h2>
                 <p className="text-sm font-semibold text-accent">
                     {usage.plan ? planLabel(t, usage.plan) : t("noPlan")}
+                    {usage.source === "subscription" && usage.subscription && (
+                        <span className="ml-2 text-xs font-medium text-ink-subtle">{tPricing(`interval.${usage.subscription.interval}`)}</span>
+                    )}
                     {usage.source === "trial" && usage.trialEndsAt && (
                         <span className="ml-2 text-xs font-medium text-ink-subtle">{t("trialUntil", { date: format.dateTime(new Date(usage.trialEndsAt), { dateStyle: "medium" }) })}</span>
                     )}

@@ -5,12 +5,14 @@ import { PLAN_FEATURES, ROLES } from '@/lib/constants';
 import { getPlanUsage, planHasFeature } from '@/lib/plans';
 import PlanUsageCard from '@/components/admin/PlanUsageCard';
 import { hasPermission } from '@/lib/permissions';
+import { getRolePermissions, listCustomRoles } from '@/lib/roles';
+import { ASSIGNABLE_BUILT_IN_ROLES, covers } from '@/lib/role-rules';
 import { getClientTenantQuery, getTenantQuery, getUserTenantQuery } from '@/lib/tenant-guard';
 import { canCloseOrganization, OPEN_ORGANIZATION, otherActiveMemberships } from '@/lib/organizations';
 import type { Organization, User } from '@/types/models';
 import { emailConfigured } from '@/lib/email';
 import { alertSettingsOf } from '@/lib/stock-alerts';
-import UserManagementClient, { type UserRow } from "./UserManagementClient";
+import UserManagementClient, { type RoleOption, type UserRow } from "./UserManagementClient";
 import AlertSettingsCard from "./AlertSettingsCard";
 import CurrencyCard from "./CurrencyCard";
 import { currencyOf } from "@/lib/currency";
@@ -21,11 +23,20 @@ export default async function UserManagementPage() {
     if (!hasPermission(session, "manage_users")) redirect("/unauthorized");
 
     const db = await getDb();
+    const clientId = toObjectId(session.user.clientId);
     const [usersRaw, departmentsRaw, organization] = await Promise.all([
         db.collection<User>('users').find(getUserTenantQuery(session)).toArray(),
         db.collection('departments').find(getTenantQuery(session)).toArray(),
         db.collection<Organization>('clients').findOne({ ...getClientTenantQuery(session), ...OPEN_ORGANIZATION }, { projection: { clientCode: 1, name: 1, ownerEmail: 1, alerts: 1, currency: 1 } }),
     ]);
+
+    // Roles the staff page offers: the built-in ones, then the organization's own. A role with a permission the
+    // user lacks shows, but can't be given (app/api/admin/users/toggle-status checks it too)
+    const own = session.user.permissions;
+    const customRoles = clientId ? await listCustomRoles(clientId) : [];
+    const builtInRoles = await Promise.all(ASSIGNABLE_BUILT_IN_ROLES.map(async slug => ({ slug, name: null, permissions: await getRolePermissions(slug, clientId) })));
+    const roleOptions: RoleOption[] = [...builtInRoles, ...customRoles].map(r => ({ slug: r.slug, name: r.name, assignable: covers(own, r.permissions) }));
+    const permissionsOf = new Map([...builtInRoles, ...customRoles].map(r => [r.slug, r.permissions]));
 
     // Flatten each user's membership in the current organization
     const users: UserRow[] = usersRaw.map(user => {
@@ -38,14 +49,16 @@ export default async function UserManagementPage() {
             image: user.image,
             clientId: session.user.clientId,
             role,
+            roleName: customRoles.find(r => r.slug === role)?.name,
             isPending: role === ROLES.PENDING_USER,
             isActive: membership?.status === 'active',
             departments: membership?.departments?.map(id => id.toString()) || [],
+            // Members whose role has a permission the user lacks are above them
+            editable: user.email?.toLowerCase() !== session.user.email?.toLowerCase() && covers(own, permissionsOf.get(role)),
         };
     });
 
     const departments = departmentsRaw.map(dept => ({ _id: dept._id.toString(), name: dept.name as string }));
-    const clientId = toObjectId(session.user.clientId);
     const usage = clientId ? await getPlanUsage(clientId) : null;
 
     return (
@@ -55,6 +68,7 @@ export default async function UserManagementPage() {
             {organization && <div className="mb-8"><CurrencyCard initial={currencyOf(organization)} /></div>}
             <UserManagementClient
                 users={users}
+                roles={roleOptions}
                 departments={departments}
                 client={organization ? { _id: organization._id.toString(), code: organization.clientCode, name: organization.name } : null}
                 canCloseOrganization={!!organization && !!session.user.clientId && canCloseOrganization(session, organization)}

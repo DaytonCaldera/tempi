@@ -1,16 +1,19 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
+import { PERMISSIONS } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
 import { DataTable, DataTableRow, DataTableCell } from "@/components/ui/DataTable";
 import { Modal } from "@/components/ui/Modal";
 import { usePlanLimitDialog } from "@/components/admin/PlanLimitDialog";
-import { labelOf } from "@/i18n/labels";
+import { roleLabel } from "@/i18n/labels";
 import { Users, Package, Edit3, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type DepartmentRow = { _id: string; name: string; description?: string; clientId?: string };
-type Personnel = { _id: string; name: string; isActive: boolean; role: string | null };
+type Personnel = { _id: string; name: string; isActive: boolean; role: string | null; roleName?: string | null };
 type DepartmentForm = { name: string; clientId: string };
 
 interface DepartmentsManagementClientProps {
@@ -26,6 +29,9 @@ export default function DepartmentsManagementClient({
     const tCommon = useTranslations("common");
     const tErrors = useTranslations("errors");
     const tRoles = useTranslations("roles");
+    // The stock page needs EDIT_STOCK, which a role can lack while managing departments
+    const { data: session } = useSession();
+    const canEditStock = hasPermission(session, PERMISSIONS.EDIT_STOCK);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDept, setEditingDept] = useState<DepartmentRow | null>(null);
     const { handlePlanError, planDialog } = usePlanLimitDialog();
@@ -158,13 +164,15 @@ export default function DepartmentsManagementClient({
                                 >
                                     <Users size={18} />
                                 </button>
-                                <Link
-                                    href={`/admin/departments/${dept._id}/stock`}
-                                    className="p-2 text-ink-subtle hover:text-warning hover:bg-warning/10 rounded-lg transition-all"
-                                    title={t("reviewStock")}
-                                >
-                                    <Package size={18} />
-                                </Link>
+                                {canEditStock && (
+                                    <Link
+                                        href={`/admin/departments/${dept._id}/stock`}
+                                        className="p-2 text-ink-subtle hover:text-warning hover:bg-warning/10 rounded-lg transition-all"
+                                        title={t("reviewStock")}
+                                    >
+                                        <Package size={18} />
+                                    </Link>
+                                )}
                                 <div className="w-px h-4 bg-subtle mx-2" />
                                 <button
                                     onClick={() => openModal(dept)}
@@ -229,7 +237,7 @@ export default function DepartmentsManagementClient({
                         <div key={user._id} className="flex items-center justify-between p-3 rounded-xl bg-subtle border border-transparent hover:border-line transition-all">
                             <div className="flex flex-col">
                                 <span className="font-bold text-sm text-ink">{user.name}</span>
-                                <span className="text-[10px] text-ink-muted uppercase font-semibold">{user.role && labelOf(tRoles, user.role)}</span>
+                                <span className="text-[10px] text-ink-muted uppercase font-semibold">{user.role && roleLabel(tRoles, user.role, user.roleName)}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-success' : 'bg-danger'}`} />

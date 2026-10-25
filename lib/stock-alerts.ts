@@ -2,7 +2,8 @@ import { after } from "next/server";
 import type { ObjectId } from "mongodb";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/lib/api";
-import { ROLES } from "@/lib/constants";
+import { PERMISSIONS } from "@/lib/constants";
+import { roleSlugsWith } from "@/lib/roles";
 import { emailConfigured, emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
 import { labelOf } from "@/i18n/labels";
@@ -101,11 +102,15 @@ export async function checkLowStock(itemIds: ObjectId[], context: AlertContext) 
     }
 }
 
-/** Admins of the organization (active members with the admin role) and the extra addresses, without repeats. */
+/**
+ * Active members whose role edits stock (admins, and the organization's own roles that do, like a manager)
+ * and the extra addresses, without repeats.
+ */
 async function recipients(clientId: ObjectId, settings: AlertSettings) {
     const db = await getDb();
+    const roles = await roleSlugsWith(PERMISSIONS.EDIT_STOCK, clientId);
     const admins = await db.collection<User>("users").find(
-        { organizations: { $elemMatch: { clientId: { $in: [clientId, clientId.toString()] }, status: "active", role: ROLES.ADMIN } }, isActive: { $ne: false } },
+        { organizations: { $elemMatch: { clientId: { $in: [clientId, clientId.toString()] }, status: "active", role: { $in: roles } } }, isActive: { $ne: false } },
         { projection: { email: 1 } }
     ).toArray();
     const emails = [...admins.map(a => a.email), ...settings.extraEmails].filter(Boolean).map(e => e.trim().toLowerCase());

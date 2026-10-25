@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/authorize";
 import { PERMISSIONS } from "@/lib/constants";
 import { getDb, toObjectId, unauthorized } from "@/lib/api";
+import { listCustomRoles } from "@/lib/roles";
 
-/** GET /api/admin/departments/personnel?deptId= - Users assigned to a department: `{ users: [{ _id, name, isActive, role }] }` */
+/** GET /api/admin/departments/personnel?deptId= - Users assigned to a department: `{ users: [{ _id, name, isActive, role, roleName? }] }` */
 export async function GET(req: Request) {
     const { session, error } = await requirePermission(PERMISSIONS.MANAGE_DEPTS);
     if (error) return error;
@@ -26,12 +27,13 @@ export async function GET(req: Request) {
         })
         .toArray();
 
+    // Names of the organization's own roles, for labeling them
+    const roleNames = new Map((await listCustomRoles(clientId)).map(r => [r.slug, r.name]));
+
     return NextResponse.json({
-        users: users.map(user => ({
-            _id: user._id.toString(),
-            name: user.name,
-            isActive: user.isActive,
-            role: user.organizations?.[0]?.role ?? null
-        }))
+        users: users.map(user => {
+            const role: string | null = user.organizations?.[0]?.role ?? null;
+            return { _id: user._id.toString(), name: user.name, isActive: user.isActive, role, roleName: role && roleNames.get(role) };
+        })
     });
 }

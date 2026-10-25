@@ -79,10 +79,10 @@ export async function PUT(req: Request, { params }: Params) {
 /**
  * DELETE /api/admin/departments/[id]/stock/[stockId]
  * Soft delete: marks the item as deleted but keeps the document, so its
- * stock_movements history stays valid for reports.
+ * stock_movements history stays valid for reports. Needs DELETE_STOCK, apart from editing.
  */
 export async function DELETE(req: Request, { params }: Params) {
-    const { session, error } = await requirePermission(PERMISSIONS.EDIT_STOCK);
+    const { session, error } = await requirePermission(PERMISSIONS.DELETE_STOCK);
     if (error) return error;
 
     try {

@@ -62,6 +62,13 @@
         "cannotEditSelf": "No puedes cambiar tu propio rol o acceso",
         "ownerLocked": "El propietario de la organización debe seguir siendo administrador activo",
         "invalidRole": "Rol no válido",
+        "roleNameRequired": "Ponle un nombre al rol (máximo 40 caracteres)",
+        "roleNameTaken": "Ya hay un rol con ese nombre",
+        "roleNotFound": "El rol no existe",
+        "roleAboveYours": "Ese rol tiene permisos que tú no tienes",
+        "memberAboveYou": "Esta persona tiene permisos que tú no tienes: no puedes cambiar su acceso",
+        "roleInUse": "{count, plural, one {Una persona tiene} other {# personas tienen}} este rol. Dales otro rol antes de eliminarlo",
+        "tooManyRoles": "Una organización puede tener hasta {limit} roles propios",
         "organizationRequired": "Primero elige una organización",
         "tooManyAttempts": "Demasiados intentos. Vuelve a intentarlo en unos minutos",
         "planLimit": {
@@ -92,14 +99,53 @@
         "invalidCurrency": "Esa moneda no está disponible.",
         "invalidTimeZone": "Esa zona horaria no existe.",
         "heldNotFound": "Ese movimiento retenido ya no está pendiente.",
-        "heldNotYours": "Este movimiento lo decide primero quien lo hizo. Los administradores pueden decidirlo 30 minutos después."
+        "heldNotYours": "Este movimiento lo decide primero quien lo hizo. Los administradores pueden decidirlo 30 minutos después.",
+        "subscriptionNotActive": "Tu suscripción no está activa, así que no se puede cambiar desde aquí.",
+        "scheduledChangePending": "Ya tienes un cambio de plan programado. Mantén tu plan actual para elegir otro.",
+        "customPlanChange": "Los planes personalizados se cambian con nosotros. Escríbenos y lo ajustamos.",
+        "noPlanChange": "Ese ya es tu plan.",
+        "refundNotEligible": "Este pago ya no tiene reembolso: la garantía es solo para planes anuales, durante los primeros días después de pagar.",
+        "refundFailed": "Tu suscripción se canceló, pero el reembolso no se pudo hacer. Escríbenos y lo resolvemos.",
+        "subscriptionActionFailed": "No se pudo hacer el cambio. Inténtalo de nuevo en unos minutos."
     },
     "roles": {
         "superadmin": "Superadmin",
         "admin": "Administrador",
         "user": "Runner / Operativo",
         "pending_user": "Pendiente",
-        "new_user": "Usuario nuevo"
+        "new_user": "Usuario nuevo",
+        "custom": "Rol personalizado"
+    },
+    "permissions": {
+        "manage_users": { "label": "Gestionar personal", "description": "Aprobar personas, cambiar su rol y sus áreas, y ver el plan y los ajustes de la organización." },
+        "manage_roles": { "label": "Gestionar roles", "description": "Crear, editar y eliminar los roles de la organización." },
+        "manage_departments": { "label": "Gestionar departamentos", "description": "Crear y renombrar departamentos y ver quién trabaja en cada uno." },
+        "edit_inventory": { "label": "Editar inventario", "description": "Crear, editar, importar y transferir productos, y mover stock en cualquier departamento." },
+        "delete_stock": { "label": "Eliminar productos", "description": "Quitar productos del inventario. Su historial se conserva para los reportes." },
+        "move_stock": { "label": "Mover stock (runner)", "description": "Registrar entradas y salidas en los departamentos asignados." },
+        "view_reports": { "label": "Ver reportes", "description": "Ver consumo, movimientos y costos." }
+    },
+    "rolesAdmin": {
+        "title": "Roles",
+        "subtitle": "Crea roles con los permisos justos, por ejemplo un gerente que administra el inventario pero no puede eliminar productos. Nadie puede dar permisos que no tiene.",
+        "create": "Nuevo rol",
+        "createTitle": "Nuevo rol",
+        "editTitle": "Editar rol",
+        "edit": "Editar {role}",
+        "delete": "Eliminar {role}",
+        "members": "{count, plural, =0 {Sin personas} one {# persona} other {# personas}}",
+        "builtIn": "Predefinido",
+        "aboveYours": "Tiene permisos que tú no tienes",
+        "noPermissions": "Sin permisos",
+        "name": "Nombre",
+        "namePlaceholder": "Ej.: Gerente",
+        "permissions": "Permisos",
+        "lockedPermission": "No puedes darlo porque tú no lo tienes.",
+        "saving": "Guardando...",
+        "deleteTitle": "Eliminar rol",
+        "deleteConfirm": "¿Eliminar el rol «{role}»? No se puede deshacer.",
+        "deleteInUse": "{count, plural, one {Una persona tiene} other {# personas tienen}} el rol «{role}». Dales otro rol desde Personal antes de eliminarlo.",
+        "confirmDelete": "Eliminar"
     },
     "units": {
         "unidades": "Unidades",
@@ -129,6 +175,7 @@
         "runner": "Runner",
         "departments": "Departamentos",
         "staff": "Personal",
+        "roles": "Roles",
         "toggleSidebar": "Mostrar u ocultar menú",
         "avatar": "Avatar",
         "defaultRole": "Personal",
@@ -524,6 +571,8 @@
     },
     "users": {
         "inviteCode": "Código de invitación",
+        "cannotEdit": "No puedes cambiar el acceso de esta persona",
+        "roleAboveYours": "tiene permisos que tú no tienes",
         "inviteHint": "Comparte este código con tu equipo para que se unan a esta organización.",
         "totalStaff": "Total personal",
         "pendingApproval": "{count, plural, one {# pendiente de aprobación} other {# pendientes de aprobación}}",
@@ -795,6 +844,19 @@
                     "paragraphs": [
                         "Podemos actualizar estos términos. La fecha de \"última actualización\" indicada arriba muestra cuándo cambiaron por última vez. Si sigue usando Vitalliz después de un cambio, acepta los términos actualizados."
                     ]
+                },
+                "billing": {
+                    "title": "Planes, pagos y reembolsos",
+                    "paragraphs": [
+                        "Los planes de pago se cobran por adelantado, cada mes o cada año, a través de Lemon Squeezy, que actúa como comerciante y emite las facturas. Puede cancelar en cualquier momento desde la página de su plan: conserva el plan hasta el final del periodo pagado y después pasa al plan gratuito, sin perder datos."
+                    ],
+                    "bullets": [
+                        "Cambiar a un plan superior, o de pago mensual a anual, se aplica de inmediato: se cobra el precio nuevo menos la parte no usada de lo que ya pagó, y el nuevo periodo empieza ese día.",
+                        "Cambiar a un plan inferior, o de pago anual a mensual, se aplica al final del periodo pagado, sin reembolso del periodo en curso.",
+                        "Los pagos mensuales no se reembolsan.",
+                        "Los pagos anuales tienen una garantía de 14 días: si cancela dentro de ese plazo, se le reembolsa el pago completo y el plan termina ese día.",
+                        "Fuera de estos casos, podemos reembolsar cobros hechos por error o por una falla grave del servicio, si nos escribe."
+                    ]
                 }
             }
         }
@@ -1051,7 +1113,14 @@
                 "import": "Importó productos",
                 "updateAlerts": "Cambió los avisos por correo",
                 "updateCurrency": "Cambió la moneda",
-                "resolveHeld": "Decidió un movimiento retenido"
+                "resolveHeld": "Decidió un movimiento retenido",
+                "subscriptionChange": "Cambió el plan de la suscripción",
+                "subscriptionCancel": "Canceló la suscripción",
+                "subscriptionResume": "Reactivó la suscripción",
+                "subscriptionRefund": "Reembolsó la suscripción",
+                "createRole": "Creó un rol",
+                "updateRole": "Editó un rol",
+                "deleteRole": "Eliminó un rol"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -1375,7 +1444,50 @@
             "manualBody": "Tu plan es personalizado. Para cambios o facturas escribe a {email}.",
             "manage": "Gestionar suscripción",
             "comparePlans": "Planes",
-            "fairUse": "\"Sin límite\" está sujeto a uso razonable. Si tu equipo supera los 150 usuarios activos, escríbenos a {email} y armamos un plan a tu medida."
+            "fairUse": "\"Sin límite\" está sujeto a uso razonable. Si tu equipo supera los 150 usuarios activos, escríbenos a {email} y armamos un plan a tu medida.",
+            "paying": "{plan} · pago {interval}",
+            "refundedTitle": "Suscripción reembolsada",
+            "refundedBody": "El pago se devolvió a tu tarjeta y pasaste a Gratis sin perder datos.",
+            "refundStillAvailable": "Aún puedes pedir el reembolso completo: tienes {days} días de garantía en el plan anual (hasta el {date}).",
+            "requestRefund": "Pedir reembolso",
+            "cancel": "Cancelar suscripción",
+            "resume": "Reactivar suscripción",
+            "resumed": "Listo: tu suscripción sigue activa y se renovará en la fecha de siempre.",
+            "keepCurrent": "Mantener mi plan actual",
+            "keptCurrent": "Listo: mantienes tu plan actual.",
+            "scheduledChange": "Pasarás a {plan} ({interval}) el {date}. Hasta entonces mantienes lo que ya pagaste.",
+            "ownerOnly": "Solo el propietario de la organización puede cambiar o cancelar la suscripción.",
+            "actionFailed": "No se pudo hacer el cambio. Inténtalo de nuevo.",
+            "cancelledDone": "Listo: cancelaste tu suscripción. Mantienes tu plan hasta el {date}.",
+            "refundDone": "Listo: cancelaste tu suscripción y te devolvimos el pago. Puede tardar unos días en verse en tu tarjeta.",
+            "changedNow": "Listo: tu plan cambió. Lemon Squeezy te enviará el recibo del cobro.",
+            "changeScheduled": "Listo: el cambio se aplicará el {date}.",
+            "refundPolicy": "Puedes cancelar cuando quieras y mantienes tu plan hasta el final del periodo pagado. Los pagos mensuales no se reembolsan; los anuales tienen {days} días de garantía con reembolso completo.",
+            "cancelDialog": {
+                "title": "Cancelar suscripción",
+                "refundTitle": "Pedir reembolso",
+                "body": "Mantienes {plan} hasta el {date}. Después pasas a Gratis sin perder datos: solo no podrás crecer por encima de sus límites.",
+                "noRefundMonthly": "Los pagos mensuales no se reembolsan.",
+                "noRefundYearly": "Ya pasaron los {days} días de garantía de tu pago anual, así que no se reembolsa.",
+                "chooseHow": "¿Cómo quieres cancelar?",
+                "atPeriodEnd": "Al final del periodo",
+                "withRefund": "Ahora, con reembolso de {amount}",
+                "refundBody": "Tu plan termina hoy y te devolvemos el pago completo. Garantía de {days} días, hasta el {date}.",
+                "refundOnlyBody": "Te devolvemos {amount} a tu tarjeta y tu plan termina hoy. Pasas a Gratis sin perder datos.",
+                "dropsScheduled": "El cambio de plan que tenías programado también se cancela.",
+                "keep": "Volver",
+                "confirm": "Cancelar suscripción",
+                "confirmRefund": "Cancelar y reembolsar"
+            },
+            "changeDialog": {
+                "title": "Cambiar a {plan} ({interval})",
+                "upgradeBody": "El cambio es inmediato. Hoy pagas el precio nuevo menos la parte que no usaste de tu plan actual, y tu nuevo periodo empieza hoy.",
+                "estimate": "Cobro de hoy: aprox. {amount} (más impuestos). Lemon Squeezy calcula el monto exacto.",
+                "upgradeRenews": "Después se renueva a {amount} con pago {interval}.",
+                "downgradeBody": "Mantienes {current} hasta el {date}, que ya pagaste. Desde ese día pagas {plan} con pago {interval} ({amount}). El periodo actual no se reembolsa.",
+                "back": "Volver",
+                "confirm": "Confirmar cambio"
+            }
         }
     },
     "startPage": {
@@ -1438,6 +1550,17 @@
                 "title": "¿Necesitas más?",
                 "body": "Armamos planes a medida para operaciones grandes. Escríbenos a {email}."
             }
+        },
+        "switchTo": {
+            "monthly": "Pasar a pago mensual",
+            "yearly": "Pasar a pago anual"
+        },
+        "freeViaCancel": "Para pasar a Gratis, cancela tu suscripción.",
+        "changeBlocked": {
+            "pending": "Tienes un cambio de plan programado.",
+            "custom": "Para cambiar un plan personalizado, escríbenos.",
+            "ownerOnly": "Solo el propietario puede cambiar el plan.",
+            "inactive": "Reactiva tu suscripción o actualiza tu pago para cambiar de plan."
         }
     },
     "checkout": {

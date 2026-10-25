@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Building2, Check, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { labelOf } from "@/i18n/labels";
+import { roleLabel } from "@/i18n/labels";
 import type { SessionMembership } from "@/types/models";
 
 export default function OrganizationSwitcher({ className, userOrgs }: { className?: string; userOrgs: SessionMembership[] }) {
@@ -79,7 +79,7 @@ export default function OrganizationSwitcher({ className, userOrgs }: { classNam
                         <div className={`w-2 h-2 rounded-full ${org.status === 'active' ? 'bg-success' : 'bg-danger'}`}></div>
                         <div className="flex-1">
                             <p className="text-sm font-semibold text-ink">{org.clientName}</p>
-                            <p className="text-[10px] text-ink-subtle uppercase font-semibold tracking-wider">{labelOf(tRoles, org.role)}</p>
+                            <p className="text-[10px] text-ink-subtle uppercase font-semibold tracking-wider">{roleLabel(tRoles, org.role, org.roleName)}</p>
                         </div>
                         {org.clientId === currentClientId && (
                             <Check size={16} className="text-accent" />

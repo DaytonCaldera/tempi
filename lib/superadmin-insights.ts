@@ -246,7 +246,7 @@ export async function getAccessDiagnosis(id: string) {
     const departmentIds = (membership.departments || []).map(d => toObjectId(d.toString())).filter(d => d !== null);
     const [organization, permissions, departments] = await Promise.all([
         db.collection<Organization>("clients").findOne({ _id: clientId }, { projection: { name: 1, status: 1 } }),
-        getRolePermissions(role),
+        getRolePermissions(role, clientId),
         db.collection<Department>("departments").find({ _id: { $in: departmentIds } }, { projection: { name: 1, clientId: 1 } }).toArray(),
     ]);
     if (organization?.status === "closed") notes.push("organizationClosed");

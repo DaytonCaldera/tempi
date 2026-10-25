@@ -7,18 +7,20 @@ import { AUDIT_ACTIONS, logAudit } from "@/lib/audit";
 import { isOrganizationOwner } from "@/lib/organizations";
 import { planLimitError } from "@/lib/plans";
 import { forgetCachedUsers } from "@/lib/users";
+import { getAssignableRole, getRolePermissions } from "@/lib/roles";
+import { covers } from "@/lib/role-rules";
 import type { Organization, User } from "@/types/models";
-
-/** Roles that can be given from the staff page. Superadmin only comes from SUPERADMIN_EMAIL (see auth.ts). */
-const ASSIGNABLE_ROLES: string[] = [ROLES.USER, ROLES.ADMIN];
 
 /**
  * PATCH /api/admin/users/toggle-status
  * Updates a user's membership in an organization: active/inactive, role and departments.
  * Body: { userId, isActive, departments: string[], role }
  *
- * - The role must be one of ASSIGNABLE_ROLES and every department must belong to the organization.
+ * - The role must be a built-in one the staff page offers or one of the organization's own roles, and every
+ *   department must belong to the organization.
  * - Admins can't edit their own membership, and the owner always stays an active admin.
+ * - Nobody gives a role with permissions they don't have, nor edits a member whose role has them (lib/role-rules.ts):
+ *   a manager can't make someone admin, nor demote or deactivate an admin.
  * - Approving or reactivating a member needs room in the organization's plan (lib/plans.ts).
  */
 export async function PATCH(request: Request) {
@@ -28,13 +30,16 @@ export async function PATCH(request: Request) {
     try {
         const { userId, isActive, departments, role } = await request.json();
 
-        if (!ASSIGNABLE_ROLES.includes(role)) return badRequest("invalidRole");
         if (typeof isActive !== "boolean" || !Array.isArray(departments)) return badRequest();
 
         // Admins can only edit memberships of their own organization
         const clientId = toObjectId(session.user.clientId);
         const userObjectId = toObjectId(userId);
         if (!clientId || !userObjectId) return badRequest();
+
+        // Superadmin only comes from SUPERADMIN_EMAIL (see auth.ts), and another organization's roles never resolve here
+        const newRole = await getAssignableRole(role, clientId);
+        if (!newRole) return badRequest("invalidRole");
 
         const departmentIds = departments.map(toObjectId).filter((id): id is ObjectId => id !== null);
         if (departmentIds.length !== departments.length) return badRequest("invalidDepartment");
@@ -54,6 +59,9 @@ export async function PATCH(request: Request) {
             return apiError("ownerLocked", 403);
         }
         const before = target.organizations?.find(m => m.clientId.toString() === clientId.toString());
+        const own = session.user.permissions;
+        if (!covers(own, newRole.permissions)) return forbidden("roleAboveYours");
+        if (before && !covers(own, await getRolePermissions(before.role, clientId))) return forbidden("memberAboveYou");
         // Only members who start counting take room in the plan: changes to active members never do
         const counted = before?.status === "active" && before.role !== ROLES.PENDING_USER;
         if (isActive && !counted) {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getDb, toObjectId } from '@/lib/api';
 import { hasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/lib/constants';
 import { getPlanUsage } from '@/lib/plans';
 import { getTenantQuery } from '@/lib/tenant-guard';
 import PlanUsageCard from '@/components/admin/PlanUsageCard';
@@ -21,7 +22,8 @@ export default async function DepartmentsManagementPage() {
 
     return (
         <div className="p-0 lg:p-10">
-            {usage && <div className="mb-8"><PlanUsageCard usage={usage} /></div>}
+            {/* The plan page needs MANAGE_USERS, which a role can lack while managing departments */}
+            {usage && <div className="mb-8"><PlanUsageCard usage={usage} upgradeLink={hasPermission(session, PERMISSIONS.MANAGE_USERS)} /></div>}
             <DepartmentsManagementClient
                 departments={departments.map(dept => ({
                     _id: dept._id.toString(),

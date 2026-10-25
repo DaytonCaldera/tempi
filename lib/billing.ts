@@ -31,21 +31,52 @@ async function lemonSqueezy(path: string, init: RequestInit = {}) {
 export type BillingInterval = "monthly" | "yearly";
 
 /**
+ * The generic variants custom plans are sold through, one per interval: a Lemon Squeezy variant charges on its own
+ * interval, so the yearly price must go through a yearly variant. LEMONSQUEEZY_CUSTOM_VARIANT_ID is the old name
+ * of the monthly one.
+ */
+export const customVariantIds = () => ({
+    monthly: process.env.LEMONSQUEEZY_CUSTOM_MONTHLY_VARIANT_ID || process.env.LEMONSQUEEZY_CUSTOM_VARIANT_ID || undefined,
+    yearly: process.env.LEMONSQUEEZY_CUSTOM_YEARLY_VARIANT_ID || undefined,
+});
+
+/**
  * The Lemon Squeezy variant to sell for a plan, and the price to charge when it isn't the variant's own.
  * Catalog plans have a variant per interval (plans.billing, set by scripts/seed-plans.js). Custom plans are
- * sold through one generic variant (LEMONSQUEEZY_CUSTOM_VARIANT_ID) with the plan's price as a custom price,
+ * sold through the generic variant of the interval (customVariantIds) with the plan's price as a custom price,
  * which Lemon Squeezy also uses for every renewal.
- * @returns null when the plan can't be bought online.
+ * @returns null when the plan can't be bought online with that interval.
  */
 export function checkoutVariant(plan: Plan, interval: BillingInterval): { variantId: string; customPrice?: number } | null {
     if (plan.billingMode === "manual" || !(Number(plan.price) > 0)) return null;
     if (plan.isCustom) {
-        const variantId = process.env.LEMONSQUEEZY_CUSTOM_VARIANT_ID;
-        const price = interval === "yearly" && Number(plan.priceYearly) > 0 ? Number(plan.priceYearly) : Number(plan.price);
+        if (interval === "yearly" && !(Number(plan.priceYearly) > 0)) return null;
+        const variantId = customVariantIds()[interval];
+        const price = interval === "yearly" ? Number(plan.priceYearly) : Number(plan.price);
         return variantId ? { variantId, customPrice: Math.round(price * 100) } : null;
     }
     const variantId = interval === "yearly" ? plan.billing?.yearlyVariantId : plan.billing?.monthlyVariantId;
     return variantId ? { variantId } : null;
+}
+
+/**
+ * How often a variant charges: from the catalog plans and the custom variants when it is one of them, else asked to
+ * Lemon Squeezy (a variant created later, or changed in its dashboard).
+ * @returns null when it isn't monthly or yearly (e.g. every 3 months), or Lemon Squeezy can't be reached.
+ */
+export async function variantInterval(variantId: string, plans: Pick<Plan, "billing">[]): Promise<BillingInterval | null> {
+    const custom = customVariantIds();
+    if (custom.monthly === variantId || plans.some(p => p.billing?.monthlyVariantId === variantId)) return "monthly";
+    if (custom.yearly === variantId || plans.some(p => p.billing?.yearlyVariantId === variantId)) return "yearly";
+    try {
+        const json = await lemonSqueezy(`/variants/${encodeURIComponent(variantId)}`);
+        const { interval, interval_count: count } = json.data.attributes;
+        if (Number(count ?? 1) !== 1) return null;
+        return interval === "month" ? "monthly" : interval === "year" ? "yearly" : null;
+    } catch (error) {
+        console.error(`Could not read the interval of variant ${variantId}:`, error);
+        return null;
+    }
 }
 
 /**
@@ -81,6 +112,49 @@ export async function createCheckout({ variantId, customPrice, clientId, planId,
 /** Cancels a subscription (it keeps access until the end of the paid period, see subscriptionGivesAccess). */
 export async function cancelSubscription(subscriptionId: string) {
     await lemonSqueezy(`/subscriptions/${encodeURIComponent(subscriptionId)}`, { method: "DELETE" });
+}
+
+async function updateSubscription(subscriptionId: string, attributes: Record<string, unknown>) {
+    await lemonSqueezy(`/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ data: { type: "subscriptions", id: String(subscriptionId), attributes } }),
+    });
+}
+
+/**
+ * Moves a subscription to another variant (plan or interval).
+ * - "now": prorated and charged right away (an upgrade): the unused time of the old variant is credited.
+ * - "nextRenewal": no proration, the new price is charged at the next renewal (a downgrade).
+ */
+export async function changeSubscriptionVariant(subscriptionId: string, variantId: string, charge: "now" | "nextRenewal") {
+    await updateSubscription(subscriptionId, {
+        variant_id: Number(variantId),
+        ...(charge === "now" ? { invoice_immediately: true } : { disable_prorations: true }),
+    });
+}
+
+/** Undoes a cancellation before the subscription ends: it renews on its usual date. */
+export async function resumeSubscription(subscriptionId: string) {
+    await updateSubscription(subscriptionId, { cancelled: false });
+}
+
+export type PaidInvoice = { id: string; total: number; createdAt: Date };
+
+/** The subscription's latest paid invoice that hasn't been refunded (cents in `total`), or null. */
+export async function latestPaidInvoice(subscriptionId: string): Promise<PaidInvoice | null> {
+    const query = new URLSearchParams({ "filter[subscription_id]": subscriptionId, "filter[status]": "paid", "filter[refunded]": "false", "page[size]": "1" });
+    const json = await lemonSqueezy(`/subscription-invoices?${query}`);
+    const invoice = json.data?.[0];
+    if (!invoice) return null;
+    return { id: String(invoice.id), total: Number(invoice.attributes.total) || 0, createdAt: new Date(invoice.attributes.created_at) };
+}
+
+/** Refunds a whole invoice. The money goes back to the card it was paid with (Lemon Squeezy does it). */
+export async function refundInvoice(invoiceId: string) {
+    await lemonSqueezy(`/subscription-invoices/${encodeURIComponent(invoiceId)}/refund`, {
+        method: "POST",
+        body: JSON.stringify({ data: { type: "subscription-invoices", id: String(invoiceId), attributes: {} } }),
+    });
 }
 
 /** Whether a webhook really comes from Lemon Squeezy: X-Signature is the HMAC-SHA256 of the raw body. */

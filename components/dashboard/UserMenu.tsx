@@ -6,7 +6,8 @@ import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { labelOf } from "@/i18n/labels";
+import { roleLabel } from "@/i18n/labels";
+import { activeMembership } from "@/lib/permissions";
 import { localeNames, locales } from "@/i18n/config";
 import { useLocaleSwitcher } from "@/i18n/useLocaleSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -28,7 +29,7 @@ export default function UserMenu() {
     useDismiss(menuRef, isOpen, close);
 
     const name = session?.user?.name || tCommon("user");
-    const role = session?.user?.role ? labelOf(tRoles, session.user.role) : t("defaultRole");
+    const role = session?.user?.role ? roleLabel(tRoles, session.user.role, activeMembership(session)?.roleName) : t("defaultRole");
 
     return (
         <div className="relative pl-4 border-l border-line" ref={menuRef}>

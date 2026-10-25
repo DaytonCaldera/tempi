@@ -18,13 +18,41 @@ export const ROLES = {
  */
 export const PERMISSIONS = {
     MANAGE_USERS: "manage_users",
+    // Create, edit and delete the organization's own roles (/admin/roles)
+    MANAGE_ROLES: "manage_roles",
     MANAGE_DEPTS: "manage_departments",
     VIEW_STOCK: "view_stock",
+    // Create and edit products, and move stock in any department
     EDIT_STOCK: "edit_inventory",
+    // Delete products. Apart from EDIT_STOCK, so a manager can run the inventory without removing anything
+    DELETE_STOCK: "delete_stock",
     VIEW_REPORTS: "view_reports",
+    // Move stock in the departments the user is assigned to (runners)
     MOVE_STOCK: "move_stock",
     VIEW_ALL_CLIENTS: "view_all_clients", // Only for God Mode
 }
+
+/**
+ * Permissions an organization can give its own roles, in the order the roles page lists them.
+ * The coverage rule (lib/role-rules.ts) compares only these.
+ */
+export const ROLE_PERMISSIONS = [
+    PERMISSIONS.MANAGE_USERS,
+    PERMISSIONS.MANAGE_ROLES,
+    PERMISSIONS.MANAGE_DEPTS,
+    PERMISSIONS.EDIT_STOCK,
+    PERMISSIONS.DELETE_STOCK,
+    PERMISSIONS.MOVE_STOCK,
+    PERMISSIONS.VIEW_REPORTS,
+] as const;
+
+/** Slug prefix of the roles an organization creates. Built-in roles (ROLES) never start with it. */
+export const CUSTOM_ROLE_PREFIX = "custom_";
+
+/** How many roles of its own an organization can have. */
+export const MAX_CUSTOM_ROLES = 20;
+
+export const ROLE_NAME_MAX_LENGTH = 40;
 
 /**
  * Placeholder clientId that older sign-ups stored before the user belonged to any organization.
@@ -44,7 +72,7 @@ export const getSuperAdminEmail = (): string | null => {
 export const LEGAL = {
     contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@vitalliz.com",
     // Bump when the text in the "legal" messages changes
-    effectiveDate: "2026-10-23",
+    effectiveDate: "2026-10-24",
 };
 
 /** Permission needed to see each sidebar section (see components/dashboard/menuItems.json) */
@@ -105,3 +133,9 @@ export type PlanFeature = typeof PLAN_FEATURES[keyof typeof PLAN_FEATURES];
 
 /** Days a past_due subscription keeps its plan while the payment is retried */
 export const BILLING_GRACE_DAYS = 7;
+
+/**
+ * Days after paying a yearly plan in which cancelling refunds it in full (the refund policy, also in the terms).
+ * Monthly plans aren't refunded: they keep access until the end of the month.
+ */
+export const REFUND_GUARANTEE_DAYS = 14;

@@ -2,6 +2,9 @@
 import Link from "next/link";
 import { Download, Calendar, FileText, Printer, Info, Lock } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
+import { PERMISSIONS } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
 import { useConsumptionReport, type DateRange } from "./useConsumptionReport";
 import { DepartmentReportTable } from "./DepartmentReportTable";
 import { PrintableReport } from "./PrintableReport";
@@ -14,6 +17,11 @@ export interface ReportProps {
     canExport?: boolean;
     /** The organization's currency, for the value of what was consumed */
     currency: string;
+}
+
+/** A link, or the same content in a span when there is nowhere the user may go. */
+function LinkOrSpan({ href, ...props }: { href: string | null } & Omit<React.ComponentProps<"a">, "href">) {
+    return href ? <Link href={href} {...props} /> : <span {...props} />;
 }
 
 function DateInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
@@ -34,6 +42,9 @@ function DateInput({ value, onChange }: { value: string; onChange: (value: strin
 export default function ConsumptionReport({ deptId, title: titleProp, canExport = false, currency }: ReportProps) {
     const t = useTranslations("reports");
     const tPlan = useTranslations("plan");
+    // The plan page needs MANAGE_USERS: a role that only sees reports gets no links to it
+    const { data: session } = useSession();
+    const canManagePlan = hasPermission(session, PERMISSIONS.MANAGE_USERS);
     const format = useFormatter();
     const title = titleProp ?? t("title");
     const { range, setRange, bounds, data, loading, limitedFrom, exportUrl, expandedId, details, toggleDetails } = useConsumptionReport(deptId);
@@ -81,13 +92,14 @@ export default function ConsumptionReport({ deptId, title: titleProp, canExport 
                                 <Download size={24} className="group-hover:translate-y-1 transition-transform" />
                             </a>
                         ) : (
-                            // Not in the plan: shown locked, and it leads to the plan page instead of hiding the feature
-                            <Link href="/admin/plan" title={tPlan("locked.export")} aria-label={tPlan("locked.export")} className="relative w-full sm:w-14 h-14 bg-card text-ink-subtle border border-line border-dashed rounded-2xl flex items-center justify-center hover:text-ink transition-colors">
+                            // Not in the plan: shown locked, and it leads to the plan page (for roles that can open
+                            // it) instead of hiding the feature
+                            <LinkOrSpan href={canManagePlan ? "/admin/plan" : null} title={tPlan("locked.export")} aria-label={tPlan("locked.export")} className="relative w-full sm:w-14 h-14 bg-card text-ink-subtle border border-line border-dashed rounded-2xl flex items-center justify-center hover:text-ink transition-colors">
                                 <Download size={22} />
                                 <span className="absolute -top-2 -right-2 flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase text-on-accent">
                                     <Lock size={9} aria-hidden /> Pro
                                 </span>
-                            </Link>
+                            </LinkOrSpan>
                         )}
                     </div>
                 </div>
@@ -96,7 +108,7 @@ export default function ConsumptionReport({ deptId, title: titleProp, canExport 
                     <p className="flex flex-wrap items-center gap-2 rounded-2xl border border-warning/30 bg-warning/10 px-5 py-3 text-sm text-ink">
                         <Info size={16} className="text-warning" aria-hidden />
                         {tPlan("historyLimited", { date: format.dateTime(limitedFrom, { dateStyle: "medium" }) })}
-                        <Link href="/admin/plan" className="font-semibold text-accent underline-offset-2 hover:underline">{tPlan("upgradeShort")}</Link>
+                        {canManagePlan && <Link href="/admin/plan" className="font-semibold text-accent underline-offset-2 hover:underline">{tPlan("upgradeShort")}</Link>}
                     </p>
                 )}
 

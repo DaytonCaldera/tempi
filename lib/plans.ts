@@ -3,6 +3,8 @@ import type { ObjectId } from "mongodb";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/lib/api";
 import { BILLING_GRACE_DAYS, type PlanFeature, ROLES } from "@/lib/constants";
+import { checkoutVariant } from "@/lib/billing";
+import { pendingChange, subscriptionTerms, type Interval } from "@/lib/subscription-changes";
 import type { Organization, Plan, PlanKey, Subscription } from "@/types/models";
 
 /**
@@ -49,6 +51,8 @@ export const daysUntil = (date: Date | string) => Math.max(1, Math.ceil((new Dat
 /** Whether a subscription still gives access to its plan. */
 export function subscriptionGivesAccess(subscription: Subscription | undefined, now = new Date()) {
     if (!subscription) return false;
+    // Refunded under the yearly guarantee: the money went back, so the plan ends now
+    if (subscription.refundedAt) return false;
     switch (subscription.status) {
         case "active":
         case "on_trial":
@@ -105,7 +109,7 @@ async function loadEffectivePlan(clientId: ObjectId): Promise<EffectivePlan> {
     const now = new Date();
 
     const candidates: { planId?: ObjectId; source: PlanSource }[] = [];
-    if (subscription && subscriptionGivesAccess(subscription, now)) candidates.push({ planId: subscription.planId, source: "subscription" });
+    if (subscription && subscriptionGivesAccess(subscription, now)) candidates.push({ planId: subscriptionTerms(subscription, now).planId, source: "subscription" });
     const trialActive = !!organization?.trial && new Date(organization.trial.endsAt) > now;
     if (trialActive) candidates.push({ planId: organization!.trial!.planId, source: "trial" });
     candidates.push({ planId: organization?.planId, source: "assigned" });
@@ -153,6 +157,8 @@ export type PlanSummary = {
     billingMode: "lemonsqueezy" | "manual";
     /** Whether it can be bought online (it has a Lemon Squeezy variant, or it is a custom plan priced with one) */
     purchasable: boolean;
+    /** Whether it can also be bought yearly (a yearly price and a yearly variant) */
+    yearlyPurchasable: boolean;
     limits: Record<LimitedResource, number | null>;
 };
 
@@ -168,7 +174,8 @@ export function toPlanSummary(plan: Plan): PlanSummary {
         features: plan.features ?? [],
         isCustom: !!plan.isCustom,
         billingMode,
-        purchasable: billingMode === "lemonsqueezy" && Number(plan.price) > 0 && (!!plan.billing?.monthlyVariantId || !!plan.isCustom),
+        purchasable: !!checkoutVariant(plan, "monthly"),
+        yearlyPurchasable: !!checkoutVariant(plan, "yearly"),
         limits: { users: limitOf(plan, "users"), departments: limitOf(plan, "departments"), items: limitOf(plan, "items") },
     };
 }
@@ -177,7 +184,17 @@ export type PlanUsage = {
     plan: PlanSummary | null;
     source: PlanSource;
     trialEndsAt: string | null;
-    subscription: { status: Subscription["status"]; renewsAt: string | null; endsAt: string | null; portalUrl: string | null } | null;
+    subscription: {
+        status: Subscription["status"];
+        /** What it is charged for now: while a downgrade is pending, the plan and interval already paid */
+        interval: Interval;
+        renewsAt: string | null;
+        endsAt: string | null;
+        portalUrl: string | null;
+        refunded: boolean;
+        /** A downgrade waiting for the end of the period */
+        scheduledChange: { planId: string; interval: Interval; at: string } | null;
+    } | null;
     resources: { resource: LimitedResource; used: number; limit: number | null }[];
 };
 
@@ -185,15 +202,19 @@ export type PlanUsage = {
 export async function getPlanUsage(clientId: ObjectId): Promise<PlanUsage> {
     const [effective, usage] = await Promise.all([getEffectivePlan(clientId), countUsage(clientId)]);
     const { plan, subscription } = effective;
+    const pending = subscription ? pendingChange(subscription.scheduledChange) : null;
     return {
         plan: plan ? toPlanSummary(plan) : null,
         source: effective.source,
         trialEndsAt: effective.trialEndsAt ? new Date(effective.trialEndsAt).toISOString() : null,
         subscription: subscription ? {
             status: subscription.status,
+            interval: subscriptionTerms(subscription).interval,
             renewsAt: subscription.renewsAt ? new Date(subscription.renewsAt).toISOString() : null,
             endsAt: subscription.endsAt ? new Date(subscription.endsAt).toISOString() : null,
             portalUrl: subscription.portalUrl ?? null,
+            refunded: !!subscription.refundedAt,
+            scheduledChange: pending ? { planId: pending.to.planId.toString(), interval: pending.to.interval, at: new Date(pending.at).toISOString() } : null,
         } : null,
         resources: LIMITED_RESOURCES.map(resource => ({ resource, used: usage[resource], limit: limitOf(plan, resource) })),
     };

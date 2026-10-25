@@ -30,6 +30,8 @@ const INDEXES = [
     // store a second copy that findOne might pick over the right one
     ['accounts', { provider: 1, providerAccountId: 1 }, 'sign-in by provider account', { unique: true }],
     ['roles', { slug: 1 }, 'role permissions'],
+    // An organization's own roles (lib/roles.ts): its list, and the session's lookup by slug in it
+    ['roles', { clientId: 1, slug: 1 }, 'roles of an organization', { unique: true }],
     ['clients', { clientCode: 1 }, 'join by code'],
     ['departments', { clientId: 1 }, 'departments of an organization'],
     // Runner and department stock pages (polled), and the consumption report
