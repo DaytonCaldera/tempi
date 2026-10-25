@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import type { ObjectId } from "mongodb";
 import { getDb, toObjectId } from "@/lib/api";
 import { AUDIT_ACTIONS, logAudit } from "@/lib/audit";
-import { verifyWebhookSignature } from "@/lib/billing";
+import { variantInterval, verifyWebhookSignature } from "@/lib/billing";
 import { forgetCachedPlans } from "@/lib/plans";
-import type { Organization, Plan, Subscription, SubscriptionStatus } from "@/types/models";
+import type { Organization, Plan, ScheduledChange, Subscription, SubscriptionStatus } from "@/types/models";
 
 /** Subscription events this endpoint listens to (pick them in Lemon Squeezy → Settings → Webhooks). */
 const SUBSCRIPTION_EVENTS = new Set([
@@ -74,12 +74,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ ignored: "older event" });
         }
 
+        const variantId = String(attributes.variant_id ?? "");
+        const sameSubscription = previous?.id === subscriptionId;
+        const catalog = await db.collection<Plan>("plans").find({ billing: { $exists: true } }, { projection: { billing: 1 } }).toArray();
+        const interval = (variantId && await variantInterval(variantId, catalog)) || (sameSubscription ? previous.interval : undefined);
+
         const subscription: Subscription = {
             provider: "lemonsqueezy",
             id: subscriptionId,
             status,
             planId,
-            variantId: String(attributes.variant_id ?? ""),
+            variantId,
+            ...(interval && { interval }),
             renewsAt: dateOrNull(attributes.renews_at),
             endsAt: dateOrNull(attributes.ends_at),
             // Kept from the first unpaid event, so retries don't extend the grace period
@@ -87,7 +93,16 @@ export async function POST(req: Request) {
             portalUrl: attributes.urls?.customer_portal ?? previous?.portalUrl,
             updatedAt,
         };
-        await db.collection<Organization>("clients").updateOne({ _id: organization._id }, { $set: { subscription } });
+        // refundedAt and scheduledChange are set by Vitalliz (app/api/billing/subscription), maybe while this event was
+        // on its way: the same subscription is updated field by field so they aren't overwritten, and a scheduled
+        // change is only dropped when Lemon Squeezy no longer agrees with it
+        const update = sameSubscription
+            ? {
+                ...Object.fromEntries(Object.entries(subscription).map(([field, value]) => [`subscription.${field}`, value])),
+                ...(previous.scheduledChange && !keptScheduledChange(previous.scheduledChange, variantId, status) && { "subscription.scheduledChange": null }),
+            }
+            : { subscription };
+        await db.collection<Organization>("clients").updateOne({ _id: organization._id }, { $set: update });
         forgetCachedPlans(organization._id);
 
         if (previous?.status !== status || !previous?.planId?.equals(planId)) {
@@ -112,6 +127,16 @@ export async function POST(req: Request) {
         console.error(`Billing webhook ${event} failed:`, error);
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
+}
+
+/**
+ * A downgrade still holds while Lemon Squeezy sells one of its two variants (the old one until it is applied, the new
+ * one after; an event can arrive in between) and the subscription isn't cancelled. A plan change made in the customer
+ * portal, or a cancellation, drops it.
+ */
+function keptScheduledChange(change: ScheduledChange | null | undefined, variantId: string, status: SubscriptionStatus) {
+    if (!change || status === "cancelled" || status === "expired") return null;
+    return variantId === change.from.variantId || variantId === change.to.variantId ? change : null;
 }
 
 /**

@@ -92,7 +92,14 @@
         "invalidCurrency": "That currency isn't available.",
         "invalidTimeZone": "That time zone doesn't exist.",
         "heldNotFound": "That held move is no longer pending.",
-        "heldNotYours": "The person who made this move decides it first. Admins can decide it 30 minutes later."
+        "heldNotYours": "The person who made this move decides it first. Admins can decide it 30 minutes later.",
+        "subscriptionNotActive": "Your subscription isn't active, so it can't be changed from here.",
+        "scheduledChangePending": "You already have a plan change scheduled. Keep your current plan to pick another one.",
+        "customPlanChange": "Custom plans are changed with us. Write to us and we'll adjust it.",
+        "noPlanChange": "That is already your plan.",
+        "refundNotEligible": "This payment can't be refunded anymore: the guarantee covers yearly plans, for the first days after paying.",
+        "refundFailed": "Your subscription was cancelled, but the refund couldn't be made. Write to us and we'll sort it out.",
+        "subscriptionActionFailed": "The change couldn't be made. Try again in a few minutes."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -795,6 +802,19 @@
                     "paragraphs": [
                         "We may update these terms. The \"last updated\" date above shows when they last changed. If you keep using Vitalliz after a change, you accept the updated terms."
                     ]
+                },
+                "billing": {
+                    "title": "Plans, payments and refunds",
+                    "paragraphs": [
+                        "Paid plans are charged in advance, monthly or yearly, through Lemon Squeezy, which acts as the merchant and issues the invoices. You can cancel anytime from your plan page: you keep the plan until the end of the paid period and then move to the free plan, without losing data."
+                    ],
+                    "bullets": [
+                        "Moving to a higher plan, or from monthly to yearly billing, applies right away: you are charged the new price minus the unused part of what you already paid, and the new period starts that day.",
+                        "Moving to a lower plan, or from yearly to monthly billing, applies at the end of the paid period, with no refund for the current period.",
+                        "Monthly payments aren't refunded.",
+                        "Yearly payments have a 14-day guarantee: if you cancel within that time, the whole payment is refunded and the plan ends that day.",
+                        "Beyond these cases, we may refund charges made by mistake or caused by a serious failure of the service, if you write to us."
+                    ]
                 }
             }
         }
@@ -1051,7 +1071,11 @@
                 "import": "Imported products",
                 "updateAlerts": "Changed the email alerts",
                 "updateCurrency": "Changed the currency",
-                "resolveHeld": "Decided a held move"
+                "resolveHeld": "Decided a held move",
+                "subscriptionChange": "Changed the subscription's plan",
+                "subscriptionCancel": "Cancelled the subscription",
+                "subscriptionResume": "Resumed the subscription",
+                "subscriptionRefund": "Refunded the subscription"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -1375,7 +1399,50 @@
             "manualBody": "Your plan is custom. For changes or invoices write to {email}.",
             "manage": "Manage subscription",
             "comparePlans": "Plans",
-            "fairUse": "\"Unlimited\" is subject to fair use. If your team goes over 150 active users, write to {email} and we'll build a plan for you."
+            "fairUse": "\"Unlimited\" is subject to fair use. If your team goes over 150 active users, write to {email} and we'll build a plan for you.",
+            "paying": "{plan} · {interval} billing",
+            "refundedTitle": "Subscription refunded",
+            "refundedBody": "The payment went back to your card and you moved to Free without losing data.",
+            "refundStillAvailable": "You can still get a full refund: yearly plans have a {days}-day guarantee (until {date}).",
+            "requestRefund": "Request refund",
+            "cancel": "Cancel subscription",
+            "resume": "Resume subscription",
+            "resumed": "Done: your subscription stays active and renews on its usual date.",
+            "keepCurrent": "Keep my current plan",
+            "keptCurrent": "Done: you keep your current plan.",
+            "scheduledChange": "You'll move to {plan} ({interval}) on {date}. Until then you keep what you already paid for.",
+            "ownerOnly": "Only the organization's owner can change or cancel the subscription.",
+            "actionFailed": "The change couldn't be made. Try again.",
+            "cancelledDone": "Done: you cancelled your subscription. You keep your plan until {date}.",
+            "refundDone": "Done: you cancelled your subscription and we refunded the payment. It can take a few days to show on your card.",
+            "changedNow": "Done: your plan changed. Lemon Squeezy will email you the receipt.",
+            "changeScheduled": "Done: the change will apply on {date}.",
+            "refundPolicy": "You can cancel anytime and keep your plan until the end of the paid period. Monthly payments aren't refunded; yearly ones have a {days}-day full-refund guarantee.",
+            "cancelDialog": {
+                "title": "Cancel subscription",
+                "refundTitle": "Request refund",
+                "body": "You keep {plan} until {date}. Then you move to Free without losing data: you just can't grow past its limits.",
+                "noRefundMonthly": "Monthly payments aren't refunded.",
+                "noRefundYearly": "The {days}-day guarantee of your yearly payment is over, so it isn't refunded.",
+                "chooseHow": "How do you want to cancel?",
+                "atPeriodEnd": "At the end of the period",
+                "withRefund": "Now, with a {amount} refund",
+                "refundBody": "Your plan ends today and we refund the whole payment. {days}-day guarantee, until {date}.",
+                "refundOnlyBody": "We refund {amount} to your card and your plan ends today. You move to Free without losing data.",
+                "dropsScheduled": "The plan change you had scheduled is cancelled too.",
+                "keep": "Back",
+                "confirm": "Cancel subscription",
+                "confirmRefund": "Cancel and refund"
+            },
+            "changeDialog": {
+                "title": "Change to {plan} ({interval})",
+                "upgradeBody": "The change is immediate. Today you pay the new price minus the unused part of your current plan, and your new period starts today.",
+                "estimate": "Charged today: about {amount} (plus taxes). Lemon Squeezy works out the exact amount.",
+                "upgradeRenews": "Then it renews at {amount}, {interval} billing.",
+                "downgradeBody": "You keep {current} until {date}, which you already paid for. From that day you pay {plan}, {interval} billing ({amount}). The current period isn't refunded.",
+                "back": "Back",
+                "confirm": "Confirm change"
+            }
         }
     },
     "startPage": {
@@ -1438,6 +1505,17 @@
                 "title": "Need more?",
                 "body": "We build custom plans for large operations. Write to us at {email}."
             }
+        },
+        "switchTo": {
+            "monthly": "Switch to monthly billing",
+            "yearly": "Switch to yearly billing"
+        },
+        "freeViaCancel": "To move to Free, cancel your subscription.",
+        "changeBlocked": {
+            "pending": "You have a plan change scheduled.",
+            "custom": "To change a custom plan, write to us.",
+            "ownerOnly": "Only the owner can change the plan.",
+            "inactive": "Resume your subscription or update your payment to change plans."
         }
     },
     "checkout": {

@@ -1,13 +1,29 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Loader2, Minus } from "lucide-react";
+import { Check, CheckCircle2, Loader2, Minus } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { Modal } from "@/components/ui/Modal";
 import { planLabel } from "@/i18n/labels";
 import { PLAN_FEATURES } from "@/lib/constants";
 import type { PlanSummary } from "@/lib/plans";
+import { classifyChange, estimateUpgradeCharge, type ChangeKind } from "@/lib/subscription-changes";
+import { useSubscriptionAction } from "./useSubscriptionAction";
 
 export type BillingInterval = "monthly" | "yearly";
+
+/**
+ * The organization's paid subscription (admin mode): plan changes go through POST /api/billing/subscription,
+ * prorated, instead of a new checkout. `changeable` says why one can't be made from here.
+ */
+export type PricingSubscription = {
+    planId: string;
+    interval: BillingInterval;
+    renewsAt: string | null;
+    changeable: "yes" | "pending" | "custom" | "ownerOnly" | "inactive";
+};
+
+type PendingChange = { plan: PlanSummary; interval: BillingInterval; kind: ChangeKind; estimate: number | null };
 
 interface PricingTableProps {
     plans: PlanSummary[];
@@ -18,19 +34,54 @@ interface PricingTableProps {
     mode: "public" | "admin";
     /** The organization's effective plan, marked as current (admin mode) */
     currentPlanId?: string | null;
+    subscription?: PricingSubscription | null;
 }
 
 /** Plan cards with a monthly/yearly switch. Limits of null are unlimited (lib/plans.ts). */
-export default function PricingTable({ plans, mode, currentPlanId }: PricingTableProps) {
+export default function PricingTable({ plans, mode, currentPlanId, subscription }: PricingTableProps) {
     const t = useTranslations("pricing");
     const tPlan = useTranslations("plan");
+    const tPage = useTranslations("plan.page");
     const format = useFormatter();
-    const [interval, setBillingInterval] = useState<BillingInterval>("monthly");
+    const [interval, setBillingInterval] = useState<BillingInterval>(subscription?.interval ?? "monthly");
+    const [change, setChange] = useState<PendingChange | null>(null);
+    const [changed, setChanged] = useState<string | null>(null);
+    const action = useSubscriptionAction();
     const [buying, setBuying] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const hasYearly = plans.some(p => p.priceYearly > 0);
 
     const money = (value: number) => format.number(value, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    const exactMoney = (value: number) => format.number(value, { style: "currency", currency: "USD" });
+    const date = (value: string | null) => value ? format.dateTime(new Date(value), { dateStyle: "long" }) : "—";
+    const currentPlan = plans.find(p => p._id === currentPlanId) ?? null;
+    const amountOf = (plan: PlanSummary, value: BillingInterval) => value === "yearly" ? plan.priceYearly : plan.price;
+
+    /** Asks to confirm a change of the paid subscription, with what it charges or when it happens. */
+    const askChange = (plan: PlanSummary, value: BillingInterval) => {
+        if (!subscription || !currentPlan) return;
+        const kind = classifyChange(
+            { planId: currentPlan._id, price: currentPlan.price, interval: subscription.interval },
+            { planId: plan._id, price: plan.price, interval: value },
+        );
+        const estimate = kind === "upgrade" ? estimateUpgradeCharge({
+            currentAmount: amountOf(currentPlan, subscription.interval),
+            newAmount: amountOf(plan, value),
+            interval: subscription.interval,
+            renewsAt: subscription.renewsAt ? new Date(subscription.renewsAt) : null,
+        }) : null;
+        action.clearError();
+        setChange({ plan, interval: value, kind, estimate });
+    };
+
+    const confirmChange = async () => {
+        if (!change || action.busy) return;
+        const data = await action.run({ action: "change", planId: change.plan._id, interval: change.interval });
+        if (data) {
+            setChanged(data.kind === "upgrade" ? tPage("changedNow") : tPage("changeScheduled", { date: date(typeof data.at === "string" ? data.at : null) }));
+            setChange(null);
+        }
+    };
     const limit = (value: number | null) => value === null ? tPlan("unlimited") : format.number(value);
 
     const buy = async (plan: PlanSummary) => {
@@ -76,10 +127,14 @@ export default function PricingTable({ plans, mode, currentPlanId }: PricingTabl
 
             <div className={`grid gap-6 ${plans.length >= 3 ? "lg:grid-cols-3" : "md:grid-cols-2"}`}>
                 {plans.map(plan => {
-                    const isCurrent = mode === "admin" && plan._id === currentPlanId;
                     const highlighted = plan.key === "pro";
                     const yearly = interval === "yearly" && plan.priceYearly > 0;
+                    const planInterval: BillingInterval = yearly ? "yearly" : "monthly";
                     const price = yearly ? plan.priceYearly : plan.price;
+                    // With a subscription, the same plan with the other interval is a change too
+                    const samePlan = mode === "admin" && plan._id === currentPlanId;
+                    const isCurrent = samePlan && (!subscription || subscription.interval === planInterval);
+                    const buyable = plan.price > 0 && (yearly ? plan.yearlyPurchasable : plan.purchasable);
                     const rows = [
                         { label: t("rows.users", { value: limit(plan.limits.users) }), included: true },
                         { label: t("rows.departments", { value: limit(plan.limits.departments) }), included: true },
@@ -122,12 +177,24 @@ export default function PricingTable({ plans, mode, currentPlanId }: PricingTabl
 
                             <div className="mt-auto">
                                 {mode === "public" ? (
-                                    <Link href={plan.price > 0 && plan.purchasable ? `/checkout?${new URLSearchParams({ plan: plan._id, interval: yearly ? "yearly" : "monthly" })}` : "/login"} className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition ${highlighted ? "bg-accent text-on-accent hover:brightness-110" : "bg-inverse text-on-inverse hover:bg-accent hover:text-on-accent"}`}>
+                                    <Link href={buyable ? `/checkout?${new URLSearchParams({ plan: plan._id, interval: yearly ? "yearly" : "monthly" })}` : "/login"} className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition ${highlighted ? "bg-accent text-on-accent hover:brightness-110" : "bg-inverse text-on-inverse hover:bg-accent hover:text-on-accent"}`}>
                                         {price > 0 ? t("start") : t("startFree")}
                                     </Link>
                                 ) : isCurrent ? (
                                     <p className="w-full rounded-full border border-line py-3 text-center text-sm font-semibold text-ink-muted">{t("current")}</p>
-                                ) : plan.price > 0 && plan.purchasable ? (
+                                ) : subscription && plan.price === 0 ? (
+                                    <p className="text-center text-xs text-ink-subtle">{t("freeViaCancel")}</p>
+                                ) : subscription && subscription.changeable !== "yes" ? (
+                                    <p className="text-center text-xs text-ink-subtle">{t(`changeBlocked.${subscription.changeable}`)}</p>
+                                ) : subscription && buyable ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => askChange(plan, planInterval)}
+                                        className={`flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold transition ${highlighted ? "bg-accent text-on-accent hover:brightness-110" : "bg-inverse text-on-inverse hover:bg-accent hover:text-on-accent"}`}
+                                    >
+                                        {samePlan ? t(`switchTo.${planInterval}`) : t("upgrade", { plan: planLabel(tPlan, plan) })}
+                                    </button>
+                                ) : buyable ? (
                                     <button
                                         type="button"
                                         onClick={() => buy(plan)}
@@ -147,6 +214,53 @@ export default function PricingTable({ plans, mode, currentPlanId }: PricingTabl
             </div>
 
             {error && <p role="alert" className="mt-6 text-center text-sm font-semibold text-danger">{error}</p>}
+            {changed && (
+                <p role="status" className="mt-6 flex items-center justify-center gap-2 text-sm text-ink">
+                    <CheckCircle2 size={16} className="text-success" aria-hidden /> {changed}
+                </p>
+            )}
+
+            {change && currentPlan && subscription && (
+                <Modal
+                    isOpen
+                    onClose={() => setChange(null)}
+                    title={tPage("changeDialog.title", { plan: planLabel(tPlan, change.plan), interval: t(`interval.${change.interval}`) })}
+                    footer={
+                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <button type="button" onClick={() => setChange(null)} className="rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink hover:bg-subtle">
+                                {tPage("changeDialog.back")}
+                            </button>
+                            <button type="button" onClick={confirmChange} aria-disabled={action.busy} className="inline-flex items-center justify-center gap-2 rounded-full bg-inverse px-5 py-2.5 text-sm font-semibold text-on-inverse hover:bg-accent hover:text-on-accent aria-disabled:opacity-60">
+                                {action.busy && <Loader2 size={14} className="animate-spin" aria-hidden />}
+                                {tPage("changeDialog.confirm")}
+                            </button>
+                        </div>
+                    }
+                >
+                    <div className="space-y-3 text-sm text-ink-muted">
+                        {change.kind === "upgrade" ? (
+                            <>
+                                <p>{tPage("changeDialog.upgradeBody")}</p>
+                                {change.estimate !== null && (
+                                    <p className="rounded-2xl bg-subtle px-4 py-3 text-ink">
+                                        {tPage("changeDialog.estimate", { amount: exactMoney(change.estimate) })}
+                                    </p>
+                                )}
+                                <p>{tPage("changeDialog.upgradeRenews", { amount: exactMoney(amountOf(change.plan, change.interval)), interval: t(`interval.${change.interval}`).toLowerCase() })}</p>
+                            </>
+                        ) : (
+                            <p>{tPage("changeDialog.downgradeBody", {
+                                current: planLabel(tPlan, currentPlan),
+                                date: date(subscription.renewsAt),
+                                plan: planLabel(tPlan, change.plan),
+                                interval: t(`interval.${change.interval}`).toLowerCase(),
+                                amount: exactMoney(amountOf(change.plan, change.interval)),
+                            })}</p>
+                        )}
+                        {action.error && <p role="alert" className="font-semibold text-danger">{action.error}</p>}
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 }

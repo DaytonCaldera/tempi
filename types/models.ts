@@ -74,6 +74,8 @@ export interface Subscription {
     status: SubscriptionStatus;
     planId: ObjectId;
     variantId?: string;
+    /** How often it is charged, from its variant. Missing on subscriptions stored before it existed (read as monthly) */
+    interval?: "monthly" | "yearly";
     /** Next charge. Missing once it is cancelled */
     renewsAt?: Date | null;
     /** When a cancelled subscription stops giving access */
@@ -81,7 +83,26 @@ export interface Subscription {
     /** When it went past_due, for the grace period */
     pastDueSince?: Date | null;
     portalUrl?: string;
+    /** Refunded under the yearly guarantee: it stops giving access right away, whatever its ends_at says */
+    refundedAt?: Date | null;
+    /** A downgrade the admin asked for, which takes effect when the paid period ends (lib/subscription-changes.ts) */
+    scheduledChange?: ScheduledChange | null;
     updatedAt: Date;
+}
+
+/**
+ * A change to a cheaper plan or to monthly billing. The organization keeps what it paid for (`from`) until `at`
+ * (the end of the paid period), then gets `to`. `applied` says whether Lemon Squeezy already sells `to`: a change
+ * within the same interval is applied at once without proration (the new price is charged at the next renewal); a
+ * change of interval is applied by the daily job (app/api/billing/scheduled-changes) just before `at`, because
+ * Lemon Squeezy moves the billing date when the interval changes.
+ */
+export interface ScheduledChange {
+    from: { planId: ObjectId; interval: "monthly" | "yearly"; variantId: string };
+    to: { planId: ObjectId; interval: "monthly" | "yearly"; variantId: string };
+    at: Date;
+    applied: boolean;
+    requestedBy?: string;
 }
 
 /** Plans of the public catalog. Custom plans (isCustom) have no key. */

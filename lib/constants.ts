@@ -44,7 +44,7 @@ export const getSuperAdminEmail = (): string | null => {
 export const LEGAL = {
     contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@vitalliz.com",
     // Bump when the text in the "legal" messages changes
-    effectiveDate: "2026-10-23",
+    effectiveDate: "2026-10-24",
 };
 
 /** Permission needed to see each sidebar section (see components/dashboard/menuItems.json) */
@@ -105,3 +105,9 @@ export type PlanFeature = typeof PLAN_FEATURES[keyof typeof PLAN_FEATURES];
 
 /** Days a past_due subscription keeps its plan while the payment is retried */
 export const BILLING_GRACE_DAYS = 7;
+
+/**
+ * Days after paying a yearly plan in which cancelling refunds it in full (the refund policy, also in the terms).
+ * Monthly plans aren't refunded: they keep access until the end of the month.
+ */
+export const REFUND_GUARANTEE_DAYS = 14;

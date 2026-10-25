@@ -35,6 +35,11 @@ export const AUDIT_ACTIONS = {
     IMPORT_STOCK: "stock.import",
     // A Lemon Squeezy webhook changed an organization's subscription (app/api/billing/webhook)
     SUBSCRIPTION: "billing.subscription",
+    // The owner changed, cancelled or resumed the subscription on /admin/plan (app/api/billing/subscription)
+    SUBSCRIPTION_CHANGE: "billing.subscriptionChange",
+    SUBSCRIPTION_CANCEL: "billing.subscriptionCancel",
+    SUBSCRIPTION_RESUME: "billing.subscriptionResume",
+    SUBSCRIPTION_REFUND: "billing.subscriptionRefund",
 } as const;
 
 export type AuditAction = typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS];

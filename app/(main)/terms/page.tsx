@@ -12,7 +12,7 @@ export default function TermsPage() {
     return (
         <LegalDocument
             document="terms"
-            sections={["acceptance", "service", "accounts", "organizations", "acceptableUse", "data", "availability", "termination", "liability", "law", "changes"]}
+            sections={["acceptance", "service", "billing", "accounts", "organizations", "acceptableUse", "data", "availability", "termination", "liability", "law", "changes"]}
         />
     );
 }

@@ -92,7 +92,14 @@
         "invalidCurrency": "Esa moneda no está disponible.",
         "invalidTimeZone": "Esa zona horaria no existe.",
         "heldNotFound": "Ese movimiento retenido ya no está pendiente.",
-        "heldNotYours": "Este movimiento lo decide primero quien lo hizo. Los administradores pueden decidirlo 30 minutos después."
+        "heldNotYours": "Este movimiento lo decide primero quien lo hizo. Los administradores pueden decidirlo 30 minutos después.",
+        "subscriptionNotActive": "Tu suscripción no está activa, así que no se puede cambiar desde aquí.",
+        "scheduledChangePending": "Ya tienes un cambio de plan programado. Mantén tu plan actual para elegir otro.",
+        "customPlanChange": "Los planes personalizados se cambian con nosotros. Escríbenos y lo ajustamos.",
+        "noPlanChange": "Ese ya es tu plan.",
+        "refundNotEligible": "Este pago ya no tiene reembolso: la garantía es solo para planes anuales, durante los primeros días después de pagar.",
+        "refundFailed": "Tu suscripción se canceló, pero el reembolso no se pudo hacer. Escríbenos y lo resolvemos.",
+        "subscriptionActionFailed": "No se pudo hacer el cambio. Inténtalo de nuevo en unos minutos."
     },
     "roles": {
         "superadmin": "Superadmin",
@@ -795,6 +802,19 @@
                     "paragraphs": [
                         "Podemos actualizar estos términos. La fecha de \"última actualización\" indicada arriba muestra cuándo cambiaron por última vez. Si sigue usando Vitalliz después de un cambio, acepta los términos actualizados."
                     ]
+                },
+                "billing": {
+                    "title": "Planes, pagos y reembolsos",
+                    "paragraphs": [
+                        "Los planes de pago se cobran por adelantado, cada mes o cada año, a través de Lemon Squeezy, que actúa como comerciante y emite las facturas. Puede cancelar en cualquier momento desde la página de su plan: conserva el plan hasta el final del periodo pagado y después pasa al plan gratuito, sin perder datos."
+                    ],
+                    "bullets": [
+                        "Cambiar a un plan superior, o de pago mensual a anual, se aplica de inmediato: se cobra el precio nuevo menos la parte no usada de lo que ya pagó, y el nuevo periodo empieza ese día.",
+                        "Cambiar a un plan inferior, o de pago anual a mensual, se aplica al final del periodo pagado, sin reembolso del periodo en curso.",
+                        "Los pagos mensuales no se reembolsan.",
+                        "Los pagos anuales tienen una garantía de 14 días: si cancela dentro de ese plazo, se le reembolsa el pago completo y el plan termina ese día.",
+                        "Fuera de estos casos, podemos reembolsar cobros hechos por error o por una falla grave del servicio, si nos escribe."
+                    ]
                 }
             }
         }
@@ -1051,7 +1071,11 @@
                 "import": "Importó productos",
                 "updateAlerts": "Cambió los avisos por correo",
                 "updateCurrency": "Cambió la moneda",
-                "resolveHeld": "Decidió un movimiento retenido"
+                "resolveHeld": "Decidió un movimiento retenido",
+                "subscriptionChange": "Cambió el plan de la suscripción",
+                "subscriptionCancel": "Canceló la suscripción",
+                "subscriptionResume": "Reactivó la suscripción",
+                "subscriptionRefund": "Reembolsó la suscripción"
             },
             "change": "{field}: {before} → {after}",
             "fields": {
@@ -1375,7 +1399,50 @@
             "manualBody": "Tu plan es personalizado. Para cambios o facturas escribe a {email}.",
             "manage": "Gestionar suscripción",
             "comparePlans": "Planes",
-            "fairUse": "\"Sin límite\" está sujeto a uso razonable. Si tu equipo supera los 150 usuarios activos, escríbenos a {email} y armamos un plan a tu medida."
+            "fairUse": "\"Sin límite\" está sujeto a uso razonable. Si tu equipo supera los 150 usuarios activos, escríbenos a {email} y armamos un plan a tu medida.",
+            "paying": "{plan} · pago {interval}",
+            "refundedTitle": "Suscripción reembolsada",
+            "refundedBody": "El pago se devolvió a tu tarjeta y pasaste a Gratis sin perder datos.",
+            "refundStillAvailable": "Aún puedes pedir el reembolso completo: tienes {days} días de garantía en el plan anual (hasta el {date}).",
+            "requestRefund": "Pedir reembolso",
+            "cancel": "Cancelar suscripción",
+            "resume": "Reactivar suscripción",
+            "resumed": "Listo: tu suscripción sigue activa y se renovará en la fecha de siempre.",
+            "keepCurrent": "Mantener mi plan actual",
+            "keptCurrent": "Listo: mantienes tu plan actual.",
+            "scheduledChange": "Pasarás a {plan} ({interval}) el {date}. Hasta entonces mantienes lo que ya pagaste.",
+            "ownerOnly": "Solo el propietario de la organización puede cambiar o cancelar la suscripción.",
+            "actionFailed": "No se pudo hacer el cambio. Inténtalo de nuevo.",
+            "cancelledDone": "Listo: cancelaste tu suscripción. Mantienes tu plan hasta el {date}.",
+            "refundDone": "Listo: cancelaste tu suscripción y te devolvimos el pago. Puede tardar unos días en verse en tu tarjeta.",
+            "changedNow": "Listo: tu plan cambió. Lemon Squeezy te enviará el recibo del cobro.",
+            "changeScheduled": "Listo: el cambio se aplicará el {date}.",
+            "refundPolicy": "Puedes cancelar cuando quieras y mantienes tu plan hasta el final del periodo pagado. Los pagos mensuales no se reembolsan; los anuales tienen {days} días de garantía con reembolso completo.",
+            "cancelDialog": {
+                "title": "Cancelar suscripción",
+                "refundTitle": "Pedir reembolso",
+                "body": "Mantienes {plan} hasta el {date}. Después pasas a Gratis sin perder datos: solo no podrás crecer por encima de sus límites.",
+                "noRefundMonthly": "Los pagos mensuales no se reembolsan.",
+                "noRefundYearly": "Ya pasaron los {days} días de garantía de tu pago anual, así que no se reembolsa.",
+                "chooseHow": "¿Cómo quieres cancelar?",
+                "atPeriodEnd": "Al final del periodo",
+                "withRefund": "Ahora, con reembolso de {amount}",
+                "refundBody": "Tu plan termina hoy y te devolvemos el pago completo. Garantía de {days} días, hasta el {date}.",
+                "refundOnlyBody": "Te devolvemos {amount} a tu tarjeta y tu plan termina hoy. Pasas a Gratis sin perder datos.",
+                "dropsScheduled": "El cambio de plan que tenías programado también se cancela.",
+                "keep": "Volver",
+                "confirm": "Cancelar suscripción",
+                "confirmRefund": "Cancelar y reembolsar"
+            },
+            "changeDialog": {
+                "title": "Cambiar a {plan} ({interval})",
+                "upgradeBody": "El cambio es inmediato. Hoy pagas el precio nuevo menos la parte que no usaste de tu plan actual, y tu nuevo periodo empieza hoy.",
+                "estimate": "Cobro de hoy: aprox. {amount} (más impuestos). Lemon Squeezy calcula el monto exacto.",
+                "upgradeRenews": "Después se renueva a {amount} con pago {interval}.",
+                "downgradeBody": "Mantienes {current} hasta el {date}, que ya pagaste. Desde ese día pagas {plan} con pago {interval} ({amount}). El periodo actual no se reembolsa.",
+                "back": "Volver",
+                "confirm": "Confirmar cambio"
+            }
         }
     },
     "startPage": {
@@ -1438,6 +1505,17 @@
                 "title": "¿Necesitas más?",
                 "body": "Armamos planes a medida para operaciones grandes. Escríbenos a {email}."
             }
+        },
+        "switchTo": {
+            "monthly": "Pasar a pago mensual",
+            "yearly": "Pasar a pago anual"
+        },
+        "freeViaCancel": "Para pasar a Gratis, cancela tu suscripción.",
+        "changeBlocked": {
+            "pending": "Tienes un cambio de plan programado.",
+            "custom": "Para cambiar un plan personalizado, escríbenos.",
+            "ownerOnly": "Solo el propietario puede cambiar el plan.",
+            "inactive": "Reactiva tu suscripción o actualiza tu pago para cambiar de plan."
         }
     },
     "checkout": {
